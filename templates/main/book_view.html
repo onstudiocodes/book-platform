@@ -35,10 +35,10 @@
           <!-- Reader Container -->
           <div class="hidden p-6 relative" id="reader-container">
             <!-- Page Content -->
-            <div class="transition-transform m-auto max-w-none duration-500 h-[300px] ease-in-out bg-gray-100 p-4 rounded-lg" id="page-container">{{ book.content|safe }}</div>
+            <div class="transition-transform m-auto max-w-none duration-500 ease-in-out bg-gray-100 p-4 rounded-lg" id="page-container">{{ book.content|safe }}</div>
 
             <!-- Pagination and Controls -->
-            <div class="flex justify-between items-center mt-4 h-60">
+            <div class="flex justify-between items-center mt-4">
               <div class="flex gap-2 items-center">
                 <!-- Previous Button -->
                 <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700" id="prev-btn"><i class="fa fa-chevron-left"></i></button>
@@ -147,6 +147,7 @@
             <i class="fa fa-share"></i>
             Share
           </button>
+          <input type="hidden" value="{{book.id}}" id="book_id">
           <div class="relative">
             <button class="dropdownButton bg-neutral-200 hover:bg-neutral-300 w-12 p-2 rounded-full text-sm"><i class="fa fa-ellipsis"></i></button>
             <!-- Dropdown Menu -->

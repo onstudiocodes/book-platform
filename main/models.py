@@ -50,6 +50,15 @@ class BookView(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+class ReadingTime(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey("Book", on_delete=models.CASCADE)
+    total_time = models.IntegerField(default=0)  # Time in seconds
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.book.title} - {self.total_time} sec"
+    
 class News(models.Model):
     title = models.CharField(max_length=255)
     slug = AutoSlugField(populate_from='title', unique=True)

@@ -12,9 +12,11 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.core.serializers import serialize
 from django.template.loader import render_to_string
-# Create your views here.
-
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from .models import ReadingTime
 from django.core.paginator import Paginator
+import json
 
 def index(request):
     context = {}
@@ -55,6 +57,27 @@ def load_more_data(request):
     books_html = [render_to_string('components/book_card.html', {'book': book, 'request': request}) for book in paginator.page(page)]
     
     return JsonResponse({'data': books_html, 'has_next': page < paginator.num_pages}, safe=False)
+
+
+@csrf_exempt
+@login_required
+def save_reading_time(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        book_id = data.get("book_id")
+        reading_time = data.get("reading_time", 0)
+
+        if reading_time > 0:
+            book = Book.objects.get(id=book_id)
+            reading_record, created = ReadingTime.objects.get_or_create(user=request.user, book=book)
+
+            # Increment total reading time
+            reading_record.total_time += reading_time
+            reading_record.save()
+
+        return JsonResponse({"message": "Reading time saved!"})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 from accounts.forms import profileForm
@@ -147,10 +170,12 @@ def remove_from_collection(request, slug, collection_name):
 def book_view(request, slug):
     book = Book.public_objects.get(slug=slug)
     user = request.user if request.user.is_authenticated else None
-    log_book_view(book=book, user=user)
 
     # Add to history
     if request.user.is_authenticated:
+        if request.user != book.author:
+            log_book_view(book=book, user=user)
+
         history, created = History.objects.update_or_create(
             user=request.user,
             book=book,
