@@ -28,5 +28,6 @@ urlpatterns = [
     path('clear_notifications', views.clear_notifications, name="clear_notifications"),
     path('mark_all_as_read', views.mark_all_as_read, name="mark_all_as_read"),
     path('load-more-data', views.load_more_data, name="load_more_data"),
+    path("save-reading-time/", views.save_reading_time, name="save_reading_time"),
     path('temp', views.temp_book_view)
 ]

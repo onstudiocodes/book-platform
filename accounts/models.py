@@ -15,6 +15,10 @@ class UserProfile(models.Model):
     def get_total_views(self):
         return self.user.books.aggregate(models.Sum('views'))['views__sum'] or 0
     
+    def get_total_reading_time(self):
+        return self.user.books.annotate(total_time=models.Sum('readingtime__total_time')).aggregate(total=models.Sum('total_time'))['total'] or 0
+
+    
 class UserFollow(models.Model):
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following_users")
     following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers_users")
