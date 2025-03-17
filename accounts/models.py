@@ -16,7 +16,8 @@ class UserProfile(models.Model):
         return self.user.books.aggregate(models.Sum('views'))['views__sum'] or 0
     
     def get_total_reading_time(self):
-        return self.user.books.annotate(total_time=models.Sum('readingtime__total_time')).aggregate(total=models.Sum('total_time'))['total'] or 0
+        data = self.user.books.annotate(total_time=models.Sum('readingtime__total_time')).aggregate(total=models.Sum('total_time'))['total'] or 0
+        return f"{data/3600:.2f}"
 
     
 class UserFollow(models.Model):

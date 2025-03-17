@@ -44,6 +44,12 @@ class Book(models.Model):
     def dislikes_count(self):
         return self.dislikes.count()
     
+    def reading_time(self):
+        result = 0
+        for item in self.readingtime_set.all():
+            result += item.total_time
+        return f"{result/3600:.2f}"
+    
 
 class BookView(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="book_views")
@@ -58,6 +64,9 @@ class ReadingTime(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.book.title} - {self.total_time} sec"
+    
+    def get_hours(self):
+        return f"{self.total_time/3600:.2f}"
     
 class News(models.Model):
     title = models.CharField(max_length=255)
