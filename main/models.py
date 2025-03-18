@@ -4,6 +4,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 from autoslug import AutoSlugField
 from  django.utils import timezone
 from django.core.validators import FileExtensionValidator
+from django.shortcuts import reverse
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -49,6 +50,9 @@ class Book(models.Model):
         for item in self.readingtime_set.all():
             result += item.total_time
         return f"{result/3600:.2f}"
+    
+    def get_absolute_url(self):
+        return reverse('main:book_view', args=[self.slug])
     
 
 class BookView(models.Model):

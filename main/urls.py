@@ -1,8 +1,12 @@
 from django.urls import path
 from . import views
-
+from django.contrib.sitemaps.views import sitemap
+from .sitemaps import StaticViewSiteMap, BookSiteMap
 app_name = 'main'
-
+sitemaps = {
+    'static': StaticViewSiteMap(),
+    'books': BookSiteMap()
+}
 urlpatterns = [
     path('', views.index, name="index"),
     path('trending', views.index, name="trending"),
@@ -29,5 +33,6 @@ urlpatterns = [
     path('mark_all_as_read', views.mark_all_as_read, name="mark_all_as_read"),
     path('load-more-data', views.load_more_data, name="load_more_data"),
     path("save-reading-time/", views.save_reading_time, name="save_reading_time"),
-    path('temp', views.temp_book_view)
+    path('temp', views.temp_book_view),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name="django.contrib.sitemaps.views.sitemap")
 ]
