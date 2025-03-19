@@ -41,17 +41,6 @@ document.getElementById('menuToggle').addEventListener('click', function (event)
 
 })
 
-// document.addEventListener('click', (event) => {
-//     const sideBar = document.getElementById('sidebar')
-//     if (fullMenuHide == true) {
-//         if (!sideBar.classList.contains('left-[-100%]')) {
-//             sideBar.classList.add('left-[-100%]');
-//         }
-//     }
-
-// });
-
-
 
 // --------------------------------------------------
 // ----------------- Dropdown menu-------------------
@@ -197,7 +186,7 @@ function delete_comment(element) {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            comment.parentElement.removeChild(comment)
+            comment.parentElement.parentElement.removeChild(comment.parentElement)
             addNotification(data.success, 'green')
             let comment_count = document.getElementById('comment-count')
             comment_count.textContent = (Number(comment_count.textContent) - 1)
