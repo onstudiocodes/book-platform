@@ -251,6 +251,7 @@
 
 {% block scripts %}
   <script>
+    let user_is_authenticated = {{ user.is_authenticated|yesno:"true,false" }};
     let fullMenuHide = true
     let halfMenu = false
     const sideBar = document.getElementById('sidebar')

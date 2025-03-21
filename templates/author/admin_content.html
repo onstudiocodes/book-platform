@@ -19,7 +19,7 @@ Content
 
 </ul>
 <div class="w-full overflow-x-scroll">
-    <table class="text-sm text-left rtl:text-right overflow-x-scroll">
+    <table class="text-sm text-left rtl:text-right w-full overflow-x-scroll">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50 ">
             <tr>
                 <th class="px-6 py-5 flex gap-3 items-center border-r h-full min-w-96" scope="col">
@@ -62,7 +62,7 @@ Content
                     </div>
                 </th>
                 <td class="px-2 py-6 whitespace-nowrap">
-                        <select name="" id="" data-book-id="{{book.id}}" class="block p-1 rounded visibility-toggle">
+                        <select name="" id="" data-book-id="{{book.id}}" class="block p-1 rounded visibility-toggle cursor-pointer">
                             <option value="Public" {% if book.status == 'Public' %} selected {% endif %}>Public</option>
                             <option value="Private" {% if book.status == 'Private' %} selected {% endif %}>Private</option>
                         </select>
