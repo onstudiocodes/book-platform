@@ -67,3 +67,8 @@
     - Analytics page latest book performance section
 14. Content Dashboard
     - Translation page design issue
+
+- News page Like comment and share options add.
+- Newscast design Modify
+- Profile page infinte content fix
+- Search page infinite content fix.
