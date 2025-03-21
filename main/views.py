@@ -131,7 +131,7 @@ def delete_collection(request, collection_id):
 def collection(request, collection_name):
     coll = Collection.objects.filter(name=collection_name, user=request.user)
     if coll.exists():
-        return render(request, 'single_collection.html', {'collection': coll.first()})
+        return render(request, 'main/single_collection.html', {'collection': coll.first()})
     else:
         messages.error(request, "Collection not found.")
         return redirect(request.META.get('HTTP_REFERER', '/fallback-url/'))

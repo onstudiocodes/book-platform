@@ -14,7 +14,11 @@ const totalPagesSpan = document.getElementById("total-pages");
 // let currentPage = 0;
 
 readNowButton.addEventListener("click", function () {
+    console.log('user is authenticated', user_is_authenticated);
+    if (user_is_authenticated) {
+        console.log("User is authenticated");
     startTracking();
+    }
     coverContainer.classList.add("hidden");
     readerContainer.classList.remove("hidden");
 
@@ -52,6 +56,9 @@ function stopTracking() {
 
 // Function to send reading time to the backend
 function saveReadingTime() {
+    if (!user_is_authenticated){
+        return;
+    }
     if (totalReadingTime > 0) {
         fetch("/save-reading-time/", {
             method: "POST",

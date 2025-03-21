@@ -1,0 +1,69 @@
+1. Annoymous view.
+    issue found(1)
+    - trying to save reading time while not logged in.(✅Fixed)
+2. Page backend not implemented issues
+    issues found(2)
+    - Earn page backend not implemented
+    - News page dummy data not removed
+3. Register new account(✅Done)
+4. Login to an existing account(✅Done)
+5. Read books, like, comment, and follow authors(✅Done)
+6. Read news anonymously(✅Done)
+7. Access book reading history (logged-in users)(✅Done)
+8. Continue reading (one click, return to the last book read)(✅Done)
+9. Collections
+    - Create collections(✅Done)
+    - Delete collections(✅Done)
+    - Add books to collections(✅Done)
+    - Remove books from collections(✅Done)
+    issues found(1)
+    - single collection template not found(✅Fixed)
+10. Access subscription list(✅Done)
+11. View author profiles(✅Done)
+12. Book management
+    - Write books(✅Done)
+    - Modify books(✅Done)
+    - Delete books(❌Not available)
+    - Change book visibility(✅Done)
+13. Admin dashboard
+    - Dashboard(❌Need modifications)
+    - Content list (by author)(✅Done)
+    - Analytics (overall author analytics)
+    - Community (comments list made on any book of the author)(✅Done)
+    - Copyright(✅Done)
+    - Earnings(✅Done)
+    issues found(4)
+    - content list table width issue.(✅Fixed)
+    - content list row per page feature not works
+    - Analytics real follower data not showing
+    - Analytics page showing some wrong data
+    - Analytics page latest book performance section
+14. Content Dashboard
+    - Edit books(✅Done)
+    - Book-specific analytics(✅Done)
+    - Book-specific comments(✅Done)
+    - Translations(✅Done)
+    - Audios for the book(✅Done)
+    - Content-specific copyright(✅Done)
+    issues found(1)
+    - Translation page design issue
+
+----------------------------------------
+----------------------------------------
+----------------------------------------
+
+❌ Unfinished tasks.
+
+2. Page backend not implemented issues
+    - Earn page backend not implemented
+    - News page dummy data not removed
+12. Book management
+    - Delete books(❌Not available)
+13. Admin dashboard
+    - Dashboard(❌Need modifications)
+    - content list row per page feature not works
+    - Analytics real follower data not showing
+    - Analytics page showing some wrong data
+    - Analytics page latest book performance section
+14. Content Dashboard
+    - Translation page design issue
