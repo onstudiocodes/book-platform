@@ -3,8 +3,8 @@
     - trying to save reading time while not logged in.(✅Fixed)
 2. Page backend not implemented issues
     issues found(2)
-    - Earn page backend not implemented
-    - News page dummy data not removed
+    - Earn page backend not implemented(✅Done)
+    - News page dummy data not removed(✅Done)
 3. Register new account(✅Done)
 4. Login to an existing account(✅Done)
 5. Read books, like, comment, and follow authors(✅Done)
@@ -46,7 +46,7 @@
     - Audios for the book(✅Done)
     - Content-specific copyright(✅Done)
     issues found(1)
-    - Translation page design issue
+    - Translation page design issue(✅Done)
 
 ----------------------------------------
 ----------------------------------------
@@ -54,9 +54,6 @@
 
 ❌ Unfinished tasks.
 
-2. Page backend not implemented issues
-    - Earn page backend not implemented
-    - News page dummy data not removed
 12. Book management
     - Delete books(❌Not available)
 13. Admin dashboard
@@ -65,8 +62,6 @@
     - Analytics real follower data not showing
     - Analytics page showing some wrong data
     - Analytics page latest book performance section
-14. Content Dashboard
-    - Translation page design issue
 
 - News page Like comment and share options add.
 - Newscast design Modify
