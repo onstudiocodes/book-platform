@@ -72,7 +72,13 @@ def author_community(request):
 
 @login_required(login_url='accounts:login')
 def author_earn(request):
-    return render(request, 'author/admin_earn.html')
+    follower_progress = request.user.followers_users.count() / 1000 * 100
+    reader_progress = request.user.userprofile.get_total_views() / 100000 * 100
+    context = {
+        'follower_progress': follower_progress,
+        'reader_progress': reader_progress
+    }
+    return render(request, 'author/admin_earn.html', context)
 
 @login_required(login_url='accounts:login')
 def author_copyright(request):

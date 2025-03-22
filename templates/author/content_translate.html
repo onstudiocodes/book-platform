@@ -15,19 +15,29 @@ Content translate
         {{form.as_p}}
         <input type="submit" value="Submit" class="p-2 rounded bg-green-600 hover:bg-green-700 text-white">
     </form>
-    
-    <div class="felx flex-col max-w-lg m-auto space-y-3 mt-24 text-center">
-        <select name="" id="" class="border rounded-lg px-4 py-2 bg-white m-auto w-64">
-            <option value="">Select language</option>
-            <option value="">Bangla</option>
-            <option value="">English</option>
-            <option value="">Hindi</option>
-        </select>
-        <div class="text-xs font-medium text-neutral-500 flex items-center gap-3 justify-center">
-            <input type="checkbox" name="" id="">
-            <div>Make this default for my channel.</div>
-        </div>
-        <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full">Confirm</button>
-    </div>
 </div>
+<div class="text-xl font-medium mt-4">Available translations</div>
+{% with translations=book.translations.all %}
+{% if translations %}
+<table class="w-full text-left border-collapse table-auto">
+    <tr class="*:border *:p-2">
+        <th>#</th>
+        <th>Language</th>
+        <th>title</th>
+        <th>Translated title</th>
+    </tr>
+    {% for translation in translations %}
+    <tr class="*:border *:p-2">
+        <td>{{forloop.counter}}</td>
+        <td>{{translation.language}}</td>
+        <td>{{translation.book.title}}</td>
+        <td>{{translation.translated_title}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% else %}
+No audio for this book found.
+{% endif %}
+{% endwith %}
 {% endblock %}

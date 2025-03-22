@@ -44,23 +44,23 @@ Earn
             <div class="border p-6 rounded-xl">
                 <div class="font-bold text-sm">1. Reach requirements to apply <i class="fa fa-circle-info mx-2"></i>
                 </div>
-                <div class="text-xs font-medium text-neutral-500 my-1">Showing data as of: Jan 2, 2025</div>
+                <div class="text-xs font-medium text-neutral-500 my-1">Showing data as of: {% now "M d, Y" %}</div>
 
                 <!-- custom progress bar -->
                 <div class="bg-gray-200 h-2 rounded-full overflow-hidden my-2">
-                    <div class="bg-blue-700 h-full" style="width: 30%;"></div>
+                    <div class="bg-blue-700 h-full" style="width: {{follower_progress}}%;"></div>
                 </div>
                 <div class="flex justify-between my-2">
-                    <div class="text-sm">14 Subscribers</div>
+                    <div class="text-sm">{{user.followers_users.count}} Subscribers</div>
                     <div class="text-neutral-500">1000</div>
                 </div>
                 <div class="text-xs text-center my-4 font-bold">and the following</div>
                      {% comment %} custom progress bar {% endcomment %}
                 <div class="bg-gray-200 h-2 rounded-full overflow-hidden my-2">
-                    <div class="bg-blue-700 h-full" style="width: 3%;"></div>
+                    <div class="bg-blue-700 h-full" style="width: {{reader_progress}}%;"></div>
                 </div>
                 <div class="flex justify-between my-2 mb-6">
-                    <div class="text-sm">2 book reads
+                    <div class="text-sm">{{user.userprofile.get_total_views}} book reads
                         <div class="text-neutral-500">last 365 days</div>
                     </div>
                     <div class="text-neutral-500">100000</div>
@@ -79,7 +79,9 @@ Earn
             <div class="font-bold text-sm">2. Complete the basics </div>
             <div class="grid grid-cols-2 mt-4">
                 <div class="flex gap-3 items-center">
-                    <i class="fa-regular fa-circle-check text-green-600 block"></i>
+                    <i style="display: none;" class="fa-regular fa-circle-check text-green-600"></i>
+                    <i class="fa-regular fa-circle-xmark text-red-600 block"></i>
+
                     <div class="text-sm font-medium">2 step verification</div>
                 </div>
                 <div class="flex gap-3 items-center">
