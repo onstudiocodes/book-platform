@@ -93,10 +93,11 @@ Content
         <div>Rows per page</div>
         <select
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            id="" name="">
-            <option value="">10</option>
-            <option value="">30</option>
-            <option value="">50</option>
+            id="rows_per_page" name="">
+            <option value="10" {% if request.session.rows_per_page == 10 %} selected {% endif %}>10</option>
+            <option value="30" {% if request.session.rows_per_page == 30 %} selected {% endif %}>30</option>
+            <option value="50" {% if request.session.rows_per_page == 50 %} selected {% endif %}>50</option>
+
         </select>
     </div>
     <div class="*:p-2">
@@ -136,6 +137,27 @@ Content
             }
         })
     })
+    function updateSessionKey(newValue) {
+    fetch('/author/update-session-key/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ key: newValue })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.reload();
+        } else {
+            console.log('Failed to update session key');
+        }
+    });
+}
+document.querySelector('#rows_per_page').addEventListener('change', function() {
+    updateSessionKey(this.value);
+});
 </script>
 
 {% endblock %}

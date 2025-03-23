@@ -88,6 +88,12 @@ def profile(request, username):
     if request.user.is_authenticated and UserFollow.objects.filter(follower=request.user, following=profile).exists():
         follower = True
     context = {'profile': profile, 'follower': follower}
+
+    books = Book.objects.filter(author__username=username)
+    paginator = Paginator(books, 10)
+    initial_books = paginator.page(1)
+    context['books'] = initial_books
+
     if request.user.is_authenticated and request.user.username == username:
         
         if request.method == "POST":
@@ -198,6 +204,8 @@ def book_view(request, slug):
 def search_results(request):
     if request.method == "GET":
         q = request.GET.get('q')
+        if q == "":
+            return redirect('main:index')
         books = Book.public_objects.filter(title__icontains=q) | Book.public_objects.filter(description__icontains=q) | Book.public_objects.filter(author__userprofile__full_name__icontains=q) | Book.public_objects.filter(category__name__icontains=q)
         books = books.distinct()
         return render(request, 'main/search_result.html', {'q': q, 'books': books})

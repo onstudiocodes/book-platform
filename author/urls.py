@@ -19,6 +19,8 @@ urlpatterns = [
     path('write-book', views.write_book, name="write_book"),
     path('create-news', views.create_news, name="create_news"),
     path('get-translation/<int:book_id>/<int:translation_id>', views.get_translation, name='get_translation'),
-    path('change-visibility/<int:book_id>/<str:status>', views.change_visibility, name="change_visibilty")
+    path('change-visibility/<int:book_id>/<str:status>', views.change_visibility, name="change_visibilty"),
+    path('delete-book/<int:book_id>', views.delete_book, name="delete_book"),
+    path('update-session-key/', views.update_session_key, name='update_session_key'),
 
 ]

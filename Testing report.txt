@@ -55,15 +55,16 @@
 ❌ Unfinished tasks.
 
 12. Book management
-    - Delete books(❌Not available)
+    - Delete books(❌Not available)(✅Done)
 13. Admin dashboard
     - Dashboard(❌Need modifications)
-    - content list row per page feature not works
-    - Analytics real follower data not showing
-    - Analytics page showing some wrong data
-    - Analytics page latest book performance section
+    - content list row per page feature not works(✅Done)
+    - Analytics real follower data not showing(✅Done)
+    - Analytics page showing some wrong data(✅Done)
+    - Analytics page latest book performance section(✅Done)
 
 - News page Like comment and share options add.
 - Newscast design Modify
-- Profile page infinte content fix
+- Profile page infinte content fix(✅Fixed)
 - Search page infinite content fix.
+- Notification count not woriking
