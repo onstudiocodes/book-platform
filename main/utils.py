@@ -38,8 +38,12 @@ def get_last_n_days_data(model, n, user=None, book=None, formatted=False):
         return result
     
     filters = {"created_at__date__gte": startdate}  # Filter by date only
-    if user:
+    if user and model!=BookView:
+        print('1')
         filters["user"] = user
+    elif user and model==BookView:
+        filters["book__author"] = user
+        print(2)
     if book:
         filters["book"] = book
 

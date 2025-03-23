@@ -11,6 +11,7 @@ import json, datetime
 from django.utils import timezone
 from django.core.paginator import Paginator
 from accounts.models import UserFollow
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 @login_required(login_url='accounts:login')
@@ -24,13 +25,28 @@ def author_dashboard(request):
 @login_required(login_url='accounts:login')
 def author_content(request):
     books = Book.objects.filter(author=request.user)
-    paginator = Paginator(books, 10)
+    rows_per_page = request.session.get('rows_per_page')
+    if not rows_per_page:
+        request.session['rows_per_page'] = 10
+        rows_per_page = 10
+    
+    print(rows_per_page)
+    paginator = Paginator(books, rows_per_page)
     page = request.GET.get('page')
     page_obj = paginator.get_page(page)
     context = {
         'books': page_obj
     }
     return render(request, 'author/admin_content.html', context)
+
+@csrf_exempt
+def update_session_key(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        new_value = data.get('key')
+        request.session['rows_per_page'] = int(new_value)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'failed'})
 
 @login_required(login_url='accounts:login',)
 def author_analytics(request):
@@ -274,3 +290,11 @@ def change_visibility(request, book_id, status):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'failed'})
 
+def delete_book(request, book_id):
+    book = Book.objects.get(id=book_id)
+    if book.author == request.user:
+        book.delete()
+        messages.success(request, 'Book deleted')
+        return redirect('author:author_content')
+    messages.error(request, 'Book not deleted')
+    return redirect('author:author_content')
