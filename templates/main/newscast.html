@@ -1,99 +1,206 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}
-  News
+News
 {% endblock %}
 {% block header %}
-  <style>
+<style>
     .shorts-container {
-      scroll-snap-type: y mandatory;
-      overflow-y: auto;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE and Edge */
+        scroll-snap-type: y mandatory;
+        overflow-y: auto;
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE and Edge */
     }
-    
+
     .shorts-container::-webkit-scrollbar {
-      display: none; /* Chrome, Safari */
+        display: none;
+        /* Chrome, Safari */
     }
-    
+
     .short {
-      scroll-snap-align: start;
+        scroll-snap-align: start;
     }
 
     #carousel {
         display: flex;
         transition: transform 0.5s ease-in-out;
-        width: 100%; /* Ensure the carousel takes full width */
-      }
-      
-      #carousel img {
-        flex: 0 0 100%; /* Ensure each image takes full width */
-        width: 100%; /* Ensure images take full width */
-        height: auto; /* Maintain aspect ratio */
-        display: block; /* Remove any inline spacing */
-      }
-  </style>
+        width: 100%;
+        /* Ensure the carousel takes full width */
+    }
+
+    #carousel img {
+        flex: 0 0 100%;
+        /* Ensure each image takes full width */
+        width: 100%;
+        /* Ensure images take full width */
+        height: auto;
+        /* Maintain aspect ratio */
+        display: block;
+        /* Remove any inline spacing */
+    }
+</style>
 {% endblock %}
 {% block content %}
-  <div class="flex items-center justify-center h-full relative">
+<div class="flex items-center justify-center h-full relative">
     <div class="relative w-full max-w-md h-full overflow-hidden">
-      <!-- Shorts Container -->
-      <div id="shortsContainer" class="shorts-container h-full border rounded-md">
-        {% if news %}
-        {% for item in news %}
-        <div class="short min-h-full p-4 flex flex-col align-middle justify-center">
-          <div class="font-medium text-xl mb-2">{{item.title}}</div>
-          <div id="default-carousel" class="relative rounded-lg overflow-hidden shadow-lg" data-carousel="static">
-            <!-- Carousel wrapper -->
-            <div class="relative h-40" data-carousel-inner>
-              {% for image in item.images.all %}
-              <div class="hidden duration-700 ease-in-out" data-carousel-item>
-                    <img src="{{image.image.url}}"
-                        class="object-cover w-full h-full" alt="Slide {{forloop.counter}}">
-                    
-                </div>
-                {% endfor %}
+        <!-- Shorts Container -->
+        <div id="shortsContainer" class="shorts-container h-full border rounded-md">
+            {% if news %}
+            {% for item in news %}
+            <div class="relative short min-h-full p-4 flex flex-col align-middle justify-between">
+                <div class="font-medium text-xl mb-2">{{item.title}}</div>
+                <div id="default-carousel" class="relative rounded-lg overflow-hidden shadow-lg" data-carousel="static">
+                    <!-- Carousel wrapper -->
+                    <div class="relative h-40" data-carousel-inner>
+                        {% for image in item.images.all %}
+                        <div class="hidden duration-700 ease-in-out" data-carousel-item>
+                            <img src="{{image.image.url}}" class="object-cover w-full h-full"
+                                alt="Slide {{forloop.counter}}">
 
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                    <!-- Slider controls -->
+                    {% if item.images.count > 1 %}
+                    <button type="button"
+                        class="flex absolute top-1/2 left-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition"
+                        data-carousel-prev>
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                            </path>
+                        </svg>
+                    </button>
+                    <button type="button"
+                        class="flex absolute top-1/2 right-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition"
+                        data-carousel-next>
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                            </path>
+                        </svg>
+                    </button>
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="text-sm overflow-hidden text-ellipsis line-clamp-4 my-2">{{item.content|safe}}</div>
+                    <div>
+                        <a href="{% url 'main:news-detail' item.id %}"
+                            class="text-blue-400 hover:border-b hover:border-blue-400 inline">Read
+                            more.</a>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4">
+                    <img src="{{item.author.userprofile.profile_picture.url}}" class="h-10 w-10 rounded-full" alt="">
+                    <a href="{% url 'main:profile' item.author.username %}">{{item.author.userprofile.full_name}} <div
+                            class="text-sm text-neutral-600">{{item.author.followers_users.count}} Subscribers</div></a>
+                            {% if user != item.author %}
+                            <button id="follow-btn" data-user-id="{{ item.author.id }}" data-url="{% url 'main:toggle_follow' %}" class="bg-black text-white px-2 py-1 rounded-xl">
+                                {% if user1 in item.author.followers_users.all %}
+                                Unfollow
+                              {% else %}
+                                Follow
+                              {% endif %}
+                            </button>
+                          {% endif %}
+                </div>
             </div>
-            <!-- Slider controls -->
-             {% if item.images.count > 1 %}
-            <button type="button"
-                class="flex absolute top-1/2 left-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition"
-                data-carousel-prev>
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
-            <button type="button"
-                class="flex absolute top-1/2 right-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition"
-                data-carousel-next>
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </button>
+
+            {% endfor %}
             {% endif %}
         </div>
-    
-          <div class="text-sm overflow-hidden text-ellipsis line-clamp-4 my-2">ইতালির রোম শহরের ভেতরে ছোট একটি দেশ ভ্যাটিকান সিটি। নামের সঙ্গে সিটি থাকলেও এটি বিশ্বের একটি স্বাধীন-সার্বভৌম দেশ এবং রোমান ক্যাথলিক গির্জার সদর দপ্তর। ক্ষুদ্র এ দেশটির প্রায় চারপাশটাই পাথরের দেয়ালে ঘেরা। দেয়ালগুলোর ভেতর আছে সেন্ট পিটার্স ব্যাসিলিকা নামের বিশাল এক গির্জা, ভ্যাটিকান প্যালেস এবং আরও কিছু ভবন। ভ্যাটিকান প্যালেসের ভেতরে পোপের ভবন, জাদুঘর, একটি গ্রন্থাগার এবং সিস্টিন চ্যাপেল ভবনের অবস্থান। ইতালির রোম শহরের ভেতরে ছোট একটি দেশ ভ্যাটিকান সিটি। নামের সঙ্গে সিটি থাকলেও এটি বিশ্বের একটি স্বাধীন-সার্বভৌম দেশ এবং রোমান ক্যাথলিক গির্জার সদর দপ্তর। ক্ষুদ্র এ দেশটির প্রায় চারপাশটাই পাথরের দেয়ালে ঘেরা। দেয়ালগুলোর ভেতর আছে সেন্ট পিটার্স ব্যাসিলিকা নামের বিশাল এক গির্জা, ভ্যাটিকান প্যালেস এবং আরও কিছু ভবন। ভ্যাটিকান প্যালেসের ভেতরে পোপের ভবন, জাদুঘর, একটি গ্রন্থাগার এবং সিস্টিন চ্যাপেল ভবনের অবস্থান।</div>
-          <div>
-            <a href="{% url 'main:news' item.id %}" class="text-blue-400 hover:border-b hover:border-blue-400 inline">Read more.</a>
-          </div>
-        </div>
-        {% endfor %}
-        {% endif %}
-      </div>
     </div>
     <!-- Navigation Buttons for Desktop -->
-    <button id="prevBtn" class="hidden md:block absolute bottom-16 right-10 transform -translate-x-1/2 bg-white text-black p-2 rounded-full">▲</button>
-    <button id="nextBtn" class="hidden md:block absolute bottom-5 right-10 transform -translate-x-1/2 bg-white text-black p-2 rounded-full">▼</button>
-  </div>
+    <button id="prevBtn"
+        class="hidden md:block absolute bottom-16 right-10 transform -translate-x-1/2 bg-white text-black p-2 rounded-full">▲</button>
+    <button id="nextBtn"
+        class="hidden md:block absolute bottom-5 right-10 transform -translate-x-1/2 bg-white text-black p-2 rounded-full">▼</button>
+</div>
 {% endblock %}
 {% block scripts %}
 <script src="https://unpkg.com/flowbite@1.4.0/dist/flowbite.js"></script>
 
-  <script>
+<!-- Add this script to your newscast page template -->
+<script>
+    let page = 1;
+    let isLoading = false;
+
+    function loadMoreNews() {
+        if (isLoading) return;
+        isLoading = true;
+
+        fetch(`/api/news/?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results.length > 0) {
+                    const shortsContainer = document.getElementById('shortsContainer');
+                    data.results.forEach(item => {
+                        const newsItem = document.createElement('div');
+                        newsItem.className = 'relative short min-h-full p-4 flex flex-col align-middle justify-between';
+                        newsItem.innerHTML = `
+                            <div class="font-medium text-xl mb-2">${item.title}</div>
+                            <div id="default-carousel" class="relative rounded-lg overflow-hidden shadow-lg" data-carousel="static">
+                                <div class="relative h-40" data-carousel-inner>
+                                    ${item.images.map(image => `
+                                        <div class="hidden duration-700 ease-in-out" data-carousel-item>
+                                            <img src="${image.image}" class="object-cover w-full h-full" alt="Slide">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                ${item.images.length > 1 ? `
+                                    <button type="button" class="flex absolute top-1/2 left-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition" data-carousel-prev>
+                                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="flex absolute top-1/2 right-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition" data-carousel-next>
+                                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div>
+                                <div class="text-sm overflow-hidden text-ellipsis line-clamp-4 my-2">${item.content}</div>
+                                <div>
+                                    <a href="/news/${item.id}/" class="text-blue-400 hover:border-b hover:border-blue-400 inline">Read more.</a>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4">
+                                <img src="${item.author.userprofile.profile_picture}" class="h-10 w-10 rounded-full" alt="">
+                                <a href="/profile/${item.author.username}/">${item.author.userprofile.full_name} <div class="text-sm text-neutral-600">${item.author.followers_users.count} Subscribers</div></a>
+                                ${user !== item.author ? `
+                                    <button id="follow-btn" data-user-id="${item.author.id}" data-url="/toggle_follow/" class="bg-black text-white px-2 py-1 rounded-xl">
+                                        ${user1 in item.author.followers_users.all ? 'Unfollow' : 'Follow'}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                        shortsContainer.appendChild(newsItem);
+                    });
+                    page++;
+                }
+                isLoading = false;
+            })
+            .catch(error => {
+                console.error('Error loading more news:', error);
+                isLoading = false;
+            });
+    }
+
+    window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+            loadMoreNews();
+        }
+    });
+
+    // Initial load
+    loadMoreNews();
+</script>
+<script>
     // Script for shorts navigation
     const shortsContainer = document.getElementById('shortsContainer');
     const shorts = document.querySelectorAll('.short');
@@ -103,39 +210,39 @@
     let shortsCurrentIndex = 0; // Renamed to avoid conflict
 
     function scrollToShort(index) {
-      if (index >= 0 && index < shorts.length) {
-        shorts[index].scrollIntoView({ behavior: 'smooth' });
-        shortsCurrentIndex = index;
-      }
+        if (index >= 0 && index < shorts.length) {
+            shorts[index].scrollIntoView({ behavior: 'smooth' });
+            shortsCurrentIndex = index;
+        }
     }
 
     nextBtn.addEventListener('click', () => scrollToShort(shortsCurrentIndex + 1));
     prevBtn.addEventListener('click', () => scrollToShort(shortsCurrentIndex - 1));
 
-    
-  </script>
-  <script>
+
+</script>
+<script>
     document.addEventListener('DOMContentLoaded', () => {
         function adjustContentHeight() {
-          const navbar = document.querySelector('header');
-          const content = document.querySelector('main');
-      
-          if (!navbar || !content) {
-            console.error("Navbar or main element not found!");
-            return;
-          }
-      
-          const navHeight = navbar.offsetHeight;
-      
-          const computedHeight = `calc(100vh - ${navHeight}px)`;
-      
-          content.style.setProperty("height", computedHeight, "important");
+            const navbar = document.querySelector('header');
+            const content = document.querySelector('main');
+
+            if (!navbar || !content) {
+                console.error("Navbar or main element not found!");
+                return;
+            }
+
+            const navHeight = navbar.offsetHeight;
+
+            const computedHeight = `calc(100vh - ${navHeight}px)`;
+
+            content.style.setProperty("height", computedHeight, "important");
         }
-      
+
         setTimeout(adjustContentHeight, 100);
         window.addEventListener('resize', adjustContentHeight);
-      });
-      
+    });
+
 </script>
 <script>
     let halfMenu = true;

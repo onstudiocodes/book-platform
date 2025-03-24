@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'accounts',
     'author',
     'django_ckeditor_5',
-    'django_cleanup'
+    'django_cleanup',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -71,7 +72,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'main.context_processors.notifications'
+                'main.context_processors.notifications',
+                'main.context_processors.unread_notifications'
             ],
         },
     },
@@ -158,4 +160,16 @@ CKEDITOR_5_CONFIGS = {
             'toolbar': ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side'],
         },
     }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }

@@ -18,5 +18,8 @@
     #page-container p, #book_content p {
         @apply text-base leading-normal;
     }
+    .active-menu{
+        @apply text-black border-b-2 font-bold border-gray-500 hover:border-gray-500;
+    }
 }
 

@@ -386,3 +386,58 @@ def news(request, news_id):
 
 def temp_book_view(request):
     return render(request, 'temp_book_view.html', {'book': Book.objects.get(slug="omujk-28fc-9bd0")})
+
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from .models import News
+from .serializers import NewsSerializer
+from rest_framework.pagination import PageNumberPagination
+
+class NewsPagination(PageNumberPagination):
+    page_size = 10  # Number of items per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class NewsListCreateView(generics.ListCreateAPIView):
+    queryset = News.objects.all().order_by('-published_date')
+    serializer_class = NewsSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = NewsPagination
+# List all news or create a new news item
+class NewsListCreateView(generics.ListCreateAPIView):
+    queryset = News.objects.all().order_by('-published_date')
+    serializer_class = NewsSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+# Retrieve, update, or delete a specific news item
+class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+# Like/Unlike a news item
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def like_news(request, pk):
+    news = News.objects.get(id=pk)
+    user = request.user
+    if user in news.likes.all():
+        news.likes.remove(user)
+        return Response({"message": "Unliked"})
+    else:
+        news.likes.add(user)
+        return Response({"message": "Liked"})
+
+# Dislike/Undislike a news item
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def dislike_news(request, pk):
+    news = News.objects.get(id=pk)
+    user = request.user
+    if user in news.dislikes.all():
+        news.dislikes.remove(user)
+        return Response({"message": "Undisliked"})
+    else:
+        news.dislikes.add(user)
+        return Response({"message": "Disliked"})

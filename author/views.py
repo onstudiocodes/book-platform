@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from main.models import Book, User, Comment, BookView, Booktranslation
+from main.models import Book, User, Comment, BookView, Booktranslation, News
 from django.contrib import messages
 from .forms import BookUploadForm, NewsForm, NewsImageFormSet, AudioForm, TranslationForm
 import base64
@@ -23,19 +23,22 @@ def author_dashboard(request):
     return render(request, 'author/admin_dashboard.html', context)
 
 @login_required(login_url='accounts:login')
-def author_content(request):
-    books = Book.objects.filter(author=request.user)
+def author_content(request, content_type):
+    if content_type == 'books':
+        items = Book.objects.filter(author=request.user)
+    elif content_type == 'news':
+        items = News.objects.filter(author=request.user)
     rows_per_page = request.session.get('rows_per_page')
     if not rows_per_page:
         request.session['rows_per_page'] = 10
         rows_per_page = 10
     
-    print(rows_per_page)
-    paginator = Paginator(books, rows_per_page)
+    paginator = Paginator(items, rows_per_page)
     page = request.GET.get('page')
     page_obj = paginator.get_page(page)
     context = {
-        'books': page_obj
+        'books': page_obj,
+        'content_type': content_type
     }
     return render(request, 'author/admin_content.html', context)
 
