@@ -79,11 +79,14 @@ class News(models.Model):
     content = CKEditor5Field(config_name="extends") 
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='news', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    published_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_news', blank=True)
     dislikes = models.ManyToManyField(User, related_name='disliked_news', blank=True)
     views = models.PositiveIntegerField(default=0)
+    
+    def thumbnail(self):
+        return self.images.first().image
 
 class NewsImage(models.Model):
     news = models.ForeignKey(News, on_delete=models.CASCADE, related_name="images")

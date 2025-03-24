@@ -9,11 +9,11 @@ Content
         <h2 class="text-3xl font-semibold">Channel Content</h2>
     </div>
 </header>
-<ul class="flex gap-4 font-medium text-gray-600 border-b-2 overflow-x-scroll">
-    <li class="p-2 cursor-pointer text-black border-b-2 font-bold border-gray-500">
+<ul class="flex gap-4 font-medium text-gray-600 border-b-2 overflow-x-scroll *:p-2 *:cursor-pointer *:hover:border-b-2">
+    <li class="hover:border-gray-300 {% if content_type == 'books' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'books' %}`">
         Books
     </li>
-    <li class="hover:border-b-2 hover:border-gray-300 p-2 cursor-pointer">
+    <li class="hover:border-gray-300 {% if content_type == 'news' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'news' %}`">
         News
     </li>
 
@@ -62,10 +62,11 @@ Content
                     </div>
                 </th>
                 <td class="px-2 py-6 whitespace-nowrap">
-                        <select name="" id="" data-book-id="{{book.id}}" class="block p-1 rounded visibility-toggle cursor-pointer">
-                            <option value="Public" {% if book.status == 'Public' %} selected {% endif %}>Public</option>
-                            <option value="Private" {% if book.status == 'Private' %} selected {% endif %}>Private</option>
-                        </select>
+                    <select name="" id="" data-book-id="{{book.id}}"
+                        class="block p-1 rounded visibility-toggle cursor-pointer">
+                        <option value="Public" {% if book.status == 'Public' %} selected {% endif %}>Public</option>
+                        <option value="Private" {% if book.status == 'Private' %} selected {% endif %}>Private</option>
+                    </select>
                 </td>
                 <td class="px-2 py-6">None</td>
                 <td class="px-2 py-4 whitespace-nowrap">
@@ -103,9 +104,12 @@ Content
     <div class="*:p-2">
         <div class="inline-block">Page {{ books.number }} of {{ books.paginator.num_pages }}</div>
         <i class="fa fa-angles-left block cursor-pointer" title="First page" onclick="location.href=`?page=1`"></i>
-        <i class="fa fa-angle-left block cursor-pointer" title="Previous page" {% if books.has_previous %} onclick="location.href=`?page={{books.previous_page_number}}`"{% endif %}></i>
-        <i class="fa fa-angle-right block cursor-pointer" title="Next page" {% if books.has_next %} onclick="location.href=`?page={{books.next_page_number}}`" {% endif %}></i>
-        <i class="fa fa-angles-right block cursor-pointer" title="Last page" onclick="location.href=`?page={{books.paginator.num_pages}}`"></i>
+        <i class="fa fa-angle-left block cursor-pointer" title="Previous page" {% if books.has_previous %}
+            onclick="location.href=`?page={{books.previous_page_number}}`" {% endif %}></i>
+        <i class="fa fa-angle-right block cursor-pointer" title="Next page" {% if books.has_next %}
+            onclick="location.href=`?page={{books.next_page_number}}`" {% endif %}></i>
+        <i class="fa fa-angles-right block cursor-pointer" title="Last page"
+            onclick="location.href=`?page={{books.paginator.num_pages}}`"></i>
     </div>
 
 </div>
@@ -114,15 +118,15 @@ Content
 {% block scripts %}
 <script>
     document.querySelectorAll('.visibility-toggle').forEach(element => {
-        element.addEventListener('change', function() {
+        element.addEventListener('change', function () {
             let book_id = this.getAttribute('data-book-id')
             let status = this.value
             fetch(`/author/change-visibility/${book_id}/${status}`)
-            .then(data => data.json())
-            .then(data => {
-                console.log(data.status)
-            })
-            .catch(error => console.log(error))
+                .then(data => data.json())
+                .then(data => {
+                    console.log(data.status)
+                })
+                .catch(error => console.log(error))
 
             console.log(book_id)
         })
@@ -130,34 +134,34 @@ Content
 
     document.querySelector('#select_all').addEventListener('change', () => {
         document.querySelectorAll('.select').forEach((element) => {
-            if (element.checked){
+            if (element.checked) {
                 element.checked = false
-            }else {
+            } else {
                 element.checked = true
             }
         })
     })
     function updateSessionKey(newValue) {
-    fetch('/author/update-session-key/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({ key: newValue })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            window.location.reload();
-        } else {
-            console.log('Failed to update session key');
-        }
+        fetch('/author/update-session-key/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ key: newValue })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    console.log('Failed to update session key');
+                }
+            });
+    }
+    document.querySelector('#rows_per_page').addEventListener('change', function () {
+        updateSessionKey(this.value);
     });
-}
-document.querySelector('#rows_per_page').addEventListener('change', function() {
-    updateSessionKey(this.value);
-});
 </script>
 
 {% endblock %}

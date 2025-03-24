@@ -5,7 +5,7 @@ app_name = 'author'
 
 urlpatterns = [
     path('dashboard', views.author_dashboard, name="author_dashboard"),
-    path('content', views.author_content, name="author_content"),
+    path('content/<str:content_type>', views.author_content, name="author_content"),
     path('analytics', views.author_analytics, name="author_analytics"),
     path('community', views.author_community, name="author_community"),
     path('copyright', views.author_copyright, name="author_copyright"),

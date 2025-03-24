@@ -4,8 +4,10 @@ django-autoslug==1.9.9
 django-ckeditor-5==0.2.15
 django-cleanup==9.0.0
 django-js-asset==3.0.1
+djangorestframework==3.15.2
 gunicorn==23.0.0
 packaging==24.2
 pillow==11.1.0
 sqlparse==0.5.3
+tzdata==2025.1
 whitenoise==6.8.2

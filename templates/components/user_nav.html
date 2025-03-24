@@ -60,9 +60,11 @@
 
             <div class="sm:relative">
                 <button class="dropdownButton text-lg w-9 fa-regular fa-bell">
+                    {% if unread_notifications > 0 %}
                     <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                        3
+                        {{unread_notifications}}
                     </span>
+                    {% endif %}
                 </button>
                 <div id="dropdownMenu"
                     class="dropdownMenu absolute right-0 mt-2 w-screen sm:w-64 bg-white border border-gray-200 rounded-lg shadow-lg hidden">
