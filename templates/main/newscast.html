@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}
@@ -27,90 +28,63 @@ News
         display: flex;
         transition: transform 0.5s ease-in-out;
         width: 100%;
-        /* Ensure the carousel takes full width */
     }
 
     #carousel img {
         flex: 0 0 100%;
-        /* Ensure each image takes full width */
         width: 100%;
-        /* Ensure images take full width */
         height: auto;
-        /* Maintain aspect ratio */
         display: block;
-        /* Remove any inline spacing */
+    }
+
+    /* News detail overlay styles */
+    .news-detail-overlay {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        background-color: white;
+        z-index: 999;
+        overflow-y: auto;
+        padding: 20px;
+        display: none;
+    }
+
+    .news-detail-content {
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .close-detail-btn {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: black;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 1001;
     }
 </style>
 {% endblock %}
 {% block content %}
+<input type="hidden" id="loggedInUser" value="{{user.username}}">
+<input type="hidden" id="loggedInUserId" value="{{user.id}}">
+
+<!-- News Detail Overlay -->
+<div id="newsDetailOverlay" class="news-detail-overlay md:left-64 relative">
+    <button id="closeDetailBtn" class="close-detail-btn">&times;</button>
+    <div id="newsDetailContent" class="news-detail-content max-w-full md:max-w-2xl"></div>
+</div>
+
 <div class="flex items-center justify-center h-full relative">
     <div class="relative w-full max-w-md h-full overflow-hidden">
         <!-- Shorts Container -->
         <div id="shortsContainer" class="shorts-container h-full border rounded-md">
-            {% if news %}
-            {% for item in news %}
-            <div class="relative short min-h-full p-4 flex flex-col align-middle justify-between">
-                <div class="font-medium text-xl mb-2">{{item.title}}</div>
-                <div id="default-carousel" class="relative rounded-lg overflow-hidden shadow-lg" data-carousel="static">
-                    <!-- Carousel wrapper -->
-                    <div class="relative h-40" data-carousel-inner>
-                        {% for image in item.images.all %}
-                        <div class="hidden duration-700 ease-in-out" data-carousel-item>
-                            <img src="{{image.image.url}}" class="object-cover w-full h-full"
-                                alt="Slide {{forloop.counter}}">
-
-                        </div>
-                        {% endfor %}
-
-                    </div>
-                    <!-- Slider controls -->
-                    {% if item.images.count > 1 %}
-                    <button type="button"
-                        class="flex absolute top-1/2 left-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition"
-                        data-carousel-prev>
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
-                            </path>
-                        </svg>
-                    </button>
-                    <button type="button"
-                        class="flex absolute top-1/2 right-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition"
-                        data-carousel-next>
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                            </path>
-                        </svg>
-                    </button>
-                    {% endif %}
-                </div>
-                <div>
-                    <div class="text-sm overflow-hidden text-ellipsis line-clamp-4 my-2">{{item.content|safe}}</div>
-                    <div>
-                        <a href="{% url 'main:news-detail' item.id %}"
-                            class="text-blue-400 hover:border-b hover:border-blue-400 inline">Read
-                            more.</a>
-                    </div>
-                </div>
-                <div class="flex items-center mt-4">
-                    <img src="{{item.author.userprofile.profile_picture.url}}" class="h-10 w-10 rounded-full" alt="">
-                    <a href="{% url 'main:profile' item.author.username %}">{{item.author.userprofile.full_name}} <div
-                            class="text-sm text-neutral-600">{{item.author.followers_users.count}} Subscribers</div></a>
-                            {% if user != item.author %}
-                            <button id="follow-btn" data-user-id="{{ item.author.id }}" data-url="{% url 'main:toggle_follow' %}" class="bg-black text-white px-2 py-1 rounded-xl">
-                                {% if user1 in item.author.followers_users.all %}
-                                Unfollow
-                              {% else %}
-                                Follow
-                              {% endif %}
-                            </button>
-                          {% endif %}
-                </div>
-            </div>
-
-            {% endfor %}
-            {% endif %}
+            <!-- Content will be loaded dynamically -->
         </div>
     </div>
     <!-- Navigation Buttons for Desktop -->
@@ -121,24 +95,135 @@ News
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="https://unpkg.com/flowbite@1.4.0/dist/flowbite.js"></script>
-
-<!-- Add this script to your newscast page template -->
 <script>
+    const navbar = document.querySelector('header');
+    const content = document.querySelector('#newsDetailOverlay');
+
+    const navHeight = navbar.offsetHeight;
+
+    const computedHeight = `calc(100vh - ${navHeight}px)`;
+    
+    content.style.setProperty("height", computedHeight, "important");
+
     let page = 1;
     let isLoading = false;
+    const loggedInUser = document.getElementById('loggedInUser').value;
+    const loggedInUserId = document.getElementById('loggedInUserId').value;
+    
+    // News detail overlay elements
+    const newsDetailOverlay = document.getElementById('newsDetailOverlay');
+    const newsDetailContent = document.getElementById('newsDetailContent');
+    const closeDetailBtn = document.getElementById('closeDetailBtn');
+
+    function showNewsDetail(newsId) {
+        fetch(`/news/${newsId}/`)  // You'll need to create this endpoint
+            .then(response => response.json())
+            .then(data => {
+                newsDetailContent.innerHTML = `
+                    <h1 class="text-3xl font-bold mb-4">${data.title}</h1>
+                    <div class="mb-6">
+                        ${data.images.map(image => `
+                            <img src="${image.image}" class="w-full h-auto mb-4 rounded-lg" alt="News image">
+                        `).join('')}
+                    </div>
+                    <div class="prose max-w-none">${data.content}</div>
+                    <div class="flex items-center mt-8 gap-2">
+                        <img src="${data.author.userprofile.profile_picture}" class="h-12 w-12 rounded-full" alt="">
+                        <div>
+                            <a href="/profile/${data.author.username}" class="font-medium">${data.author.userprofile.full_name}</a>
+                            <div class="text-sm text-neutral-600">${data.author.followers} Subscribers</div>
+                        </div>
+                        ${loggedInUser !== data.author.username ? `
+                            <button id="follow-btn-detail" data-user-id="${data.author.id}" data-is-following="${data.author.is_following}" class="bg-black text-white px-3 py-1 rounded-xl ml-auto">
+                                ${data.author.is_following ? 'Unfollow' : 'Follow'}
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // Initialize follow button in detail view
+                const followBtnDetail = document.getElementById('follow-btn-detail');
+                if (followBtnDetail) {
+                    followBtnDetail.addEventListener('click', handleFollow);
+                }
+                
+                newsDetailOverlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            })
+            .catch(error => {
+                console.error('Error loading news detail:', error);
+            });
+    }
+
+    function closeNewsDetail() {
+        newsDetailOverlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    closeDetailBtn.addEventListener('click', closeNewsDetail);
+
+    function handleFollow(event) {
+        const button = event.currentTarget;
+        const userId = button.getAttribute('data-user-id');
+        const isFollowing = button.getAttribute('data-is-following') === 'true';
+        const url = '/toggle_follow/';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({ user_id: userId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                button.textContent = data.action === 'followed' ? 'Unfollow' : 'Follow';
+                button.setAttribute('data-is-following', data.action === 'followed');
+                
+                // Update follower count if needed
+                const followerCountElement = button.closest('.flex.items-center').querySelector('.text-neutral-600');
+                if (followerCountElement) {
+                    const currentCount = parseInt(followerCountElement.textContent.split(' ')[0]);
+                    followerCountElement.textContent = `${data.action === 'followed' ? currentCount + 1 : currentCount - 1} Subscribers`;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
     function loadMoreNews() {
         if (isLoading) return;
         isLoading = true;
 
-        fetch(`/api/news/?page=${page}`)
+        fetch(`/news/?page=${page}`)
             .then(response => response.json())
             .then(data => {
                 if (data.results.length > 0) {
                     const shortsContainer = document.getElementById('shortsContainer');
+                   
                     data.results.forEach(item => {
                         const newsItem = document.createElement('div');
+                        const isAuthor = loggedInUser === item.author.username;
+                        const isFollowing = item.author.is_following;
                         newsItem.className = 'relative short min-h-full p-4 flex flex-col align-middle justify-between';
                         newsItem.innerHTML = `
                             <div class="font-medium text-xl mb-2">${item.title}</div>
@@ -166,20 +251,39 @@ News
                             <div>
                                 <div class="text-sm overflow-hidden text-ellipsis line-clamp-4 my-2">${item.content}</div>
                                 <div>
-                                    <a href="/news/${item.id}/" class="text-blue-400 hover:border-b hover:border-blue-400 inline">Read more.</a>
+                                    <a href="#" class="read-more-btn text-blue-400 hover:border-b hover:border-blue-400 inline" data-news-id="${item.id}">Read more.</a>
                                 </div>
                             </div>
-                            <div class="flex items-center mt-4">
+                            <div class="flex items-center mt-4 gap-2">
                                 <img src="${item.author.userprofile.profile_picture}" class="h-10 w-10 rounded-full" alt="">
-                                <a href="/profile/${item.author.username}/">${item.author.userprofile.full_name} <div class="text-sm text-neutral-600">${item.author.followers_users.count} Subscribers</div></a>
-                                ${user !== item.author ? `
-                                    <button id="follow-btn" data-user-id="${item.author.id}" data-url="/toggle_follow/" class="bg-black text-white px-2 py-1 rounded-xl">
-                                        ${user1 in item.author.followers_users.all ? 'Unfollow' : 'Follow'}
+                                <a href="/profile/${item.author.username}">${item.author.userprofile.full_name} <div class="text-sm text-neutral-600">${item.author.followers} Subscribers</div></a>
+                                ${!isAuthor ? `
+                                    <button id="follow-btn" data-user-id="${item.author.id}" data-is-following="${isFollowing}" class="bg-black text-white px-2 py-1 rounded-xl">
+                                        ${isFollowing ? 'Unfollow' : 'Follow'}
                                     </button>
                                 ` : ''}
                             </div>
                         `;
                         shortsContainer.appendChild(newsItem);
+                        
+                        // Initialize carousel
+                        const carouselElement = newsItem.querySelector('[data-carousel="static"]');
+                        if (carouselElement) {
+                            initializeCarousel(carouselElement);
+                        }
+                        
+                        // Add click event to read more button
+                        const readMoreBtn = newsItem.querySelector('.read-more-btn');
+                        readMoreBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            showNewsDetail(item.id);
+                        });
+                        
+                        // Add click event to follow button
+                        const followBtn = newsItem.querySelector('#follow-btn');
+                        if (followBtn) {
+                            followBtn.addEventListener('click', handleFollow);
+                        }
                     });
                     page++;
                 }
@@ -191,25 +295,46 @@ News
             });
     }
 
-    window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
-            loadMoreNews();
-        }
-    });
-
-    // Initial load
-    loadMoreNews();
-</script>
-<script>
+    function initializeCarousel(carouselElement) {
+        const inner = carouselElement.querySelector('[data-carousel-inner]');
+        const items = inner.querySelectorAll('[data-carousel-item]');
+        const prevBtn = carouselElement.querySelector('[data-carousel-prev]');
+        const nextBtn = carouselElement.querySelector('[data-carousel-next]');
+    
+        let currentIndex = 0;
+    
+        const showSlide = (index) => {
+            items.forEach((item, i) => {
+                item.classList.toggle('hidden', i !== index);
+            });
+        };
+    
+        const handlePrev = () => {
+            currentIndex = (currentIndex - 1 + items.length) % items.length;
+            showSlide(currentIndex);
+        };
+    
+        const handleNext = () => {
+            currentIndex = (currentIndex + 1) % items.length;
+            showSlide(currentIndex);
+        };
+    
+        if (prevBtn) prevBtn.addEventListener('click', handlePrev);
+        if (nextBtn) nextBtn.addEventListener('click', handleNext);
+    
+        // Show the first slide initially
+        showSlide(0);
+    }
+    
     // Script for shorts navigation
     const shortsContainer = document.getElementById('shortsContainer');
-    const shorts = document.querySelectorAll('.short');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
 
-    let shortsCurrentIndex = 0; // Renamed to avoid conflict
+    let shortsCurrentIndex = 0;
 
     function scrollToShort(index) {
+        const shorts = document.querySelectorAll('.short');
         if (index >= 0 && index < shorts.length) {
             shorts[index].scrollIntoView({ behavior: 'smooth' });
             shortsCurrentIndex = index;
@@ -219,32 +344,29 @@ News
     nextBtn.addEventListener('click', () => scrollToShort(shortsCurrentIndex + 1));
     prevBtn.addEventListener('click', () => scrollToShort(shortsCurrentIndex - 1));
 
+    // Adjust content height
+    function adjustContentHeight() {
+        const navbar = document.querySelector('header');
+        const content = document.querySelector('main');
 
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        function adjustContentHeight() {
-            const navbar = document.querySelector('header');
-            const content = document.querySelector('main');
-
-            if (!navbar || !content) {
-                console.error("Navbar or main element not found!");
-                return;
-            }
-
-            const navHeight = navbar.offsetHeight;
-
-            const computedHeight = `calc(100vh - ${navHeight}px)`;
-
-            content.style.setProperty("height", computedHeight, "important");
+        if (!navbar || !content) {
+            console.error("Navbar or main element not found!");
+            return;
         }
 
+        const navHeight = navbar.offsetHeight;
+        const computedHeight = `calc(100vh - ${navHeight}px)`;
+
+        content.style.setProperty("height", computedHeight, "important");
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
         setTimeout(adjustContentHeight, 100);
-        window.addEventListener('resize', adjustContentHeight);
+        loadMoreNews();
     });
 
-</script>
-<script>
+    window.addEventListener('resize', adjustContentHeight);
     let halfMenu = true;
     let fullMenuHide = false;
 </script>
