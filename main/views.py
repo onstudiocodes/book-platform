@@ -399,16 +399,18 @@ class NewsPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+
+
 class NewsListCreateView(generics.ListCreateAPIView):
-    queryset = News.objects.all().order_by('-published_date')
+    queryset = News.objects.select_related('author', 'author__userprofile').prefetch_related('likes', 'dislikes', 'images').order_by('-published_date')
     serializer_class = NewsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = NewsPagination
-# List all news or create a new news item
-class NewsListCreateView(generics.ListCreateAPIView):
-    queryset = News.objects.all().order_by('-published_date')
-    serializer_class = NewsSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = NewsPagination 
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 # Retrieve, update, or delete a specific news item
 class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
