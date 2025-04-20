@@ -96,7 +96,8 @@ class NewsImage(models.Model):
         return f"Image for {self.news.title}"
 
 class Comment(models.Model):
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='comments')
+    book = models.ForeignKey(Book, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True)
+    news = models.ForeignKey(News, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     likes = models.ManyToManyField(User, related_name="liked_comment", blank=True)

@@ -402,7 +402,7 @@ class NewsPagination(PageNumberPagination):
 
 
 class NewsListCreateView(generics.ListCreateAPIView):
-    queryset = News.objects.select_related('author', 'author__userprofile').prefetch_related('likes', 'dislikes', 'images').order_by('-published_date')
+    queryset = News.objects.select_related('author', 'author__userprofile').prefetch_related('likes', 'dislikes', 'images', 'comments').order_by('-published_date')
     serializer_class = NewsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = NewsPagination 
@@ -424,12 +424,23 @@ class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
 def like_news(request, pk):
     news = News.objects.get(id=pk)
     user = request.user
+    context = {}
     if user in news.likes.all():
         news.likes.remove(user)
-        return Response({"message": "Unliked"})
+        context['status'] = "success"
+        context['likes'] = news.likes.count()
+        context['action'] = "unlike"
+        context['message'] = "Unliked"
+        return Response(context)
     else:
         news.likes.add(user)
-        return Response({"message": "Liked"})
+        context['status'] = "success"
+        context['likes'] = news.likes.count()
+        context['action'] = "like"
+        context['message'] = "Liked"
+        if user != news.author:
+            create_notification(news.author, f"{user.userprofile.full_name} liked your news {news.title}")
+        return Response(context)
 
 # Dislike/Undislike a news item
 @api_view(['POST'])
@@ -443,3 +454,42 @@ def dislike_news(request, pk):
     else:
         news.dislikes.add(user)
         return Response({"message": "Disliked"})
+
+
+def get_comments(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+    comments = news.comments.all().order_by('-created_at')
+    return JsonResponse({
+        'comments': [
+            {
+                'text': c.content,
+                'created_at': c.created_at.strftime("%b %d, %Y %H:%M"),
+                'author': {
+                    'full_name': c.user.userprofile.full_name,
+                    'profile_picture': c.user.userprofile.profile_picture.url
+                }
+            } for c in comments
+        ]
+    })
+
+@login_required
+def post_comment(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+    print(request.POST)
+    if request.method == 'POST':
+        text = request.POST.get('text')
+        comment = Comment.objects.create(
+            news=news,
+            user=request.user,
+            content=text
+        )
+        print(comment)
+        return JsonResponse({
+            'text': comment.content,
+            'created_at': comment.created_at.strftime("%b %d, %Y %H:%M"),
+            'author': {
+                'full_name': request.user.userprofile.full_name,
+                'profile_picture': request.user.userprofile.profile_picture.url
+            }
+        })
+    return JsonResponse({'status': 'error'}, status=400)
