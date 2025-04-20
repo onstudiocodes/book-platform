@@ -43,10 +43,12 @@ class NewsSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     dislikes_count = serializers.SerializerMethodField()
     views_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = News
-        fields = ['id', 'author', 'title', 'slug', 'description', 'content', 'author_name', 'category', 'published_date', 'updated_date', 'images', 'likes_count', 'dislikes_count', 'views_count']
+        fields = ['id', 'author', 'title', 'slug', 'description', 'content', 'author_name', 'category', 'published_date', 'updated_date', 'images', 'likes_count', 'dislikes_count', 'views_count', 'comments_count', 'is_liked']
 
     def get_likes_count(self, obj):
         return obj.likes.count()
@@ -56,3 +58,12 @@ class NewsSerializer(serializers.ModelSerializer):
 
     def get_views_count(self, obj):
         return obj.views  # Direct field, no need for `.count()`
+    
+    def get_comments_count(self, obj):
+        return obj.comments.count() if hasattr(obj, 'comments') else 0
+    
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(id=request.user.id).exists()
+        return False

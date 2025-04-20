@@ -1253,6 +1253,10 @@ video {
   z-index: 1000;
 }
 
+.z-\[999\] {
+  z-index: 999;
+}
+
 .m-0 {
   margin: 0px;
 }
@@ -11679,6 +11683,11 @@ video {
 
 .hover\:bg-gray-400\/95:hover {
   background-color: rgb(156 163 175 / 0.95);
+}
+
+.hover\:bg-gray-500:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(107 114 128 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-gray-900:hover {
