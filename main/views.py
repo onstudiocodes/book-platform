@@ -423,8 +423,12 @@ class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
 @permission_classes([permissions.IsAuthenticated])
 def like_news(request, pk):
     news = News.objects.get(id=pk)
+    if not request.user.is_authenticated:
+        return Response({'status': 'Not authenticated'})
     user = request.user
     context = {}
+    
+    print('going through')
     if user in news.likes.all():
         news.likes.remove(user)
         context['status'] = "success"
