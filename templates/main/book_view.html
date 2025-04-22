@@ -79,6 +79,7 @@
               </div>
             </div>
             <div class="w-full">
+              <audio src="#"  class="w-full my-2 audio-player" id="audio-{{audio.id}}" controls></audio>
               {% for audio in book.audiobooks.all %}
                 <audio src="{{ audio.file.url }}" class="w-full my-2 hidden audio-player" id="audio-{{audio.id}}" controls></audio>
               {% endfor %}
@@ -166,7 +167,7 @@
       <!-- Description container -->
       <div class="w-full bg-gray-200 p-4 rounded-lg">
         <div class="font-bold text-sm">
-          {{ book.views }} views{% now 'N j, Y' %}
+          {{ book.views }} views {% now 'N j, Y' %}
         </div>
         {{ book.description }}
       </div>
@@ -291,6 +292,8 @@
 
     document.getElementById('text-size').addEventListener('change', function(){
       let page_container = document.getElementById('page-container')
+      console.log(page_container)
+      console.log(this.value)
       if (this.value == 'sm'){
         page_container.classList.add('text-sm')
       }else if (this.value == 'base'){

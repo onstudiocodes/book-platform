@@ -105,8 +105,11 @@ def author_copyright(request):
 
 @login_required(login_url='accounts:login')
 def content_details(request, slug):
-    book = Book.objects.get(slug=slug)  # Fetch the existing book
+    if 'book-details' in request.META.get('PATH_INFO'):
+        book = Book.objects.get(slug=slug)  # Fetch the existing book
 
+    else:
+        book = News.objects.get(slug=slug)
     if request.method == "POST":
         form = BookUploadForm(request.POST, request.FILES, instance=book)  # Bind the form with the book instance
         print(request.FILES)
