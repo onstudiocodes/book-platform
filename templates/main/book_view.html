@@ -81,7 +81,12 @@
             <div class="w-full">
               <audio src="#"  class="w-full my-2 audio-player" id="audio-{{audio.id}}" controls></audio>
               {% for audio in book.audiobooks.all %}
-                <audio src="{{ audio.file.url }}" class="w-full my-2 hidden audio-player" id="audio-{{audio.id}}" controls></audio>
+              <div class="my-4 relative">
+                <div id="waveform-{{ audio.id }}" class="waveform bg-gray-200 rounded h-10 pl-28"></div>
+                <button onclick="togglePlay({{ audio.id }})" class="absolute top-2.5 left-4"><i class="fa fa-play"></i></button>
+                <div id="time-display-{{ audio.id }}" class="absolute top-2.5 left-10 text-gray-700 text-sm">0:00 / 0:00</div>
+
+              </div>
               {% endfor %}
             </div>
           </div>
@@ -251,6 +256,49 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/wavesurfer.js"></script>
+<script>
+  const wavesurfers = {};
+
+  document.addEventListener("DOMContentLoaded", function () {
+    {% for audio in book.audiobooks.all %}
+      wavesurfers[{{ audio.id }}] = WaveSurfer.create({
+        container: '#waveform-{{ audio.id }}',
+        waveColor: '#ccc',
+        progressColor: '#3b82f6', // Tailwind blue-500
+        height: 40,
+        barWidth: 1,
+        responsive: true,
+      });
+      wavesurfers[{{ audio.id }}].load('{{ audio.file.url }}');
+      const id = {{ audio.id }};
+      wavesurfers[id].on('timeupdate', function (currentTime) {
+    const duration = wavesurfers[id].getDuration();
+    if (!isNaN(duration)) {
+      document.getElementById(`time-display-${id}`).innerText =
+        formatTime(currentTime) + " / " + formatTime(duration);
+    }
+  });
+    {% endfor %}
+  });
+// Helper function to format seconds to mm:ss
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+
+
+  function togglePlay(id) {
+    if (wavesurfers[id].isPlaying()) {
+      wavesurfers[id].pause();
+    } else {
+      wavesurfers[id].play();
+    }
+  }
+</script>
+
   <script>
     let user_is_authenticated = {{ user.is_authenticated|yesno:"true,false" }};
     let fullMenuHide = true

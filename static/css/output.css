@@ -1223,6 +1223,22 @@ video {
   top: 1.75rem;
 }
 
+.top-5 {
+  top: 1.25rem;
+}
+
+.top-2 {
+  top: 0.5rem;
+}
+
+.left-10 {
+  left: 2.5rem;
+}
+
+.left-4 {
+  left: 1rem;
+}
+
 .z-40 {
   z-index: 40;
 }
@@ -6457,6 +6473,10 @@ video {
   padding-left: 0.25rem;
 }
 
+.pl-10 {
+  padding-left: 2.5rem;
+}
+
 .pr-1 {
   padding-right: 0.25rem;
 }
@@ -6479,6 +6499,18 @@ video {
 
 .pt-9 {
   padding-top: 2.25rem;
+}
+
+.pl-20 {
+  padding-left: 5rem;
+}
+
+.pl-2 {
+  padding-left: 0.5rem;
+}
+
+.pl-28 {
+  padding-left: 7rem;
 }
 
 .text-left {
