@@ -50,7 +50,7 @@ Content
             </style>
             {% for book in books %}
             <tr class="bg-white border-b align-top text-xs">
-                <th class="px-6 py-4 font-medium text-gray-900 dark:text-white flex gap-3 border-r" scope="col">
+                <th class="px-6 py-4 font-medium text-gray-900 flex gap-3 border-r" scope="col">
                     <input id="select-{{book.id}}" class="select" name="" type="checkbox" />
                     <img alt="" class="h-20 w-12 object-cover" src="{{book.thumbnail.url}}" />
                     <div class="text-sm cursor-pointer"
