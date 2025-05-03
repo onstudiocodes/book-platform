@@ -201,6 +201,18 @@ def book_view(request, slug):
         'comments': comments
         })
 
+from django.http import HttpResponse
+from .utils import generate_book_pdf
+
+def book_pdf_view(request, slug):
+    book = Book.public_objects.get(slug=slug)
+    pdf_stream = generate_book_pdf(book)
+
+    response = HttpResponse(pdf_stream, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{book.slug}.pdf"'
+    return response
+
+
 def search_results(request):
     if request.method == "GET":
         q = request.GET.get('q')
@@ -384,8 +396,23 @@ def news(request, news_id):
     }
     return render(request, 'main/news.html', context)
 
+from django.urls import reverse
+
+from django.urls import reverse
+
 def temp_book_view(request):
-    return render(request, 'temp_book_view.html', {'book': Book.objects.get(slug="omujk-28fc-9bd0")})
+    book = Book.objects.get(slug="omujk-28fc-9bd0")
+
+    # This will generate something like /book_pdf_view/omujk-28fc-9bd0/
+    book_pdf_url = reverse('main:book_pdf_view', kwargs={'slug': book.slug})
+
+    context = {
+        'book': book,
+        'book_pdf_url': book_pdf_url,
+    }
+    return render(request, 'temp_book_view.html', context)
+
+
 
 from rest_framework import generics, permissions
 from rest_framework.response import Response

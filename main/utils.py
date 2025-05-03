@@ -94,3 +94,47 @@ def create_notification(user, message):
         user=user,
         content=message
     )
+
+# utils/pdf_utils.py
+from weasyprint import HTML, CSS
+from django.template.loader import render_to_string
+from io import BytesIO
+import os
+
+def generate_book_pdf(book):
+    """
+    Generate a PDF file for a given Book instance.
+    Returns a BytesIO stream containing the PDF.
+    """
+    # Render HTML template with book content
+    html_string = render_to_string("components/pdf_template.html", {
+        "book": book,
+    })
+
+    # Create in-memory buffer
+    pdf_buffer = BytesIO()
+
+    # Define custom page size (e.g., 270x480 pt for mobile-like view)
+    custom_css = CSS(string='''
+        @page {
+            size: 270pt 480pt;
+            margin: 20pt;
+        }
+
+        body {
+            font-family: "Arial", sans-serif;
+            font-size: 12pt;
+            line-height: 1.4;
+        }
+
+        h1, h2, h3 {
+            page-break-after: avoid;
+        }
+    ''')
+
+    # Generate PDF
+    HTML(string=html_string, base_url=os.getcwd()).write_pdf(pdf_buffer, stylesheets=[custom_css])
+    pdf_buffer.seek(0)
+
+    return pdf_buffer
+

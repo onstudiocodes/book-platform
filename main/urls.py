@@ -39,5 +39,6 @@ urlpatterns = [
     path('load-more-data', views.load_more_data, name="load_more_data"),
     path("save-reading-time/", views.save_reading_time, name="save_reading_time"),
     path('temp', views.temp_book_view),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name="django.contrib.sitemaps.views.sitemap")
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
+    path('book_pdf_view/<str:slug>/', views.book_pdf_view, name="book_pdf_view"),
 ]
