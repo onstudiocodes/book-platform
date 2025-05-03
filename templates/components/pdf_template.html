@@ -1,0 +1,14 @@
+<!-- templates/main/pdf_template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ book.title }}</title>
+</head>
+<body>
+    <h1>{{ book.title }}</h1>
+    <p><em>By {{ book.author.username }}</em></p>
+    <hr>
+    {{ book.content|safe }}
+</body>
+</html>
