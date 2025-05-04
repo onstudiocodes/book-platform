@@ -122,142 +122,119 @@ document.addEventListener("visibilitychange", function () {
 });
 
 
-// function paginateContent() {
-//     pages = [];
-//     tempContainer.innerHTML = ""; // Clear previous content
-//     tempContainer.style.width = pageContainer.clientWidth + "px"; // Match width
-//     tempContainer.style.position = "absolute"; // Prevent layout shifting
-//     tempContainer.style.visibility = "hidden"; // Hide from view
-//     document.body.appendChild(tempContainer); // Append for measurement
 
-//     // 🔥 Get padding values dynamically
-//     const computedStyle = window.getComputedStyle(pageContainer);
-//     const paddingTop = parseFloat(computedStyle.paddingTop);
-//     const paddingBottom = parseFloat(computedStyle.paddingBottom);
-//     const lineHeight = parseFloat(computedStyle.lineHeight) || 24; // Default fallback
-//     const extraMargin = 8; // Additional buffer space
+// Set the worker path for PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
 
-//     const availableHeight = pageContainer.clientHeight - (paddingTop + paddingBottom + extraMargin);
+document.addEventListener('DOMContentLoaded', function() {
+  const thumbnailView = document.getElementById('cover-container');
+  const contentView = document.getElementById('reader-container');
+  const readButton = document.getElementById('read-now-btn');
+  const prevButton = document.getElementById('prev-page');
+  const nextButton = document.getElementById('next-page');
+  const pageNumContainer = document.getElementById('page-number');
+  const totalPages = document.getElementById('total-pages')
+//   const pageIndicator = document.getElementById('page-indicator');
+  const canvas = document.getElementById('pdf-canvas');
+  const context = canvas.getContext('2d');
+  const book_pdf_url = document.getElementById('book_pdf_url').value
+  
+  
+  let pdfDoc = null;
+  let pageNum = 1;
+  let pageRendering = false;
+  let pageNumPending = null;
+  const scale = 1.5;
 
-//     let content = document.createElement("div");
-//     content.innerHTML = bookContent; // Convert string to actual HTML elements
-//     let elements = Array.from(content.childNodes); // Get elements
-//     let tempPage = document.createElement("div"); // Container for one page
+  // Show the PDF viewer when "Read Now" is clicked
+  readButton.addEventListener('click', function() {
+    thumbnailView.style.display = 'none';
+    contentView.style.display = 'block';
+    loadPdf(book_pdf_url);
+  });
 
-//     for (let element of elements) {
-//         // Skip empty text nodes or whitespace
-//         if (element.nodeType === Node.TEXT_NODE && element.textContent.trim() === "") {
-//             continue;
-//         }
+  // Load the PDF
+  function loadPdf(url) {
+    pdfjsLib.getDocument(`${url}?w=${width}&h=${height}`).promise.then(function(pdf) {
+      pdfDoc = pdf;
+    //   pageIndicator.textContent = `Page 1/${pdf.numPages}`;
+      pageNumContainer.value=1
+      totalPages.textContent=pdf.numPages
+      // Enable/disable pagination buttons
+      prevButton.disabled = true;
+      nextButton.disabled = pdf.numPages <= 1;
+      
+      // Render the first page
+      renderPage(1);
+    }).catch(function(error) {
+      console.error('Error loading PDF:', error);
+    });
+  }
 
-//         let clonedElement = element.cloneNode(true);
-//         tempPage.appendChild(clonedElement); // Add element
-//         tempContainer.innerHTML = tempPage.innerHTML; // Insert into temp container
+  // Render a specific page
+  function renderPage(num) {
+    pageRendering = true;
+    
+    pdfDoc.getPage(num).then(function(page) {
+      const viewport = page.getViewport({ scale: scale });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+      };
+      
+      const renderTask = page.render(renderContext);
+      
+      renderTask.promise.then(function() {
+        pageRendering = false;
+        if (pageNumPending !== null) {
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+      });
+    });
+    
+    // pageIndicator.textContent = `Page ${num}/${pdfDoc.numPages}`;
+    pageNumContainer.value = num;
+    totalPages.textContent = pdfDoc.numPages
+  }
 
-//         // 🔥 If content overflows, handle it
-//         if (tempContainer.scrollHeight > availableHeight) {
-//             tempPage.removeChild(tempPage.lastChild); // Remove overflowing element
+  // Queue rendering of a new page
+  function queueRenderPage(num) {
+    if (pageRendering) {
+      pageNumPending = num;
+    } else {
+      renderPage(num);
+    }
+  }
 
-//             // 🔥 Handle long paragraphs by splitting them into smaller chunks
-//             if (clonedElement.nodeName === "P") {
-//                 let words = clonedElement.textContent.split(" ");
-//                 let newParagraph = document.createElement("p");
-//                 let tempText = "";
-            
-//                 for (let word of words) {
-//                     tempText += word + " ";
-//                     newParagraph.textContent = tempText.trim();
-//                     tempContainer.innerHTML = tempPage.innerHTML + newParagraph.outerHTML;
-            
-//                     if (tempContainer.scrollHeight > availableHeight) {
-//                         let sentenceEndIndex = tempText.lastIndexOf(". "); // Try to split at full stop
-//                         if (sentenceEndIndex === -1) {
-//                             sentenceEndIndex = tempText.lastIndexOf(", "); // Otherwise, try a comma
-//                         }
-//                         if (sentenceEndIndex === -1) {
-//                             sentenceEndIndex = tempText.lastIndexOf(" "); // Otherwise, use the last space
-//                         }
-                    
-//                         let firstPart = tempText.slice(0, sentenceEndIndex + 1).trim();
-//                         let remainingPart = tempText.slice(sentenceEndIndex + 1).trim();
-                    
-//                         if (firstPart) {
-//                             newParagraph.textContent = firstPart;
-//                             tempPage.appendChild(newParagraph.cloneNode(true));
-//                         }
-                        
-//                         pages.push(tempPage.innerHTML);
-//                         tempPage = document.createElement("div");
-                    
-//                         if (remainingPart) {
-//                             let nextParagraph = document.createElement("p");
-//                             nextParagraph.textContent = remainingPart;
-//                             tempPage = document.createElement("div"); // Create a new page
-//                             tempPage.appendChild(nextParagraph);
-//                         }
-                        
-                    
-//                         break;
-//                     }
-                    
-//                 }
-//             } else {
-//                 // For non-paragraph elements, move them to the next page
-//                 pages.push(tempPage.innerHTML);
-//                 tempPage = document.createElement("div");
-//                 tempPage.appendChild(clonedElement.cloneNode(true));
-//             }
-            
-//         }
-//     }
+  // Previous page button
+  prevButton.addEventListener('click', function() {
+    if (pageNum <= 1) return;
+    
+    pageNum--;
+    queueRenderPage(pageNum);
+    
+    // Update button states
+    nextButton.disabled = false;
+    if (pageNum <= 1) {
+      prevButton.disabled = true;
+    }
+  });
 
-//     // 🔥 Add the last page if it has content
-//     if (tempPage.innerHTML.trim() !== "") {
-//         pages.push(tempPage.innerHTML); // Store last page
-//     }
-
-//     totalPagesSpan.textContent = `/ ${pages.length}`; // Update total pages
-//     document.body.removeChild(tempContainer); // Cleanup
-//     if (tempContainer.scrollHeight > availableHeight) {
-//         while (tempContainer.scrollHeight > availableHeight && tempPage.lastChild) {
-//             tempPage.removeChild(tempPage.lastChild);
-//         }
-//         pages.push(tempPage.innerHTML);
-//     }    
-//     displayPage(0);
-// }
-
-
-
-
-// // Function to display the selected page
-// function displayPage(index) {
-//     if (index >= 0 && index < pages.length) {
-//         pageContainer.innerHTML = pages[index]; // Load the page
-//         currentPage = index;
-//         pageInput.value = currentPage + 1;
-//         prevButton.disabled = currentPage === 0;
-//         nextButton.disabled = currentPage === pages.length - 1;
-//     }
-// }
-
-// // Event Listeners for Pagination Controls
-// nextButton.addEventListener("click", () => displayPage(currentPage + 1));
-// prevButton.addEventListener("click", () => displayPage(currentPage - 1));
-// pageInput.addEventListener("change", (event) => {
-//     let newPage = parseInt(event.target.value, 10) - 1;
-//     if (!isNaN(newPage) && newPage >= 0 && newPage < pages.length) {
-//         displayPage(newPage);
-//     }
-// });
-
-// // Recalculate pagination on window resize
-// let resizeTimeout;
-// window.addEventListener("resize", () => {
-//     clearTimeout(resizeTimeout);
-//     resizeTimeout = setTimeout(() => {
-//         let prevPage = currentPage; // Save current page
-//         paginateContent(); // Recalculate pages
-//         displayPage(prevPage); // Restore previous page
-//     }, 300); // Delay to prevent rapid resizing
-// });
+  // Next page button
+  nextButton.addEventListener('click', function() {
+    if (pageNum >= pdfDoc.numPages) return;
+    
+    pageNum++;
+    queueRenderPage(pageNum);
+    
+    // Update button states
+    prevButton.disabled = false;
+    if (pageNum >= pdfDoc.numPages) {
+      nextButton.disabled = true;
+    }
+  });
+});

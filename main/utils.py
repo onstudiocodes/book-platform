@@ -101,7 +101,7 @@ from django.template.loader import render_to_string
 from io import BytesIO
 import os
 
-def generate_book_pdf(book):
+def generate_book_pdf(book, width_px=270, height_px=480):
     """
     Generate a PDF file for a given Book instance.
     Returns a BytesIO stream containing the PDF.
@@ -114,22 +114,22 @@ def generate_book_pdf(book):
     # Create in-memory buffer
     pdf_buffer = BytesIO()
 
-    # Define custom page size (e.g., 270x480 pt for mobile-like view)
-    custom_css = CSS(string='''
-        @page {
-            size: 270pt 480pt;
-            margin: 20pt;
-        }
+    # Define custom page size (e.g., 270x480 px for mobile-like view)
+    custom_css = CSS(string=f'''
+        @page {{
+            size: {width_px}px {height_px}px;
+            margin: 5px;
+        }}
 
-        body {
+        body {{
             font-family: "Arial", sans-serif;
-            font-size: 12pt;
+            font-size: 12px;
             line-height: 1.4;
-        }
+        }}
 
-        h1, h2, h3 {
+        h1, h2, h3 {{
             page-break-after: avoid;
-        }
+        }}
     ''')
 
     # Generate PDF
