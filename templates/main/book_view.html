@@ -17,6 +17,7 @@
   </style>
 {% endblock %}
 {% block content %}
+<input type="hidden" id="book_pdf_url" value="{{book_pdf_url}}">
   <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
   <div class="flex lg:flex-row flex-col gap-4 md:mx-6">
     <div class="lg:w-3/5 space-y-2">
@@ -29,29 +30,42 @@
             <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700" id="read-now-btn">Read Now</button>
           </div>
 
-          <!-- Temporary Container for Off-DOM Content -->
-          <div id="temp-container" style="visibility: hidden; position: absolute; z-index: -1;"></div>
-
           <!-- Reader Container -->
-          <div class="hidden p-6 relative" id="reader-container">
+          <div class="hidden p-2 relative" id="reader-container">
             <!-- Page Content -->
-            <div class="transition-transform m-auto max-w-none duration-500 ease-in-out bg-gray-100 p-4 rounded-lg" id="page-container">{{ book.content|safe }}</div>
+            {% comment %} <div class="transition-transform m-auto max-w-none duration-500 ease-in-out bg-gray-100 p-4 rounded-lg" id="page-container">{{ book.content|safe }}</div> {% endcomment %}
+            
+            <div id="pages-container" class="h-full relative flex items-center justify-center">
+              <canvas id="pdf-canvas" class="max-h-full max-w-full"></canvas>
+            </div>
+            {% comment %} <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-4">
+              <button id="prev-page" class="px-4 py-2 bg-white bg-opacity-80 rounded-lg shadow-md hover:bg-opacity-100" disabled>
+                ← Previous
+              </button>
+              <span id="page-indicator" class="px-4 py-2 bg-white bg-opacity-80 rounded-lg">
+                Page 1/1
+              </span>
+              <button id="next-page" class="px-4 py-2 bg-white bg-opacity-80 rounded-lg shadow-md hover:bg-opacity-100" disabled>
+                Next →
+              </button>
+            </div> {% endcomment %}
+
 
             <!-- Pagination and Controls -->
             <div class="flex justify-between items-center mt-4">
               <div class="flex gap-2 items-center">
                 <!-- Previous Button -->
-                <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700" id="prev-btn"><i class="fa fa-chevron-left"></i></button>
+                <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700" id="prev-page"><i class="fa fa-chevron-left"></i></button>
 
                 <!-- Page Number Input -->
                 <div>
                   <label class="mr-2" for="page-number">Page:</label>
                   <input class="border rounded w-12 text-center" id="page-number" min="1" type="number" value="1" />
-                  <span class="ml-1" id="total-pages">/ 1</span>
+                  / <span class="ml-1" id="total-pages">1</span>
                 </div>
 
                 <!-- Next Button -->
-                <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700" id="next-btn"><i class="fa fa-chevron-right"></i></button>
+                <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700" id="next-page"><i class="fa fa-chevron-right"></i></button>
               </div>
 
               <select name="" id="audio_select" class="p-2 text-xs w-20">
@@ -409,8 +423,11 @@
 
       } 
     })
-    
+    const width = 360;
+    const height = 600;
+
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="{% static 'js/book_view.js' %}"></script>
 {% endblock %}

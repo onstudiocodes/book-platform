@@ -177,6 +177,9 @@ def book_view(request, slug):
     book = Book.public_objects.get(slug=slug)
     user = request.user if request.user.is_authenticated else None
 
+    
+    book_pdf_url = reverse('main:book_pdf_view', kwargs={'slug': book.slug})
+
     # Add to history
     if request.user.is_authenticated:
         if request.user != book.author:
@@ -198,7 +201,8 @@ def book_view(request, slug):
         'book': book, 
         'suggestions': suggestions, 
         'follower': follower,
-        'comments': comments
+        'comments': comments,
+        'book_pdf_url': book_pdf_url
         })
 
 from django.http import HttpResponse
@@ -206,7 +210,10 @@ from .utils import generate_book_pdf
 
 def book_pdf_view(request, slug):
     book = Book.public_objects.get(slug=slug)
-    pdf_stream = generate_book_pdf(book)
+
+    width = int(request.GET.get("w", 270))  # in pt, fallback default
+    height = int(request.GET.get("h", 480))
+    pdf_stream = generate_book_pdf(book, width, height)
 
     response = HttpResponse(pdf_stream, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{book.slug}.pdf"'
