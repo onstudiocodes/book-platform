@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let pageNum = 1;
   let pageRendering = false;
   let pageNumPending = null;
-  const scale = 1.5;
+  const scale = 1;
 
   // Show the PDF viewer when "Read Now" is clicked
   readButton.addEventListener('click', function() {

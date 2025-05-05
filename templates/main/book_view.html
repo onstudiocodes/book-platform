@@ -423,8 +423,16 @@
 
       } 
     })
-    const width = 360;
-    const height = 600;
+
+    const navbar = document.querySelector('header');
+    const content = document.querySelector('main');
+    const cover_container = document.querySelector('#cover-container')
+    const navHeight = navbar.offsetHeight;
+    const computedHeight = window.innerHeight - navHeight
+
+    const width = cover_container.offsetWidth;
+    const height = cover_container.offsetHeight;
+    console.log(width, height)
 
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
