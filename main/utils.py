@@ -123,7 +123,7 @@ def generate_book_pdf(book, width_px=270, height_px=480):
 
         body {{
             font-family: "Arial", sans-serif;
-            font-size: 12px;
+            font-size: 20px;
             line-height: 1.4;
         }}
 
