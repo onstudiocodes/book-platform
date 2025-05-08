@@ -122,7 +122,6 @@ document.addEventListener("visibilitychange", function () {
 });
 
 
-
 // Set the worker path for PDF.js
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
 
@@ -133,33 +132,132 @@ document.addEventListener('DOMContentLoaded', function() {
   const prevButton = document.getElementById('prev-page');
   const nextButton = document.getElementById('next-page');
   const pageNumContainer = document.getElementById('page-number');
-  const totalPages = document.getElementById('total-pages')
-//   const pageIndicator = document.getElementById('page-indicator');
+  const totalPages = document.getElementById('total-pages');
   const canvas = document.getElementById('pdf-canvas');
   const context = canvas.getContext('2d');
-  const book_pdf_url = document.getElementById('book_pdf_url').value
+  const book_pdf_url = document.getElementById('book_pdf_url').value;
   
+  // View mode elements
+  const portraitBtn = document.getElementById('portrait-btn');
+  const landscapeBtn = document.getElementById('landscape-btn');
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
+  const viewModeButtons = document.getElementById('view-mode-buttons');
+  const readerControls = document.getElementById('reader-controls');
+  const pagesContainer = document.getElementById('pages-container');
   
   let pdfDoc = null;
   let pageNum = 1;
   let pageRendering = false;
   let pageNumPending = null;
-  const scale = 1;
-
+  let currentScale = 1;
+  let currentViewMode = 'portrait'; // 'portrait', 'landscape', 'fullscreen'
+  let hideControlsTimeout;
+  
+  // Show/hide controls on hover
+  pagesContainer.addEventListener('mouseenter', showControls);
+  pagesContainer.addEventListener('mouseleave', () => {
+    hideControlsTimeout = setTimeout(hideControls, 2000);
+  });
+  
+  function showControls() {
+    clearTimeout(hideControlsTimeout);
+    viewModeButtons.style.opacity = '1';
+    readerControls.style.opacity = '1';
+  }
+  
+  function hideControls() {
+    viewModeButtons.style.opacity = '0';
+    readerControls.style.opacity = '0';
+  }
+  
+  // View mode buttons
+  portraitBtn.addEventListener('click', () => setViewMode('portrait'));
+  landscapeBtn.addEventListener('click', () => setViewMode('landscape'));
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+  
+  // Handle ESC key for exiting fullscreen
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && currentViewMode === 'fullscreen') {
+      toggleFullscreen();
+    }
+  });
+  
+  function setViewMode(mode) {
+    currentViewMode = mode;
+    
+    // Reset any fullscreen styles first
+    document.body.style.overflow = '';
+    contentView.style.position = '';
+    contentView.style.top = '';
+    contentView.style.left = '';
+    contentView.style.width = '';
+    contentView.style.height = '';
+    contentView.style.zIndex = '';
+    contentView.style.backgroundColor = '';
+    
+    if (mode === 'portrait') {
+      pagesContainer.style.maxWidth = '600px';
+      pagesContainer.style.maxHeight = '800px';
+      currentScale = 1;
+    } else if (mode === 'landscape') {
+      pagesContainer.style.maxWidth = '800px';
+      pagesContainer.style.maxHeight = '600px';
+      currentScale = 1.2;
+    }
+    
+    // Re-render the current page with new scale
+    if (pdfDoc) {
+      renderPage(pageNum);
+    }
+  }
+  
+  function toggleFullscreen() {
+    if (currentViewMode !== 'fullscreen') {
+      // Enter fullscreen
+      currentViewMode = 'fullscreen';
+      document.body.style.overflow = 'hidden';
+      contentView.style.position = 'fixed';
+      contentView.style.top = '0';
+      contentView.style.left = '0';
+      contentView.style.width = '100vw';
+      contentView.style.height = '100vh';
+      contentView.style.zIndex = '1000';
+      contentView.style.backgroundColor = 'white';
+      pagesContainer.style.maxWidth = 'none';
+      pagesContainer.style.maxHeight = 'none';
+      currentScale = 1.5;
+      
+      // Change icon to "compress" (exit fullscreen)
+      fullscreenBtn.innerHTML = '<i class="fa fa-compress"></i>';
+      
+      // Re-render the current page with new scale
+      if (pdfDoc) {
+        renderPage(pageNum);
+      }
+    } else {
+      // Exit fullscreen
+      setViewMode('landscape');
+      
+      // Change icon back to "expand"
+      fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i>';
+    }
+  }
+  
   // Show the PDF viewer when "Read Now" is clicked
   readButton.addEventListener('click', function() {
     thumbnailView.style.display = 'none';
     contentView.style.display = 'block';
     loadPdf(book_pdf_url);
+    setViewMode('portrait'); // Default to portrait view
   });
-
+  
   // Load the PDF
   function loadPdf(url) {
-    pdfjsLib.getDocument(`${url}?w=${width}&h=${height}`).promise.then(function(pdf) {
+    pdfjsLib.getDocument(url).promise.then(function(pdf) {
       pdfDoc = pdf;
-    //   pageIndicator.textContent = `Page 1/${pdf.numPages}`;
-      pageNumContainer.value=1
-      totalPages.textContent=pdf.numPages
+      pageNumContainer.value = 1;
+      totalPages.textContent = pdf.numPages;
+      
       // Enable/disable pagination buttons
       prevButton.disabled = true;
       nextButton.disabled = pdf.numPages <= 1;
@@ -170,13 +268,13 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('Error loading PDF:', error);
     });
   }
-
+  
   // Render a specific page
   function renderPage(num) {
     pageRendering = true;
     
     pdfDoc.getPage(num).then(function(page) {
-      const viewport = page.getViewport({ scale: scale });
+      const viewport = page.getViewport({ scale: currentScale });
       canvas.height = viewport.height;
       canvas.width = viewport.width;
       
@@ -196,11 +294,14 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
     
-    // pageIndicator.textContent = `Page ${num}/${pdfDoc.numPages}`;
     pageNumContainer.value = num;
-    totalPages.textContent = pdfDoc.numPages
+    totalPages.textContent = pdfDoc.numPages;
+    
+    // Update button states
+    prevButton.disabled = num <= 1;
+    nextButton.disabled = num >= pdfDoc.numPages;
   }
-
+  
   // Queue rendering of a new page
   function queueRenderPage(num) {
     if (pageRendering) {
@@ -209,32 +310,31 @@ document.addEventListener('DOMContentLoaded', function() {
       renderPage(num);
     }
   }
-
+  
   // Previous page button
   prevButton.addEventListener('click', function() {
     if (pageNum <= 1) return;
     
     pageNum--;
     queueRenderPage(pageNum);
-    
-    // Update button states
-    nextButton.disabled = false;
-    if (pageNum <= 1) {
-      prevButton.disabled = true;
-    }
   });
-
+  
   // Next page button
   nextButton.addEventListener('click', function() {
     if (pageNum >= pdfDoc.numPages) return;
     
     pageNum++;
     queueRenderPage(pageNum);
-    
-    // Update button states
-    prevButton.disabled = false;
-    if (pageNum >= pdfDoc.numPages) {
-      nextButton.disabled = true;
+  });
+  
+  // Page number input
+  pageNumContainer.addEventListener('change', function() {
+    const newPageNum = parseInt(this.value);
+    if (newPageNum >= 1 && newPageNum <= pdfDoc.numPages) {
+      pageNum = newPageNum;
+      queueRenderPage(pageNum);
+    } else {
+      this.value = pageNum;
     }
   });
 });
