@@ -121,6 +121,21 @@ document.addEventListener("visibilitychange", function () {
     }
 });
 
+const loader = document.getElementById('pdf-loader');
+
+function showLoader() {
+  loader.classList.remove('opacity-0', 'pointer-events-none');
+  loader.classList.add('opacity-100');
+}
+
+function hideLoader() {
+  loader.classList.remove('opacity-100');
+  loader.classList.add('opacity-0', 'pointer-events-none');
+}
+
+
+
+
 
 // Set the worker path for PDF.js
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
@@ -185,36 +200,48 @@ document.addEventListener('DOMContentLoaded', function() {
   function setViewMode(mode) {
     currentViewMode = mode;
     
-    // Reset any fullscreen styles first
-    document.body.style.overflow = '';
-    contentView.style.position = '';
-    contentView.style.top = '';
-    contentView.style.left = '';
-    contentView.style.width = '';
-    contentView.style.height = '';
-    contentView.style.zIndex = '';
-    contentView.style.backgroundColor = '';
+    // Reset any fullscreen styles first if exiting fullscreen
+    if (mode !== 'fullscreen') {
+        document.body.style.overflow = '';
+        contentView.style.position = '';
+        contentView.style.top = '';
+        contentView.style.left = '';
+        contentView.style.width = '';
+        contentView.style.height = '';
+        contentView.style.zIndex = '';
+        contentView.style.backgroundColor = '';
+    }
     
+    // Get the book ID and construct the appropriate PDF URL
+    let pdfUrl = document.getElementById('book_pdf_url').value;
+    contentView.style.height = "80vh";
+    height = pagesContainer.clientHeight;
+    width = pagesContainer.clientWidth;
+    // Add view mode parameter to the URL
     if (mode === 'portrait') {
-      pagesContainer.style.maxWidth = '600px';
-      pagesContainer.style.maxHeight = '800px';
-      currentScale = 1;
+      pdfUrl += `?h=${width}&w=${height}&view_mode=${mode}`;
     } else if (mode === 'landscape') {
-      pagesContainer.style.maxWidth = '800px';
-      pagesContainer.style.maxHeight = '600px';
-      currentScale = 1.2;
+      pdfUrl += `?h=${height}&w=${width}&view_mode=${mode}`;
+    } else if (mode === 'fullscreen') {
+      pdfUrl += `?h=${window.innerHeight}&w=${window.innerWidth}`;
     }
+    console.log('Page container dimensions:', height, width);
+    console.log('Loading PDF URL:', pdfUrl);
+    // Load the new PDF
+    loadPdf(pdfUrl);
     
-    // Re-render the current page with new scale
-    if (pdfDoc) {
-      renderPage(pageNum);
+    // Update the fullscreen button icon if needed
+    if (mode === 'fullscreen') {
+        fullscreenBtn.innerHTML = '<i class="fa fa-compress"></i>';
+    } else {
+        fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i>';
     }
-  }
+}
   
-  function toggleFullscreen() {
-    if (currentViewMode !== 'fullscreen') {
+function toggleFullscreen() {
+  if (currentViewMode !== 'fullscreen') {
       // Enter fullscreen
-      currentViewMode = 'fullscreen';
+      setViewMode('fullscreen');
       document.body.style.overflow = 'hidden';
       contentView.style.position = 'fixed';
       contentView.style.top = '0';
@@ -225,82 +252,102 @@ document.addEventListener('DOMContentLoaded', function() {
       contentView.style.backgroundColor = 'white';
       pagesContainer.style.maxWidth = 'none';
       pagesContainer.style.maxHeight = 'none';
-      currentScale = 1.5;
-      
-      // Change icon to "compress" (exit fullscreen)
-      fullscreenBtn.innerHTML = '<i class="fa fa-compress"></i>';
-      
-      // Re-render the current page with new scale
-      if (pdfDoc) {
-        renderPage(pageNum);
-      }
-    } else {
-      // Exit fullscreen
+  } else {
+      // Exit fullscreen - default to landscape view
       setViewMode('landscape');
-      
-      // Change icon back to "expand"
-      fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i>';
-    }
   }
+}
   
   // Show the PDF viewer when "Read Now" is clicked
   readButton.addEventListener('click', function() {
+    height = pagesContainer.clientHeight;
+    width = pagesContainer.clientWidth;
+    console.log('Page container dimensions:', pagesContainer.clientHeight, pagesContainer.clientWidth);
     thumbnailView.style.display = 'none';
     contentView.style.display = 'block';
-    loadPdf(book_pdf_url);
+    loadPdf(`${book_pdf_url}?h=${height}&w=${width}`);
     setViewMode('portrait'); // Default to portrait view
   });
   
   // Load the PDF
   function loadPdf(url) {
+    // Show loading state
+    showLoader();
+    canvas.style.display = 'none';
+    
+    // Clear previous PDF if exists
+    if (pdfDoc) {
+        pdfDoc.destroy();
+    }
+    
     pdfjsLib.getDocument(url).promise.then(function(pdf) {
-      pdfDoc = pdf;
-      pageNumContainer.value = 1;
-      totalPages.textContent = pdf.numPages;
-      
-      // Enable/disable pagination buttons
-      prevButton.disabled = true;
-      nextButton.disabled = pdf.numPages <= 1;
-      
-      // Render the first page
-      renderPage(1);
+        pdfDoc = pdf;
+        pageNum = 1; // Reset to first page
+        pageNumContainer.value = 1;
+        totalPages.textContent = pdf.numPages;
+        
+        // Enable/disable pagination buttons
+        prevButton.disabled = true;
+        nextButton.disabled = pdf.numPages <= 1;
+        
+        // Render the first page
+        renderPage(1);
+        canvas.style.display = 'block';
     }).catch(function(error) {
-      console.error('Error loading PDF:', error);
+        console.error('Error loading PDF:', error);
+        // Fallback to original PDF if available
+        const originalPdfUrl = document.getElementById('book_pdf_url').value;
+        if (url !== originalPdfUrl) {
+            loadPdf(originalPdfUrl);
+        }
     });
-  }
+}
   
   // Render a specific page
   function renderPage(num) {
     pageRendering = true;
-    
+  
     pdfDoc.getPage(num).then(function(page) {
-      const viewport = page.getViewport({ scale: currentScale });
-      canvas.height = viewport.height;
+      const container = document.getElementById('pages-container');
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+  
+      const unscaledViewport = page.getViewport({ scale: 1 });
+  
+      const scaleX = containerWidth / unscaledViewport.width;
+      const scaleY = containerHeight / unscaledViewport.height;
+  
+      const scale = Math.min(scaleX, scaleY);
+      const viewport = page.getViewport({ scale });
+  
       canvas.width = viewport.width;
-      
+      canvas.height = viewport.height;
+  
       const renderContext = {
         canvasContext: context,
         viewport: viewport
       };
-      
+  
       const renderTask = page.render(renderContext);
-      
+  
       renderTask.promise.then(function() {
         pageRendering = false;
+        canvas.style.display = 'block'; // Show the canvas after rendering
+        hideLoader();
         if (pageNumPending !== null) {
           renderPage(pageNumPending);
           pageNumPending = null;
         }
       });
     });
-    
+  
     pageNumContainer.value = num;
     totalPages.textContent = pdfDoc.numPages;
-    
-    // Update button states
+  
     prevButton.disabled = num <= 1;
     nextButton.disabled = num >= pdfDoc.numPages;
   }
+  
   
   // Queue rendering of a new page
   function queueRenderPage(num) {

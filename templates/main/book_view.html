@@ -32,7 +32,7 @@
   </style>
 {% endblock %}
 {% block content %}
-<input type="hidden" id="book_pdf_url" value="{{book_pdf_url}}">
+  <input type="hidden" id="book_pdf_url" value="{{ book_pdf_url }}" />
   <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
   <div class="flex lg:flex-row flex-col gap-4 md:mx-6">
     <div class="lg:w-3/5 space-y-2">
@@ -46,93 +46,94 @@
           </div>
 
           <!-- Reader Container -->
-<div class="hidden p-2 relative" id="reader-container">      
-  <div id="pages-container" class="h-full relative flex items-center justify-center">
-    <canvas id="pdf-canvas" class="max-h-full max-w-full"></canvas>
-    
-    <!-- View Mode Buttons -->
-    <div class="absolute top-4 right-4 flex gap-2 z-10 opacity-0 transition-opacity duration-300" id="view-mode-buttons">
-      <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="portrait-btn" title="Portrait View">
-        <i class="fa fa-mobile"></i>
-      </button>
-      <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="landscape-btn" title="Landscape View">
-        <i class="fa fa-tablet"></i>
-      </button>
-      <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="fullscreen-btn" title="Fullscreen View">
-        <i class="fa fa-expand"></i>
-      </button>
-    </div>
-    
-    <!-- Pagination and Controls -->
-    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg opacity-0 transition-opacity duration-300" id="reader-controls">
-      <div class="flex justify-between items-center gap-4 ">
-        <div class="flex gap-2 items-center">
-          <!-- Previous Button -->
-          <button class="bg-blue-600 text-white p-1 rounded hover:bg-blue-700" id="prev-page">
-            <i class="fa fa-chevron-left"></i>
-          </button>
+          <div class="hidden p-2 relative" id="reader-container">
+            <div id="pages-container" class="h-full relative flex items-center justify-center">
+              <div id="pdf-loader" class="absolute inset-0 flex items-center justify-center bg-white z-20 transition-opacity duration-300 opacity-0 pointer-events-none">
+                <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              
+              
+              <canvas id="pdf-canvas" class="max-h-full max-w-full"></canvas>
 
-          <!-- Page Number Input -->
-          <div class="flex items-center">
-            <label class="mr-2" for="page-number"></label>
-            <input class="border rounded w-12 text-center" id="page-number" min="1" type="number" value="1" />
-            <span class="ml-1 whitespace-nowrap">/ <span id="total-pages">1</span></span>
+              <!-- View Mode Buttons -->
+              <div class="absolute top-4 right-4 flex gap-2 z-10 opacity-0 transition-opacity duration-300" id="view-mode-buttons">
+                <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="portrait-btn" title="Portrait View"><i class="fa fa-mobile"></i></button>
+                <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="landscape-btn" title="Landscape View"><i class="fa fa-tablet"></i></button>
+                <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="fullscreen-btn" title="Fullscreen View"><i class="fa fa-expand"></i></button>
+              </div>
+
+              <!-- Pagination and Controls -->
+              <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg opacity-0 transition-opacity duration-300" id="reader-controls">
+                <div class="flex justify-between items-center gap-4">
+                  <div class="flex gap-2 items-center">
+                    <!-- Previous Button -->
+                    <button class="bg-blue-600 text-white p-1 rounded hover:bg-blue-700" id="prev-page"><i class="fa fa-chevron-left"></i></button>
+
+                    <!-- Page Number Input -->
+                    <div class="flex items-center">
+                      <label class="mr-2" for="page-number"></label>
+                      <input class="border rounded w-12 text-center" id="page-number" min="1" type="number" value="1" />
+                      <span class="ml-1 whitespace-nowrap">/ <span id="total-pages">1</span></span>
+                    </div>
+
+                    <!-- Next Button -->
+                    <button class="bg-blue-600 text-white p-1 rounded hover:bg-blue-700" id="next-page"><i class="fa fa-chevron-right"></i></button>
+                  </div>
+
+                  <select name="" id="audio_select" class="p-2 text-xs w-20">
+                    {% if not book.audiobooks.all %}
+                      <option value="" disabled selected>audio</option>
+                    {% endif %}
+                    {% for audio in book.audiobooks.all %}
+                      <option value="audio-{{ audio.id }}">{{ audio.language }} - {{ audio.narrator }}</option>
+                    {% endfor %}
+                  </select>
+
+                  <select name="" id="translation_select" class="p-2 text-xs w-20 hidden">
+                    <option value="0" selected>default</option>
+                    {% for translation in book.translations.all %}
+                      <option value="{{ translation.id }}">{{ translation.language }}</option>
+                    {% endfor %}
+                  </select>
+
+                  <!-- Font Size Selector -->
+                  <div class="flex justify-center items-center">
+                    <label class="mr-2 whitespace-nowrap" for="ratio">Font Size:</label>
+                    <select class="border rounded px-2 py-1" id="text-size">
+                      <option value="sm">Small</option>
+                      <option value="base" selected>Normal</option>
+                      <option value="lg">Large</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% if book.audiobooks.all %}
+              <div class="w-full">
+                {% for audio in book.audiobooks.all %}
+                  <div class="audio-box my-4 relative"
+                    id="audio-{{ audio.id }}"
+                    style="{% if forloop.first %}
+                      display: block;
+                    {% else %}
+                      display: none;
+                    {% endif %}">
+                    <div id="waveform-{{ audio.id }}" class="waveform bg-gray-200 rounded h-10 pl-28"></div>
+                    <button onclick="togglePlay({{ audio.id }})" class="absolute top-2.5 left-4"><i id="waveform-{{ audio.id }}-play" class="fa fa-play"></i></button>
+                    <div id="time-display-{{ audio.id }}" class="absolute top-2.5 left-10 text-gray-700 text-sm">0:00 / 0:00</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <!-- Default disabled player -->
+              <div class="w-full my-4 relative bg-gray-100 rounded h-10 flex items-center px-4">
+                <button disabled class="text-gray-400 mr-3"><i class="fa fa-play"></i></button>
+                <div class="w-full h-2 bg-gray-300 rounded"></div>
+                <div class="text-gray-500 text-sm absolute right-4">0:00 / 0:00</div>
+              </div>
+            {% endif %}
           </div>
-
-          <!-- Next Button -->
-          <button class="bg-blue-600 text-white p-1 rounded hover:bg-blue-700" id="next-page">
-            <i class="fa fa-chevron-right"></i>
-          </button>
-        </div>
-
-        <select name="" id="audio_select" class="p-2 text-xs w-20">
-          {% if not book.audiobooks.all %}
-            <option value="" disabled selected>audio</option>
-          {% endif %}
-          {% for audio in book.audiobooks.all %}
-            <option value="audio-{{ audio.id }}">{{ audio.language }} - {{ audio.narrator }}</option>
-          {% endfor %}
-        </select>
-
-        <select name="" id="translation_select" class="p-2 text-xs w-20 hidden">
-          <option value="0" selected>default</option>
-          {% for translation in book.translations.all %}
-            <option value="{{ translation.id }}">{{ translation.language }}</option>
-          {% endfor %}
-        </select>
-
-        <!-- Font Size Selector -->
-        <div class="flex justify-center items-center">
-          <label class="mr-2 whitespace-nowrap" for="ratio">Font Size:</label>
-          <select class="border rounded px-2 py-1" id="text-size">
-            <option value="sm">Small</option>
-            <option value="base" selected>Normal</option>
-            <option value="lg">Large</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {% if book.audiobooks.all %}
-  <div class="w-full">
-    {% for audio in book.audiobooks.all %}
-      <div class="audio-box my-4 relative" id="audio-{{ audio.id }}" style="{% if forloop.first %}display: block;{% else %}display: none;{% endif %}">
-        <div id="waveform-{{ audio.id }}" class="waveform bg-gray-200 rounded h-10 pl-28"></div>
-        <button onclick="togglePlay({{ audio.id }})" class="absolute top-2.5 left-4"><i id="waveform-{{audio.id}}-play" class="fa fa-play"></i></button>
-        <div id="time-display-{{ audio.id }}" class="absolute top-2.5 left-10 text-gray-700 text-sm">0:00 / 0:00</div>
-      </div>
-    {% endfor %}
-  </div>
-  {% else %}
-    <!-- Default disabled player -->
-    <div class="w-full my-4 relative bg-gray-100 rounded h-10 flex items-center px-4">
-      <button disabled class="text-gray-400 mr-3"><i class="fa fa-play"></i></button>
-      <div class="w-full h-2 bg-gray-300 rounded"></div>
-      <div class="text-gray-500 text-sm absolute right-4">0:00 / 0:00</div>
-    </div>
-  {% endif %}
-</div>
 
           <!-- Hidden Full Content for Fallback -->
           <div class="hidden" id="book_content">{{ book.content|safe }}</div>
@@ -165,11 +166,15 @@
             <div id="like-dislike-btn" data-book-id="{{ book.id }}" data-url="{% url 'main:toggle_like' %}" data-op="like" class="bg-neutral-200 border-gray-300 flex p-2 px-3 space-x-1 items-center text-sm rounded-l-full border-r-2 cursor-pointer hover:bg-neutral-300">
               <i class="{% if book in user.liked_books.all %}
                   
+                  
                   fa
+
 
                 {% else %}
                   
+                  
                    fa-regular
+
 
                 {% endif %} fa-thumbs-up">
 
@@ -179,11 +184,15 @@
             <div id="like-dislike-btn" data-book-id="{{ book.id }}" data-url="{% url 'main:toggle_like' %}" data-op="dislike" class="bg-neutral-200 flex p-2 mr-3 space-x-1 px-3 items-center text-sm rounded-r-full cursor-pointer hover:bg-neutral-300">
               <i class="{% if book in user.disliked_books.all %}
                   
+                  
                   fa
+
 
                 {% else %}
                   
+                  
                    fa-regular
+
 
                 {% endif %} fa-thumbs-down">
 
@@ -196,7 +205,7 @@
             <i class="fa fa-share"></i>
             Share
           </button>
-          <input type="hidden" value="{{book.id}}" id="book_id">
+          <input type="hidden" value="{{ book.id }}" id="book_id" />
           <div class="relative">
             <button class="dropdownButton bg-neutral-200 hover:bg-neutral-300 w-12 p-2 rounded-full text-sm"><i class="fa fa-ellipsis"></i></button>
             <!-- Dropdown Menu -->
@@ -215,7 +224,7 @@
       <!-- Description container -->
       <div class="w-full bg-gray-200 p-4 rounded-lg">
         <div class="font-bold text-sm">
-          {{ book.views }} views {% now 'N j, Y' %}
+          {{ book.views }} views{% now 'N j, Y' %}
         </div>
         {{ book.description }}
       </div>
@@ -299,8 +308,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://unpkg.com/wavesurfer.js"></script>
-<script>
+  <script src="https://unpkg.com/wavesurfer.js"></script>
+  <script>
   const wavesurfers = {};
   let id;
   document.addEventListener("DOMContentLoaded", function () {
@@ -446,9 +455,6 @@
     const navHeight = navbar.offsetHeight;
     const computedHeight = window.innerHeight - navHeight
 
-    const width = cover_container.offsetWidth;
-    const height = cover_container.offsetHeight;
-    console.log(width, height)
 
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
