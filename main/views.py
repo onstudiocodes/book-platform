@@ -213,7 +213,6 @@ def book_pdf_view(request, slug):
 
     width = int(request.GET.get("w", 270))  # in pt, fallback default
     height = int(request.GET.get("h", 480))
-    print(width, height)
     pdf_stream = generate_book_pdf(book, width, height)
 
     response = HttpResponse(pdf_stream, content_type='application/pdf')

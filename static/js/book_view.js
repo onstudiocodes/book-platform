@@ -167,23 +167,30 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentScale = 1;
   let currentViewMode = 'portrait'; // 'portrait', 'landscape', 'fullscreen'
   let hideControlsTimeout;
-  
-  // Show/hide controls on hover
-  pagesContainer.addEventListener('mouseenter', showControls);
-  pagesContainer.addEventListener('mouseleave', () => {
-    hideControlsTimeout = setTimeout(hideControls, 2000);
+
+  // Track user activity (mouse move, click, touch)
+  ['mousemove', 'click', 'touchstart'].forEach(event => {
+    pagesContainer.addEventListener(event, handleUserInteraction);
   });
-  
-  function showControls() {
+
+  function handleUserInteraction() {
+    showControls();
+
+    // Reset hide timer
     clearTimeout(hideControlsTimeout);
+    hideControlsTimeout = setTimeout(hideControls, 2000);
+  }
+
+  function showControls() {
     viewModeButtons.style.opacity = '1';
     readerControls.style.opacity = '1';
   }
-  
+
   function hideControls() {
     viewModeButtons.style.opacity = '0';
     readerControls.style.opacity = '0';
   }
+
   
   // View mode buttons
   portraitBtn.addEventListener('click', () => setViewMode('portrait'));
@@ -217,11 +224,13 @@ document.addEventListener('DOMContentLoaded', function() {
     contentView.style.height = "80vh";
     height = pagesContainer.clientHeight;
     width = pagesContainer.clientWidth;
+    bigger = Math.max(height, width);
+    smaller = Math.min(height, width);
     // Add view mode parameter to the URL
     if (mode === 'portrait') {
-      pdfUrl += `?h=${width}&w=${height}&view_mode=${mode}`;
+      pdfUrl += `?h=${bigger}&w=${smaller}&view_mode=${mode}`;
     } else if (mode === 'landscape') {
-      pdfUrl += `?h=${height}&w=${width}&view_mode=${mode}`;
+      pdfUrl += `?h=${smaller}&w=${bigger}&view_mode=${mode}`;
     } else if (mode === 'fullscreen') {
       pdfUrl += `?h=${window.innerHeight}&w=${window.innerWidth}`;
     }
@@ -229,6 +238,10 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Loading PDF URL:', pdfUrl);
     // Load the new PDF
     loadPdf(pdfUrl);
+    if (mode === 'landscape' && window.innerHeight > window.innerWidth) {
+  alert("For better viewing, please rotate your device to landscape mode.");
+}
+
     
     // Update the fullscreen button icon if needed
     if (mode === 'fullscreen') {
@@ -248,24 +261,28 @@ function toggleFullscreen() {
       contentView.style.left = '0';
       contentView.style.width = '100vw';
       contentView.style.height = '100vh';
+      setTimeout(() => window.scrollTo(0, 1), 100);
       contentView.style.zIndex = '1000';
       contentView.style.backgroundColor = 'white';
       pagesContainer.style.maxWidth = 'none';
       pagesContainer.style.maxHeight = 'none';
   } else {
       // Exit fullscreen - default to landscape view
-      setViewMode('landscape');
+      setViewMode('portrait');
   }
 }
   
   // Show the PDF viewer when "Read Now" is clicked
   readButton.addEventListener('click', function() {
+    contentView.style.height = "80vh";
     height = pagesContainer.clientHeight;
     width = pagesContainer.clientWidth;
+    bigger = Math.max(height, width);
+    smaller = Math.min(height, width);
     console.log('Page container dimensions:', pagesContainer.clientHeight, pagesContainer.clientWidth);
     thumbnailView.style.display = 'none';
     contentView.style.display = 'block';
-    loadPdf(`${book_pdf_url}?h=${height}&w=${width}`);
+    loadPdf(`${book_pdf_url}?h=${bigger}&w=${smaller}`);
     setViewMode('portrait'); // Default to portrait view
   });
   
