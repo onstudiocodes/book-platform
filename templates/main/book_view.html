@@ -56,18 +56,18 @@
               <canvas id="pdf-canvas" class="max-h-full max-w-full"></canvas>
 
               <!-- View Mode Buttons -->
-              <div class="absolute top-4 right-4 flex gap-2 z-10 opacity-0 transition-opacity duration-300" id="view-mode-buttons">
+              {% comment %} <div class="absolute top-4 right-4 flex gap-2 z-10 opacity-0 transition-opacity duration-300" id="view-mode-buttons">
                 <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="portrait-btn" title="Portrait View"><i class="fa fa-mobile"></i></button>
                 <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="landscape-btn" title="Landscape View"><i class="fa fa-tablet"></i></button>
                 <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="fullscreen-btn" title="Fullscreen View"><i class="fa fa-expand"></i></button>
-              </div>
+              </div> {% endcomment %}
 
               <!-- Pagination and Controls -->
               <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg opacity-0 transition-opacity duration-300" id="reader-controls">
                 <div class="flex justify-between items-center gap-4">
                   <div class="flex gap-2 items-center">
                     <!-- Previous Button -->
-                    <button class="bg-blue-600 text-white p-1 rounded hover:bg-blue-700" id="prev-page"><i class="fa fa-chevron-left"></i></button>
+                    <button class="bg-blue-600 text-white w-6 h-6 rounded hover:bg-blue-700" id="prev-page"><i class="fa fa-chevron-left"></i></button>
 
                     <!-- Page Number Input -->
                     <div class="flex items-center">
@@ -77,10 +77,10 @@
                     </div>
 
                     <!-- Next Button -->
-                    <button class="bg-blue-600 text-white p-1 rounded hover:bg-blue-700" id="next-page"><i class="fa fa-chevron-right"></i></button>
+                    <button class="bg-blue-600 text-white w-6 h-6 rounded hover:bg-blue-700" id="next-page"><i class="fa fa-chevron-right"></i></button>
                   </div>
 
-                  <select name="" id="audio_select" class="p-2 text-xs w-20">
+                  <select name="" id="audio_select" class="p-2 text-xs hidden sm:block w-20">
                     {% if not book.audiobooks.all %}
                       <option value="" disabled selected>audio</option>
                     {% endif %}
@@ -89,7 +89,7 @@
                     {% endfor %}
                   </select>
 
-                  <select name="" id="translation_select" class="p-2 text-xs w-20 hidden">
+                  <select name="" id="translation_select" class="p-2 text-xs w-10 hidden">
                     <option value="0" selected>default</option>
                     {% for translation in book.translations.all %}
                       <option value="{{ translation.id }}">{{ translation.language }}</option>
@@ -98,12 +98,16 @@
 
                   <!-- Font Size Selector -->
                   <div class="flex justify-center items-center">
-                    <label class="mr-2 whitespace-nowrap" for="ratio">Font Size:</label>
-                    <select class="border rounded px-2 py-1" id="text-size">
+                    <select class="border rounded px-2 py-1 hidden sm:block w-20 text-xs" id="text-size">
                       <option value="sm">Small</option>
                       <option value="base" selected>Normal</option>
                       <option value="lg">Large</option>
                     </select>
+                  </div>
+                  <div class="flex gap-2 z-10 opacity-0 transition-opacity duration-300" id="view-mode-buttons">
+                    <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="portrait-btn" title="Portrait View"><i class="fa fa-mobile"></i></button>
+                    <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="landscape-btn" title="Landscape View"><i class="fa fa-tablet"></i></button>
+                    <button class="bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow" id="fullscreen-btn" title="Fullscreen View"><i class="fa fa-expand"></i></button>
                   </div>
                 </div>
               </div>
