@@ -24,10 +24,26 @@ function showNewsDetail(newsId) {
         .then(data => {
             newsDetailContent.innerHTML = `
                     <h1 class="text-3xl font-bold mb-4">${data.title}</h1>
-                    <div class="mb-6">
-                        ${data.images.map(image => `
-                            <img src="${image.image}" class="w-full h-auto mb-4 rounded-lg" alt="News image">
-                        `).join('')}
+                    <div id="carousel-${data}" class="relative rounded-lg overflow-hidden shadow-lg" data-carousel="static">
+                        <div class="relative" data-carousel-inner>
+                            ${data.images.map(image => `
+                                <div class="hidden duration-700 ease-in-out" data-carousel-item>
+                                    <img src="${image.image}" class="object-cover w-full h-full" alt="Slide">
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${data.images.length > 1 ? `
+                            <button type="button" class="flex absolute top-1/2 left-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition" data-carousel-prev>
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            <button type="button" class="flex absolute top-1/2 right-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition" data-carousel-next>
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        ` : ''}
                     </div>
                     <div class="prose max-w-none">${data.content}</div>
                     <div class="flex items-center mt-8 gap-2">
@@ -120,7 +136,8 @@ function showNewsDetail(newsId) {
             if (followBtnDetail) {
                 followBtnDetail.addEventListener('click', handleFollow);
             }
-
+            let carousel = document.getElementById(`carousel-${data}`);
+            initializeCarousel(carousel);
             newsDetailOverlay.style.display = 'block';
             document.body.style.overflow = 'hidden';
         })
