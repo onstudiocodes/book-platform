@@ -46,18 +46,50 @@ def index(request):
         context['following'] = UserFollow.objects.filter(follower=request.user)[:3]
 
     return render(request, 'main/index.html', context)
+
+def get_news_items():
+    return News.objects.order_by('-published_date')  # or however you want
+
 def load_more_data(request):
     page = int(request.GET.get('page', 1))
     items_per_page = 10
-    objects = Book.objects.all().order_by('?')
-    paginator = Paginator(objects, items_per_page)
-    if page > paginator.num_pages:
-        return JsonResponse({'data':[], 'has_next': False})
-    
-    books_html = [render_to_string('components/book_card.html', {'book': book, 'request': request}) for book in paginator.page(page)]
-    
-    return JsonResponse({'data': books_html, 'has_next': page < paginator.num_pages}, safe=False)
 
+    # Match filter with index logic
+    path_info = request.META.get('HTTP_REFERER', '')
+    if "/trending" in path_info:
+        books = Book.public_objects.all().order_by('-views')
+    elif "/recent" in path_info:
+        books = Book.public_objects.all().order_by('-published_date')
+    elif "/popular" in path_info:
+        books = Book.public_objects.all().order_by('-views')
+    else:
+        books = Book.public_objects.all().order_by('?')
+
+    paginator = Paginator(books, items_per_page)
+
+    if page > paginator.num_pages:
+        return JsonResponse({'data': [], 'has_next': False})
+
+    current_books = paginator.page(page)
+    data = []
+
+    if page % 2 == 0:
+        news_items = get_news_items()[:5]  # Customize as needed
+        news_html = render_to_string('components/news_row.html', {
+            'news_items': news_items,
+            'title': "News"
+        }, request=request)
+        data.append(news_html)
+    for idx, book in enumerate(current_books):
+        html = render_to_string('components/book_card.html', {'book': book, 'request': request})
+        data.append(html)
+
+    
+
+    return JsonResponse({
+        'data': data,
+        'has_next': page < paginator.num_pages
+    })
 
 @csrf_exempt
 @login_required
