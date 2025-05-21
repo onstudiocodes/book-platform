@@ -208,6 +208,13 @@ function loadMoreNews() {
     fetch(`/news/?page=${page}`)
         .then(response => response.json())
         .then(data => {
+            const results = data.results;
+
+            if (!results || results.length === 0) {
+                console.log('No more news to load.');
+                isLoading = true; // Lock it to prevent further loading
+                return;
+            }
             if (data.results.length > 0) {
                 const shortsContainer = document.getElementById('shortsContainer');
 
@@ -509,3 +516,12 @@ function handleShareClick(e) {
         .then(() => addNotification('Link copied to clipboard!', 'green'))
         .catch(() => alert('Failed to copy link'));
 }
+
+shortsContainer.addEventListener('scroll', () => {
+    if (
+        shortsContainer.scrollTop + shortsContainer.clientHeight >= shortsContainer.scrollHeight - 100
+    ) {
+        loadMoreNews();
+    }
+});
+

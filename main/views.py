@@ -423,8 +423,7 @@ def delete_comment(request, comment_id):
         })
     
 def news_cast(request):
-    news = News.objects.all()
-    return render(request, 'main/newscast.html', {'news': news})
+    return render(request, 'main/newscast.html')
 
 def news(request, news_id):
     news_obj = News.objects.get(id=news_id)
@@ -434,8 +433,6 @@ def news(request, news_id):
         'suggested_news': suggested_news
     }
     return render(request, 'main/news.html', context)
-
-from django.urls import reverse
 
 from django.urls import reverse
 
@@ -461,7 +458,7 @@ from .serializers import NewsSerializer
 from rest_framework.pagination import PageNumberPagination
 
 class NewsPagination(PageNumberPagination):
-    page_size = 10  # Number of items per page
+    page_size = 2  # Number of items per page
     page_size_query_param = 'page_size'
     max_page_size = 100
 
