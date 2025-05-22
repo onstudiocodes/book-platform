@@ -201,11 +201,16 @@ function getCookie(name) {
     return cookieValue;
 }
 
-function loadMoreNews() {
+function loadMoreNews(excludeId = null) {
     if (isLoading) return;
     isLoading = true;
 
-    fetch(`/news/?page=${page}`)
+    let url = `/news/?page=${page}`;
+    if (excludeId) {
+        url += `&exclude=${excludeId}`;
+    }
+
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             const results = data.results;
@@ -394,7 +399,26 @@ function adjustContentHeight() {
 // Initial load
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(adjustContentHeight, 100);
-    loadMoreNews();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightedId = urlParams.get('highlighted');
+
+    if (highlightedId) {
+        console.log('Loading highlighted news:', highlightedId);
+        fetch(`/news/${highlightedId}/`)
+            .then(res => res.json())
+            .then(news => {
+                displayNewsItem(news); // Display first manually selected item
+                page = 1; // Reset page
+                loadMoreNews(highlightedId); // Then load rest excluding highlighted
+            })
+            .catch(error => {
+                console.error('Failed to load highlighted news:', error);
+                loadMoreNews(); // Fallback to normal
+            });
+    } else {
+        loadMoreNews(); // Load normally
+    }
 });
 
 window.addEventListener('resize', adjustContentHeight);
@@ -525,3 +549,105 @@ shortsContainer.addEventListener('scroll', () => {
     }
 });
 
+function displayNewsItem(item) {
+    const shortsContainer = document.getElementById('shortsContainer');
+    const newsItem = document.createElement('div');
+    const isAuthor = loggedInUser === item.author.username;
+    const isFollowing = item.author.is_following;
+
+    newsItem.className = 'relative short min-h-full p-4 flex flex-col align-middle justify-between';
+
+    newsItem.innerHTML = `
+        <div class="font-medium text-xl mb-2">${item.title}</div>
+            <div id="default-carousel" class="relative rounded-lg overflow-hidden shadow-lg" data-carousel="static">
+                <div class="relative h-40" data-carousel-inner>
+                    ${item.images.map(image => `
+                        <div class="hidden duration-700 ease-in-out" data-carousel-item>
+                            <img src="${image.image}" class="object-cover w-full h-full" alt="Slide">
+                        </div>
+                    `).join('')}
+                </div>
+                ${item.images.length > 1 ? `
+                    <button type="button" class="flex absolute top-1/2 left-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition" data-carousel-prev>
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <button type="button" class="flex absolute top-1/2 right-3 z-40 items-center justify-center w-10 h-10 bg-gray-200/50 rounded-full hover:bg-gray-300 focus:outline-none transition" data-carousel-next>
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                ` : ''}
+            </div>
+            <div>
+                <div class="text-sm overflow-hidden text-ellipsis line-clamp-4 my-2">${item.content}</div>
+                <div>
+                    <a href="#" class="read-more-btn text-blue-400 hover:border-b hover:border-blue-400 inline" data-news-id="${item.id}">Read more.</a>
+                </div>
+            </div>
+            <div class="flex items-center mt-4 gap-2">
+                <img src="${item.author.userprofile.profile_picture}" class="h-10 w-10 rounded-full" alt="">
+                <a href="/profile/${item.author.username}">${item.author.userprofile.full_name} <div class="text-sm text-neutral-600">${item.author.followers} Subscribers</div></a>
+                ${!isAuthor ? `
+                    <button id="follow-btn" data-user-id="${item.author.id}" data-is-following="${isFollowing}" class="bg-black text-white px-2 py-1 rounded-xl">
+                        ${isFollowing ? 'Unfollow' : 'Follow'}
+                    </button>
+                ` : ''}
+            </div>
+            <!-- Action Buttons -->
+                <div class="action-buttons absolute right-4 bottom-20 flex flex-col items-center">
+                    <!-- Like Button -->
+                    <button class="like-btn flex flex-row items-center " data-news-id="${item.id}" data-liked="${item.is_liked}">
+                        <svg class="w-8 h-8 p-1 rounded-full ${item.is_liked ? 'bg-red-200' : 'bg-gray-400'} hover:bg-gray-500 ${item.is_liked ? 'text-red-500' : 'text-white'} fill-current" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span class="text-sm">${item.likes_count}</span>
+                    </button>
+
+                    <!-- Comment Button -->
+                    <button class="comment-btn flex flex-col items-center" data-news-id="${item.id}">
+                        <svg class="w-8 h-8 p-1 rounded-full bg-gray-400 hover:bg-gray-500 text-white fill-current" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                        </svg>
+                        <span class="text-sm">${item.comments_count}</span>
+                    </button>
+
+                    <!-- Share Button -->
+                    <button class="share-btn flex flex-col items-center" data-news-id="${item.id}">
+                        <svg class="w-8 h-8 p-1 rounded-full bg-gray-400 hover:bg-gray-500 text-white fill-current" viewBox="0 0 24 24">
+                            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92zM18 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 13c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm12 7.02c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                        </svg>
+                    </button>
+                </div>
+    `;
+
+    shortsContainer.appendChild(newsItem);
+
+    // Button listeners
+    const likeBtn = newsItem.querySelector('.like-btn');
+    likeBtn.addEventListener('click', handleLikeClick);
+
+    const commentBtn = newsItem.querySelector('.comment-btn');
+    commentBtn.addEventListener('click', handleCommentClick);
+
+    const shareBtn = newsItem.querySelector('.share-btn');
+    shareBtn.addEventListener('click', handleShareClick);
+
+    const readMoreBtn = newsItem.querySelector('.read-more-btn');
+    readMoreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showNewsDetail(item.id);
+    });
+
+    const followBtn = newsItem.querySelector('#follow-btn');
+    if (followBtn) {
+        followBtn.addEventListener('click', handleFollow);
+    }
+
+    // Carousel init if needed
+    const carouselElement = newsItem.querySelector('[data-carousel="static"]');
+    if (carouselElement) {
+        initializeCarousel(carouselElement);
+    }
+}

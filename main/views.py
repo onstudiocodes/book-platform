@@ -423,7 +423,8 @@ def delete_comment(request, comment_id):
         })
     
 def news_cast(request):
-    return render(request, 'main/newscast.html')
+    highlighted = request.GET.get('highlighted')
+    return render(request, 'main/newscast.html', {'highlighted': highlighted})
 
 def news(request, news_id):
     news_obj = News.objects.get(id=news_id)
@@ -474,6 +475,19 @@ class NewsListCreateView(generics.ListCreateAPIView):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    def get_queryset(self):
+        queryset = News.objects.select_related(
+            'author', 'author__userprofile'
+        ).prefetch_related(
+            'likes', 'dislikes', 'images', 'comments'
+        ).order_by('-published_date')
+
+        exclude_id = self.request.query_params.get('exclude')
+        if exclude_id and exclude_id.isdigit():
+            queryset = queryset.exclude(id=int(exclude_id))
+        return queryset
+
 
 # Retrieve, update, or delete a specific news item
 class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
