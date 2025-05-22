@@ -1,8 +1,8 @@
 <div class="col-span-full w-full bg-gray-100 rounded-lg shadow-md p-4 mb-4">
   <h2 class="text-lg font-semibold mb-2">News</h2>
-  <div class="flex space-x-4 overflow-x-auto pb-2 h-72">
+  <div class="grid grid-cols-5 space-x-4 overflow-x-auto pb-2 h-72">
     {% for news in news_items %}
-      <a href="#" class="w-[200px] flex-shrink-0 bg-white shadow rounded p-2 overflow-hidden">
+      <a href="{% url 'main:news_cast' %}?highlighted={{news.id}}" class="flex-shrink-0 bg-white shadow rounded p-2 overflow-hidden">
         <div class="w-full h-3/4">
             <img src="{{news.images.first.image.url}}" class="w-full h-full object-cover" alt="">
         </div>
