@@ -34,7 +34,7 @@
 {% block content %}
   <input type="hidden" id="book_pdf_url" value="{{ book_pdf_url }}" />
   <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
-  <div class="flex lg:flex-row flex-col gap-4 max-w-5xl m-auto">
+  <div class="flex lg:flex-row flex-col gap-4 max-w-5xl xl:max-w-[90%] m-auto">
     <div class="lg:w-4/6 space-y-2">
       <div class="container mx-auto">
         <!-- Book Container -->
@@ -274,7 +274,7 @@
 
           <div>
             <div class="relative">
-              <button class="dropdownButton bg-neutral-200 hover:bg-neutral-300 p-2 rounded-full text-sm"><i class="fa fa-ellipsis-vertical"></i></button>
+              <button class="dropdownButton p-2 rounded-full text-sm"><i class="fa fa-ellipsis-vertical"></i></button>
               <!-- Dropdown Menu -->
               <div id="dropdownMenu" class="dropdownMenu absolute z-[1000] right-0 mt-2 w-max bg-white border border-gray-200 rounded-lg shadow-lg hidden">
                 <ul class="py-1">

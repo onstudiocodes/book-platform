@@ -1,13 +1,21 @@
 <div class="col-span-full w-full bg-gray-100 rounded-lg shadow-md p-4 mb-4">
   <h2 class="text-lg font-semibold mb-2">News</h2>
-  <div class="grid grid-cols-5 space-x-4 overflow-x-auto pb-2 h-72">
-    {% for news in news_items %}
-      <a href="{% url 'main:news_cast' %}?highlighted={{news.id}}" class="flex-shrink-0 bg-white shadow rounded p-2 overflow-hidden">
-        <div class="w-full h-3/4">
-            <img src="{{news.images.first.image.url}}" class="w-full h-full object-cover" alt="">
-        </div>
-        <h3 class="text-md font-bold line-clamp-2 pt-2">{{ news.title }}</h3>
-      </a>
-    {% endfor %}
+  
+  <!-- Make this div control the height -->
+  <div class="relative" style="height: 350px;">
+    <!-- Enable horizontal scroll -->
+    <div class="absolute inset-0 overflow-x-auto">
+      <!-- Horizontal grid layout -->
+      <div class="grid grid-flow-col auto-cols-[minmax(200px,_1fr)] gap-4 h-full">
+        {% for news in news_items %}
+          <a href="{% url 'main:news_cast' %}?highlighted={{news.id}}" class="flex flex-col bg-white shadow rounded p-2 h-full">
+            <div class="w-full h-3/4">
+              <img src="{{ news.images.first.image.url }}" class="w-full h-full object-cover" alt="">
+            </div>
+            <h3 class="text-md font-bold line-clamp-2 pt-2">{{ news.title }}</h3>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
   </div>
 </div>
