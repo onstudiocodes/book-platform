@@ -320,7 +320,7 @@ def toggle_follow(request):
             followed_from_book = True
             book_title = referer.split('/')[-1]
             from_book = Book.objects.get(slug=book_title)
-            print(book_title)
+
         if target_profile.user == follower_user:
             return JsonResponse({'error': 'You cannot follow yourself.'}, status=400)
 
@@ -389,7 +389,6 @@ class CommentView(View):
         new_comment = Comment.objects.create(user=user, content=comment, book=target_book)
         if parent.exists():
             new_comment.parent = parent.first()
-            print("parent added.")
         new_comment.save()
         reply = False
         if new_comment.parent:
@@ -505,7 +504,6 @@ def like_news(request, pk):
     user = request.user
     context = {}
     
-    print('going through')
     if user in news.likes.all():
         news.likes.remove(user)
         context['status'] = "success"
@@ -556,7 +554,6 @@ def get_comments(request, news_id):
 @login_required
 def post_comment(request, news_id):
     news = get_object_or_404(News, id=news_id)
-    print(request.POST)
     if request.method == 'POST':
         text = request.POST.get('text')
         comment = Comment.objects.create(
@@ -564,7 +561,6 @@ def post_comment(request, news_id):
             user=request.user,
             content=text
         )
-        print(comment)
         return JsonResponse({
             'text': comment.content,
             'created_at': comment.created_at.strftime("%b %d, %Y %H:%M"),
