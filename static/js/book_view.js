@@ -425,4 +425,9 @@ document.addEventListener('DOMContentLoaded', function () {
       this.value = pageNum;
     }
   });
+  if (readNowButton){
+    setTimeout(() => {
+        readNowButton.click();
+      }, 1000);// Automatically trigger read now on page load
+  }
 });

@@ -89,4 +89,61 @@ async function loadMoreBooks() {
 
 
 </script>
+<script>
+  // Function to initialize a single .news-row
+  function initNewsRow(row) {
+    const scrollContainer = row.querySelector('.news-scroll');
+    const scrollLeftBtn = row.querySelector('.scroll-left');
+    const scrollRightBtn = row.querySelector('.scroll-right');
+    const scrollAmount = 300;
+
+    if (!scrollContainer || !scrollLeftBtn || !scrollRightBtn) return;
+
+    const updateButtons = () => {
+      scrollLeftBtn.disabled = scrollContainer.scrollLeft <= 0;
+      scrollRightBtn.disabled =
+        scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 1;
+    };
+
+    scrollLeftBtn.addEventListener('click', () => {
+      scrollContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    });
+
+    scrollRightBtn.addEventListener('click', () => {
+      scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    });
+
+    scrollContainer.addEventListener('scroll', updateButtons);
+    updateButtons();
+  }
+
+  // Initial setup if any rows already exist
+  document.querySelectorAll('.news-row').forEach(initNewsRow);
+
+  // Observe for new .news-row being added dynamically
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach(node => {
+        if (node.nodeType === 1) {
+          // Directly added .news-row
+          if (node.classList.contains('news-row')) {
+            initNewsRow(node);
+          }
+
+          // If it's a wrapper that contains news-row(s)
+          const rows = node.querySelectorAll?.('.news-row');
+          if (rows) {
+            rows.forEach(initNewsRow);
+          }
+        }
+      });
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+</script>
+
 {% endblock %}

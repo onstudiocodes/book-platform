@@ -1,24 +1,52 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}
-Subscriptions
+    {% if liked %}
+        Liked Items - {{ request.user.username }}
+    {% else %}
+        {{ collection.name }} - {{ collection.user.username }}'s Collection
+    {% endif %}
 {% endblock %}
+
+{% block styles %}
+{% endblock %}
+
 {% block content %}
 <h2 class="text-xl font-bold text-gray-700 mb-4">
-    {{collection.name}}
-</h2>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-    {% if collection.reading_list.all %}
-    {% for item in collection.reading_list.all %}
-    {% with book=item.book %}
-    {% include 'components/book_card.html' %}
-    {% endwith %}
-    {% endfor %}
+    {% if liked %}
+        Liked Books & News
     {% else %}
-    This collection is empty
+        {{ collection.name }}
+    {% endif %}
+</h2>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    {% if liked %}
+        {% if liked_books %}
+            {% for book in liked_books %}
+                {% include 'components/book_card.html' with book=book %}
+            {% endfor %}
+        {% else %}
+            <p>No liked books yet.</p>
+        {% endif %}
+        {% if liked_news %}
+            {% for news in liked_news %}
+                {% include 'components/news_card.html' with news=news %}
+            {% endfor %}
+        {% else %}
+            <p>No liked news yet.</p>
+        {% endif %}
+    {% else %}
+        {% if collection.reading_list.all %}
+            {% for item in collection.reading_list.all %}
+                {% include 'components/book_card.html' with book=item.book %}
+            {% endfor %}
+        {% else %}
+            This collection is empty
+        {% endif %}
     {% endif %}
 </div>
-
 
 <script>
     let halfMenu = true;
