@@ -167,6 +167,16 @@ def delete_collection(request, collection_id):
     return redirect('main:collections')
 
 def collection(request, collection_name):
+    print("Collection name:", collection_name)
+    if collection_name == "Liked":
+        liked_books = Book.public_objects.filter(likes=request.user)
+        liked_news = News.objects.filter(likes=request.user)
+        print(liked_books, liked_news)
+        return render(request, 'main/single_collection.html', {
+            'liked_books': liked_books,
+            'liked_news': liked_news,
+            'liked': True
+        })
     coll = Collection.objects.filter(name=collection_name, user=request.user)
     if coll.exists():
         return render(request, 'main/single_collection.html', {'collection': coll.first()})

@@ -270,9 +270,18 @@ function loadMoreNews(excludeId = null) {
                                 <div class="action-buttons absolute right-4 bottom-20 flex flex-col items-center">
                                     <!-- Like Button -->
                                     <button class="like-btn flex flex-row items-center " data-news-id="${item.id}" data-liked="${item.is_liked}">
-                                        <svg class="w-10 h-10 p-2 rounded-full ${item.is_liked ? 'bg-red-200' : 'bg-gray-100'} hover:bg-gray-200 ${item.is_liked ? 'text-red-500' : 'text-black'} fill-current" viewBox="0 0 24 24">
-                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                        
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-10 h-10 p-2 rounded-full transition-colors duration-200
+                                            ${item.is_liked ? 'bg-[#e7f3ff] text-[#1877F2]' : 'bg-[#f0f2f5] text-gray-600'}
+                                            hover:bg-gray-200 fill-current"
+                                            viewBox="0 0 24 24">
+                                        <path d="M2 21h4V9H2v12zM22 9h-6.31l.95-4.57.03-.32a1 1 0 0 0-.29-.7L15.17 2 8.59 8.59A1 1 0 0 0 8 9v10a1 1 0 0 0 1 1h9a1 1 0 0 0 .99-.86l1.5-10A1 1 0 0 0 22 9z"/>
                                         </svg>
+
+
+
+
                                         <span class="text-sm font-bold">${item.likes_count}</span>
                                     </button>
 
@@ -449,10 +458,10 @@ function handleLikeClick(e) {
                 button.querySelector('span').textContent = likeCount;
 
                 const svg = button.querySelector('svg');
-                svg.classList.toggle('text-red-500', newIsLiked);
-                svg.classList.toggle('text-black', !newIsLiked);
-                svg.classList.toggle('bg-red-200', newIsLiked);
-                svg.classList.toggle('bg-gray-100', !newIsLiked);
+                svg.classList.toggle('text-[#1877F2]', newIsLiked);
+                svg.classList.toggle('text-gray-600', !newIsLiked);
+                svg.classList.toggle('bg-[#e7f3ff]', newIsLiked);
+                svg.classList.toggle('bg-[#f0f2f5]', !newIsLiked);
             } else if (data.status == "Not authenticated") {
                 addNotification('You need to login first', 'red')
             }
@@ -599,8 +608,12 @@ function displayNewsItem(item) {
                 <div class="action-buttons absolute right-4 bottom-20 flex flex-col items-center">
                     <!-- Like Button -->
                     <button class="like-btn flex flex-row items-center " data-news-id="${item.id}" data-liked="${item.is_liked}">
-                        <svg class="w-10 h-10 p-2 rounded-full ${item.is_liked ? 'bg-red-200' : 'bg-gray-100'} hover:bg-gray-200 ${item.is_liked ? 'text-red-500' : 'text-black'} fill-current" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-10 h-10 p-2 rounded-full transition-colors duration-200
+                            ${item.is_liked ? 'bg-[#e7f3ff] text-[#1877F2]' : 'bg-[#f0f2f5] text-gray-600'}
+                            hover:bg-gray-200 fill-current"
+                            viewBox="0 0 24 24">
+                        <path d="M2 21h4V9H2v12zM22 9h-6.31l.95-4.57.03-.32a1 1 0 0 0-.29-.7L15.17 2 8.59 8.59A1 1 0 0 0 8 9v10a1 1 0 0 0 1 1h9a1 1 0 0 0 .99-.86l1.5-10A1 1 0 0 0 22 9z"/>
                         </svg>
                         <span class="text-sm font-bold">${item.likes_count}</span>
                     </button>

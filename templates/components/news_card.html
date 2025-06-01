@@ -1,0 +1,6 @@
+<a href="{% url 'main:news_cast' %}?highlighted={{ news.id }}" style="height: 350px;" class="flex flex-col bg-white shadow rounded p-2">
+  <div class="w-full h-3/4">
+    <img src="{{ news.images.first.image.url }}" class="w-full h-full object-cover" alt="" />
+  </div>
+  <h3 class="text-md font-bold line-clamp-2 pt-2">{{ news.title }}</h3>
+</a>

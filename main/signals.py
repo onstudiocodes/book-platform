@@ -11,3 +11,7 @@ def create_default_collection(sender, instance, created, **kwargs):
             user=instance,
             name="My collection"
             )
+        Collection.objects.create(
+            user=instance,
+            name="Liked"
+            )

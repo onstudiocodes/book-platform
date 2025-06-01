@@ -1512,14 +1512,6 @@ video {
   height: 100%;
 }
 
-.h-\[30\] {
-  height: 30;
-}
-
-.h-\[300px\] {
-  height: 300px;
-}
-
 .max-h-36 {
   max-height: 9rem;
 }
@@ -1638,10 +1630,6 @@ video {
   width: 100vw;
 }
 
-.w-1 {
-  width: 0.25rem;
-}
-
 .min-w-32 {
   min-width: 8rem;
 }
@@ -1705,10 +1693,6 @@ video {
 
 .flex-1 {
   flex: 1 1 0%;
-}
-
-.flex-shrink-0 {
-  flex-shrink: 0;
 }
 
 .flex-grow {
@@ -1778,10 +1762,6 @@ video {
 
 .grid-cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.grid-cols-5 {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .flex-row {
@@ -1912,6 +1892,10 @@ video {
 
 .overflow-x-scroll {
   overflow-x: scroll;
+}
+
+.scroll-smooth {
+  scroll-behavior: smooth;
 }
 
 .truncate {
@@ -6400,6 +6384,16 @@ video {
   background-color: rgb(113 63 18 / 0.95);
 }
 
+.bg-\[\#e7f3ff\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(231 243 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-\[\#f0f2f5\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(240 242 245 / var(--tw-bg-opacity, 1));
+}
+
 .bg-opacity-30 {
   --tw-bg-opacity: 0.3;
 }
@@ -8872,6 +8866,11 @@ video {
   color: rgb(113 63 18 / 0.95);
 }
 
+.text-\[\#1877F2\] {
+  --tw-text-opacity: 1;
+  color: rgb(24 119 242 / var(--tw-text-opacity, 1));
+}
+
 .opacity-0 {
   opacity: 0;
 }
@@ -8958,6 +8957,10 @@ video {
 
 .duration-\[3000ms\] {
   transition-duration: 3000ms;
+}
+
+.duration-200 {
+  transition-duration: 200ms;
 }
 
 .ease-in-out {
@@ -11774,11 +11777,6 @@ video {
 
 .hover\:bg-gray-400\/95:hover {
   background-color: rgb(156 163 175 / 0.95);
-}
-
-.hover\:bg-gray-500:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(107 114 128 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-gray-900:hover {
@@ -21919,6 +21917,14 @@ video {
 .focus\:ring-blue-500:focus {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(59 130 246 / var(--tw-ring-opacity, 1));
+}
+
+.disabled\:cursor-not-allowed:disabled {
+  cursor: not-allowed;
+}
+
+.disabled\:opacity-50:disabled {
+  opacity: 0.5;
 }
 
 .peer:-moz-placeholder-shown ~ .peer-placeholder-shown\:top-4 {
