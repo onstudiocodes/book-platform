@@ -580,3 +580,9 @@ def post_comment(request, news_id):
             }
         })
     return JsonResponse({'status': 'error'}, status=400)
+
+def tour_wall(request):
+    return render(request, 'main/tour_wall.html')
+
+def tour_details(request):
+    return render(request, 'main/tour_details.html')
