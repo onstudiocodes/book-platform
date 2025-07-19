@@ -23,6 +23,7 @@ urlpatterns = [
     path('news/<int:news_id>/comments/post/', views.post_comment, name='post_comment'),
     path('tour_wall', views.tour_wall, name="tour_wall"),
     path('tour_details', views.tour_details, name="tour_details"),
+    path('add_travel_story', views.add_travel_story, name='add_travel_story'),
     path('search', views.search_results, name='search'),
     path('history', views.history, name='history'),
     path('continue-reading', views.continue_reading, name='continue_reading'),
