@@ -586,3 +586,7 @@ def tour_wall(request):
 
 def tour_details(request):
     return render(request, 'main/tour_details.html')
+
+def add_travel_story(request):
+    return render(request, 'main/add_travel_story.html')
+
