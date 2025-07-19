@@ -71,7 +71,7 @@ async function loadMoreBooks() {
     try {
         const response = await fetch(`${loadMoreUrl}?page=${page}`);
         const data = await response.json();
-
+        console.log(data)
         data.data.forEach(bookHTML => {
             bookContainer.insertAdjacentHTML("beforeend", bookHTML);
         });

@@ -25,16 +25,16 @@ def index(request):
 
     # Determine the sorting based on the path
     if path_info == "/trending":
-        books = Book.public_objects.all().order_by('-views')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
         context['page'] = "Trending"
     elif path_info == "/recent":
-        books = Book.public_objects.all().order_by('-published_date')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-published_date')
         context['page'] = "Recent"
     elif path_info == "/popular":
-        books = Book.public_objects.all().order_by('-views')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
         context['page'] = "Popular"
     else:
-        books = Book.public_objects.all().order_by('?')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('?')
         context['page'] = "Recommended"
 
     # Paginate the initial set of books
@@ -57,13 +57,13 @@ def load_more_data(request):
     # Match filter with index logic
     path_info = request.META.get('HTTP_REFERER', '')
     if "/trending" in path_info:
-        books = Book.public_objects.all().order_by('-views')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
     elif "/recent" in path_info:
-        books = Book.public_objects.all().order_by('-published_date')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-published_date')
     elif "/popular" in path_info:
-        books = Book.public_objects.all().order_by('-views')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
     else:
-        books = Book.public_objects.all().order_by('?')
+        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('?')
 
     paginator = Paginator(books, items_per_page)
 
@@ -73,13 +73,13 @@ def load_more_data(request):
     current_books = paginator.page(page)
     data = []
 
-    if page % 2 == 0:
-        news_items = get_news_items()[:5]  # Customize as needed
-        news_html = render_to_string('components/news_row.html', {
-            'news_items': news_items,
-            'title': "News"
-        }, request=request)
-        data.append(news_html)
+    
+    news_items = get_news_items()[:5]  # Customize as needed
+    news_html = render_to_string('components/news_row.html', {
+        'news_items': news_items,
+        'title': "News"
+    }, request=request)
+    data.append(news_html)
     for idx, book in enumerate(current_books):
         html = render_to_string('components/book_card.html', {'book': book, 'request': request})
         data.append(html)
