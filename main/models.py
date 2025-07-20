@@ -95,6 +95,72 @@ class NewsImage(models.Model):
     def __str__(self):
         return f"Image for {self.news.title}"
 
+
+class TravelCategory(models.Model):
+    name = models.CharField(max_length=100)
+    slug = AutoSlugField(populate_from='name', unique=True)
+
+
+    def __str__(self):
+        return self.name
+
+class TravelStory(models.Model):
+    COUNTRY_CHOICES = [
+        ('usa', 'United States'),
+        ('uk', 'United Kingdom'),
+        ('france', 'France'),
+        ('japan', 'Japan'),
+        ('australia', 'Australia'),
+        ('thailand', 'Thailand'),
+        ('peru', 'Peru'),
+        ('south-africa', 'South Africa'),
+    ]
+    
+    TRIP_DURATION_CHOICES = [
+        ('1-3', '1-3 days'),
+        ('4-7', '4-7 days'),
+        ('1-2', '1-2 weeks'),
+        ('2+', '2+ weeks'),
+    ]
+    
+    SEASON_CHOICES = [
+        ('spring', 'Spring'),
+        ('summer', 'Summer'),
+        ('fall', 'Fall/Autumn'),
+        ('winter', 'Winter'),
+    ]
+    
+    BUDGET_CHOICES = [
+        ('budget', 'Budget ($)'),
+        ('mid-range', 'Mid-range ($$)'),
+        ('luxury', 'Luxury ($$$)'),
+    ]
+
+    title = models.CharField(max_length=255)
+    slug = AutoSlugField(populate_from='title', unique=True)
+    category = models.ForeignKey(TravelCategory, on_delete=models.SET_NULL, null=True, related_name="stories")
+    story = CKEditor5Field('Story', config_name='extends')
+    country = models.CharField(max_length=50, choices=COUNTRY_CHOICES, blank=True, null=True)
+    location = models.CharField(max_length=255)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    duration = models.CharField(max_length=20, choices=TRIP_DURATION_CHOICES, blank=True)
+    season = models.CharField(max_length=20, choices=SEASON_CHOICES, blank=True)
+    budget_level = models.CharField(max_length=20, choices=BUDGET_CHOICES, blank=True, null=True)
+    pro_tips = CKEditor5Field('Pro Tips', config_name='extends', blank=True)
+    tags = models.CharField(max_length=500, blank=True)
+    published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class TravelImage(models.Model):
+    travel_story = models.ForeignKey(TravelStory, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to='travel_images/')
+
+    def __str__(self):
+        return f"Image for {self.travel_story.title}"
+    
 class Comment(models.Model):
     book = models.ForeignKey(Book, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True)
     news = models.ForeignKey(News, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True)
