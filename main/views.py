@@ -17,6 +17,8 @@ from django.contrib.auth.decorators import login_required
 from .models import ReadingTime
 from django.core.paginator import Paginator
 import json
+from .forms import TravelStoryForm
+from .models import TravelImage
 
 def index(request):
     context = {}
@@ -588,5 +590,30 @@ def tour_details(request):
     return render(request, 'main/tour_details.html')
 
 def add_travel_story(request):
-    return render(request, 'main/add_travel_story.html')
+    if request.method == 'POST':
+        form = TravelStoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            travel_story = form.save(commit=False)
+            
+            if 'publish' in request.POST:
+                travel_story.published = True
+            travel_story.save()
+            
+            # Handle multiple image uploads
+            images = request.FILES.getlist('images')
+            if len(images) < 3:
+                messages.error(request, 'At least 3 photos are required')
+                return render(request, 'main/add_travel_story.html', {'form': form})
+                
+            for image in images:
+                TravelImage.objects.create(travel_story=travel_story, image=image)
+                
+            messages.success(request, 'Travel story saved successfully!')
+            return redirect('main:tour_details')
+    else:
+        form = TravelStoryForm()
+    
+    return render(request, 'main/add_travel_story.html', {'form': form})
+    
+
 
