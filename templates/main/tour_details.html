@@ -2,7 +2,7 @@
 {% load static %}
 {% load custom_filters %}
 {% block title %}
-  {{ book.title }}
+  {{ story.title }}
 {% endblock %}
 {% block header %}
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,6 +14,9 @@
             border-radius: 0.5rem;
             margin: 1.5rem 0;
         }
+        .prose strong{
+            font-weight: bold;
+        }
     </style>
 {% endblock %}
 {% block content %}
@@ -22,56 +25,51 @@
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
             <!-- Post Header -->
             <div class="p-6 border-b border-gray-200">
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">Sajek Valley: In the Realm of Clouds</h1>
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{story.title}}</h1>
                 <div class="flex items-center text-gray-600">
-                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Author" class="w-8 h-8 rounded-full mr-2">
-                    <span class="mr-4">Sajid Ahmed</span>
+                    <img src="{{story.author.userprofile.profile_picture.url}}" alt="Author" class="w-8 h-8 rounded-full mr-2">
+                    <span class="mr-4">{{story.author.userprofile.full_name}}</span>
                     <span class="flex items-center mr-4">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        2 weeks ago
+                        {{story.created_at|time_since}}
                     </span>
                     <span class="flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                         </svg>
-                        12 Comments
+                        {{story.comments.count}} Comments
                     </span>
                 </div>
             </div>
             
             <!-- Cover Image -->
             <div class="relative h-96">
-                <img src="https://images.unsplash.com/photo-1470114716159-e389f8712fda" alt="Post Cover" class="w-full h-full object-cover">
+                <img src="{{story.images.first.image.url}}" alt="Post Cover" class="w-full h-full object-cover">
             </div>
             
             <!-- Post Content -->
             <div class="p-6">
                 <div class="prose max-w-none mb-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-3">Trip Overview</h2>
-                    <p class="text-gray-700 mb-4">Sajek Valley, located in the Rangamati district of Bangladesh, is a breathtaking hill valley that sits approximately 1,800 feet above sea level. Known for its stunning natural beauty and indigenous culture, Sajek offers one of the most spectacular views in the country.</p>
-                    
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Getting There</h3>
-                    <p class="text-gray-700 mb-4">The journey begins from Dhaka to either Chittagong or Rangamati. From Rangamati, you'll need to hire a 4WD vehicle (Land Cruiser or similar) for the 6-7 hour journey through narrow, winding mountain roads to reach Sajek.</p>
-                    
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Where to Stay</h3>
-                    <p class="text-gray-700 mb-4">Sajek has several good resorts, with "Sajek Resort" being one of the better options (room rates: 3000-5000 BDT). Budget travelers can also stay at local indigenous guesthouses for a more authentic experience.</p>
+                {{story.story|safe}}   
                 </div>
                 
                 <!-- Image Gallery -->
                 <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Photo Gallery</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {% for img in story.images.all %}
                         <div class="rounded-lg overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="Mountain View" class="w-full h-32 md:h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in">
+                            <img src="{{img.image.url}}" alt="Mountain View" class="w-full h-32 md:h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in">
                         </div>
-                        <div class="rounded-lg overflow-hidden">
+                        {% endfor %}
+                        {% comment %} <div class="rounded-lg overflow-hidden">
                             <img src="https://images.unsplash.com/photo-1470114716159-e389f8712fda" alt="Valley Landscape" class="w-full h-32 md:h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in">
                         </div>
                         <div class="rounded-lg overflow-hidden">
                             <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4" alt="Local Culture" class="w-full h-32 md:h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in">
-                        </div>
+                        </div> {% endcomment %}
                     </div>
                 </div>
                 
@@ -87,23 +85,7 @@
                 <div class="bg-blue-50 rounded-xl p-6 mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Travel Guide</h3>
                     <div class="space-y-4">
-                        <div>
-                            <h4 class="font-medium text-gray-900">Best Time to Visit:</h4>
-                            <p class="text-gray-700">October to March is ideal, especially in winter when you can experience the magical cloud cover.</p>
-                        </div>
-                        <div>
-                            <h4 class="font-medium text-gray-900">Estimated Costs:</h4>
-                            <p class="text-gray-700">A 3-day tour typically costs 6000-8000 BDT per person (including transportation and accommodation).</p>
-                        </div>
-                        <div>
-                            <h4 class="font-medium text-gray-900">Essential Tips:</h4>
-                            <ul class="list-disc pl-5 text-gray-700 space-y-1">
-                                <li>Bring warm clothes - temperatures drop significantly at night</li>
-                                <li>Pack sunscreen and hats for daytime exploration</li>
-                                <li>Respect local indigenous cultures and traditions</li>
-                                <li>Don't miss the sunset at Ruilui Para</li>
-                            </ul>
-                        </div>
+                        {{story.pro_tips}}
                     </div>
                 </div>
                 
@@ -151,7 +133,7 @@
                 
                 <!-- Comments Section -->
                 <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Comments (12)</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Comments ({{story.comments.count}})</h3>
                     
                     <!-- Comment Form -->
                     <div class="mb-6">

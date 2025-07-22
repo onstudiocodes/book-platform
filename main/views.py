@@ -18,7 +18,7 @@ from .models import ReadingTime
 from django.core.paginator import Paginator
 import json
 from .forms import TravelStoryForm
-from .models import TravelImage
+from .models import TravelImage, TravelStory, TravelCategory
 
 def index(request):
     context = {}
@@ -584,17 +584,19 @@ def post_comment(request, news_id):
     return JsonResponse({'status': 'error'}, status=400)
 
 def tour_wall(request):
-    return render(request, 'main/tour_wall.html')
+    stories = TravelStory.objects.exclude(published=False).prefetch_related('images')
+    return render(request, 'main/tour_wall.html', {'stories': stories})
 
-def tour_details(request):
-    return render(request, 'main/tour_details.html')
+def tour_details(request, slug):
+    story = get_object_or_404(TravelStory, slug=slug)
+    return render(request, 'main/tour_details.html', {'story': story})
 
 def add_travel_story(request):
     if request.method == 'POST':
         form = TravelStoryForm(request.POST, request.FILES)
         if form.is_valid():
             travel_story = form.save(commit=False)
-            
+            travel_story.author = request.user
             if 'publish' in request.POST:
                 travel_story.published = True
             travel_story.save()
@@ -609,7 +611,7 @@ def add_travel_story(request):
                 TravelImage.objects.create(travel_story=travel_story, image=image)
                 
             messages.success(request, 'Travel story saved successfully!')
-            return redirect('main:tour_details')
+            return redirect('main:tour_details', slug=travel_story.slug)
     else:
         form = TravelStoryForm()
     
