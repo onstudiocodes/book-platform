@@ -8,6 +8,7 @@
     "build:css": "npx tailwindcss -i ./static/css/style.css -o ./static/css/output.css --watch"
   },
   "dependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/typography": "github:tailwindcss/typography"
   }
 }

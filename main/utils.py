@@ -5,6 +5,7 @@ from django.db.models import Count
 from collections import defaultdict
 from django.db.models.functions import TruncDate
 from accounts.models import UserFollow
+from dateutil.relativedelta import relativedelta
 
 def get_last_n_days_data(model, n, user=None, book=None, formatted=False):
     startdate = (timezone.now() - timedelta(days=n)).date()  # Ensure date only
@@ -95,7 +96,7 @@ def create_notification(user, message):
         content=message
     )
 
-# utils/pdf_utils.py
+# pdf_utils.py
 from weasyprint import HTML, CSS
 from django.template.loader import render_to_string
 from io import BytesIO
@@ -138,3 +139,27 @@ def generate_book_pdf(book, width_px=270, height_px=480):
 
     return pdf_buffer
 
+
+def time_since_custom(dt):
+    """
+    Returns a human-readable time difference like:
+    'just now', '5 minutes ago', '3 hours ago', '2 days ago', '1 month ago', '2 years ago'
+    """
+    if not dt:
+        return ""
+
+    current_time = timezone.now()
+    diff = relativedelta(current_time, dt)
+
+    if diff.years > 0:
+        return f"{diff.years} year{'s' if diff.years > 1 else ''} ago"
+    elif diff.months > 0:
+        return f"{diff.months} month{'s' if diff.months > 1 else ''} ago"
+    elif diff.days > 0:
+        return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
+    elif diff.hours > 0:
+        return f"{diff.hours} hour{'s' if diff.hours > 1 else ''} ago"
+    elif diff.minutes > 0:
+        return f"{diff.minutes} minute{'s' if diff.minutes > 1 else ''} ago"
+    else:
+        return "just now"

@@ -136,6 +136,7 @@ class TravelStory(models.Model):
         ('luxury', 'Luxury ($$$)'),
     ]
 
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     slug = AutoSlugField(populate_from='title', unique=True)
     category = models.ForeignKey(TravelCategory, on_delete=models.SET_NULL, null=True, related_name="stories")
@@ -164,6 +165,7 @@ class TravelImage(models.Model):
 class Comment(models.Model):
     book = models.ForeignKey(Book, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True)
     news = models.ForeignKey(News, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True)
+    travel_story = models.ForeignKey(TravelStory, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     likes = models.ManyToManyField(User, related_name="liked_comment", blank=True)
