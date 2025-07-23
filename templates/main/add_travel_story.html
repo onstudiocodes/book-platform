@@ -233,5 +233,13 @@ function handleFiles() {
     }
 }
 </script>
+<script>
+        let halfMenu = false;
+        let fullMenuHide = true;
+        const sideBar = document.getElementById('sidebar')
+        const cardGrid = document.getElementById('content')
+        sideBar.classList.toggle('md:translate-x-0')
+        cardGrid.classList.remove('md:ml-64')
+    </script>
 
 {% endblock %}

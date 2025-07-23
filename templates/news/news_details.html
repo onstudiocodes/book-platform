@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+News
+{% endblock %}
+{% block header %}
+    <style>
+        .gallery-container {
+            position: relative;
+        }
+        .gallery-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255,255,255,0.7);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .gallery-nav-btn:hover {
+            background-color: rgba(255,255,255,0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .prev-btn {
+            left: 15px;
+        }
+        .next-btn {
+            right: 15px;
+        }
+        .gallery-image {
+            transition: opacity 0.5s ease;
+        }
+        .gallery-image.hidden {
+            display: none;
+            opacity: 0;
+        }
+        .gallery-image.active {
+            display: block;
+            opacity: 1;
+        }
+        .gallery-indicators {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .indicator.active {
+            background-color: #3b82f6;
+            transform: scale(1.2);
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Back Button -->
+        <a href="{% url 'news:news_home' %}" class="flex items-center text-blue-600 hover:text-blue-800 mb-6">
+            <i class="fas fa-arrow-left mr-2"></i> Back to News Feed
+        </a>
+        
+        <!-- News Article -->
+        <article class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <!-- Article Header -->
+                <header class="mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Environment</span>
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded ml-2">Global</span>
+                    </div>
+                    <h1 class="text-3xl font-bold mb-4">Global Climate Summit Reaches Historic Agreement</h1>
+                    <div class="flex items-center text-gray-600">
+                        <span class="mr-4">Posted by <span class="font-semibold">Environment Reporter</span></span>
+                        <span><i class="far fa-clock mr-1"></i> 2 hours ago</span>
+                    </div>
+                </header>
+
+                <!-- Article Image Gallery -->
+                <div class="mb-8 gallery-container">
+                    <div class="relative overflow-hidden rounded-lg" style="height: 450px;">
+                        <!-- Images -->
+                        <img src="https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80" 
+                             alt="Climate Summit" 
+                             class="gallery-image active w-full h-full object-cover">
+                        <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80" 
+                             alt="Climate Summit 2" 
+                             class="gallery-image hidden w-full h-full object-cover">
+                        <img src="https://images.unsplash.com/photo-1508784411316-02b8cd4d3a3a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80" 
+                             alt="Climate Summit 3" 
+                             class="gallery-image hidden w-full h-full object-cover">
+                        
+                        <!-- Navigation Buttons -->
+                        <button class="gallery-nav-btn prev-btn" onclick="prevImage()">
+                            <i class="fas fa-chevron-left text-gray-800"></i>
+                        </button>
+                        <button class="gallery-nav-btn next-btn" onclick="nextImage()">
+                            <i class="fas fa-chevron-right text-gray-800"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">World leaders at the Global Climate Summit 2023 (Image <span id="current-image-number">1</span> of 3)</p>
+                    
+                    <!-- Indicators -->
+                    <div class="gallery-indicators">
+                        <div class="indicator active" data-index="0" onclick="goToImage(0)"></div>
+                        <div class="indicator" data-index="1" onclick="goToImage(1)"></div>
+                        <div class="indicator" data-index="2" onclick="goToImage(2)"></div>
+                    </div>
+                </div>
+
+                <!-- Article Content -->
+                <div class="prose max-w-none mb-8">
+                    <p class="text-lg font-medium mb-4">World leaders have finally reached a consensus on new climate policies that aim to reduce carbon emissions by 50% by 2030, marking a historic moment in global environmental cooperation.</p>
+                    
+                    <p class="mb-4">After two weeks of intense negotiations at the annual Global Climate Summit, representatives from 195 countries agreed on a comprehensive plan to address climate change. The agreement includes binding commitments from all participating nations to significantly reduce greenhouse gas emissions.</p>
+                    
+                    <h2 class="text-2xl font-bold mt-8 mb-4">Key Points of the Agreement</h2>
+                    
+                    <ul class="list-disc pl-6 mb-6">
+                        <li class="mb-2">50% reduction in carbon emissions by 2030 compared to 2010 levels</li>
+                        <li class="mb-2">$100 billion annual climate fund for developing nations</li>
+                        <li class="mb-2">Complete phase-out of coal power in developed countries by 2035</li>
+                        <li class="mb-2">Global carbon pricing mechanism to be implemented by 2025</li>
+                        <li>Protection of 30% of Earth's land and oceans by 2030</li>
+                    </ul>
+                    
+                    <p class="mb-4">UN Secretary-General Antonio Guterres called the agreement "a turning point for humanity" during the closing ceremony. "This is the most significant step forward in our collective fight against climate change," he stated.</p>
+                    
+                    <blockquote class="border-l-4 border-blue-500 pl-4 italic my-6">
+                        "We are not just saving the planet for future generations - we are creating a better world for all of us today."
+                        <footer class="mt-2 text-gray-600">— Climate Summit Chairperson</footer>
+                    </blockquote>
+                    
+                    <p class="mb-4">The agreement comes after years of failed negotiations and increasing pressure from climate activists worldwide. Scientists warn that without immediate action, the world faces catastrophic consequences from rising global temperatures.</p>
+                    
+                    <h2 class="text-2xl font-bold mt-8 mb-4">Implementation Challenges</h2>
+                    
+                    <p class="mb-4">While the agreement has been celebrated as a breakthrough, experts caution that implementation will be challenging. Many countries will need to make significant changes to their energy infrastructure and industrial policies to meet the ambitious targets.</p>
+                    
+                    <p>The next summit in 2024 will focus on monitoring progress and addressing any implementation issues that arise in the coming year.</p>
+                </div>
+
+                <!-- Article Footer -->
+                <footer class="border-t border-gray-200 pt-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex space-x-4 text-gray-500">
+                            <span class="flex items-center">
+                                <i class="far fa-eye mr-1"></i> 1.2K views
+                            </span>
+                            <span class="flex items-center">
+                                <i class="far fa-comment mr-1"></i> 84 comments
+                            </span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                                <i class="fab fa-facebook-f mr-2"></i>Share
+                            </button>
+                            <button class="px-4 py-2 bg-blue-50 text-blue-400 rounded-lg hover:bg-blue-100">
+                                <i class="fab fa-twitter mr-2"></i>Tweet
+                            </button>
+                            <button class="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
+                                <i class="fab fa-youtube mr-2"></i>Video
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold mb-4">Comments (84)</h3>
+                        
+                        <!-- Comment Form -->
+                        <div class="mb-8">
+                            <textarea class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Add your comment..."></textarea>
+                            <div class="flex justify-end mt-2">
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Post Comment</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Comment List -->
+                        <div class="space-y-4">
+                            <!-- Comment 1 -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-2">JD</div>
+                                    <span class="font-semibold">John Doe</span>
+                                    <span class="text-gray-500 text-sm ml-2">• 1 hour ago</span>
+                                </div>
+                                <p class="text-gray-700">This is a historic moment indeed! Finally our leaders are taking climate change seriously. Let's hope they follow through with actual implementation.</p>
+                                <div class="flex items-center mt-2 text-sm text-gray-500">
+                                    <button class="flex items-center mr-4 hover:text-blue-600">
+                                        <i class="far fa-thumbs-up mr-1"></i> 24
+                                    </button>
+                                    <button class="flex items-center mr-4 hover:text-blue-600">
+                                        <i class="far fa-thumbs-down mr-1"></i> 2
+                                    </button>
+                                    <button class="hover:text-blue-600">Reply</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Comment 2 -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-2">ES</div>
+                                    <span class="font-semibold">Eco Scientist</span>
+                                    <span class="text-gray-500 text-sm ml-2">• 45 minutes ago</span>
+                                </div>
+                                <p class="text-gray-700">While the targets are ambitious, I'm concerned about the lack of specific enforcement mechanisms. We've seen similar agreements fail before due to lack of accountability.</p>
+                                <div class="flex items-center mt-2 text-sm text-gray-500">
+                                    <button class="flex items-center mr-4 hover:text-blue-600">
+                                        <i class="far fa-thumbs-up mr-1"></i> 15
+                                    </button>
+                                    <button class="flex items-center mr-4 hover:text-blue-600">
+                                        <i class="far fa-thumbs-down mr-1"></i> 0
+                                    </button>
+                                    <button class="hover:text-blue-600">Reply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </article>
+    </div>
+
+    <script>
+        let currentImageIndex = 0;
+        const images = document.querySelectorAll('.gallery-image');
+        const totalImages = images.length;
+        const indicators = document.querySelectorAll('.indicator');
+        const currentImageNumber = document.getElementById('current-image-number');
+
+        function showImage(index) {
+            // Hide all images
+            images.forEach(img => img.classList.add('hidden'));
+            images.forEach(img => img.classList.remove('active'));
+            
+            // Show selected image
+            images[index].classList.remove('hidden');
+            images[index].classList.add('active');
+            
+            // Update indicators
+            indicators.forEach(indicator => indicator.classList.remove('active'));
+            indicators[index].classList.add('active');
+            
+            // Update image counter
+            currentImageNumber.textContent = index + 1;
+            
+            currentImageIndex = index;
+        }
+
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % totalImages;
+            showImage(currentImageIndex);
+        }
+
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
+            showImage(currentImageIndex);
+        }
+
+        function goToImage(index) {
+            showImage(index);
+        }
+
+        // Auto-rotate images every 5 seconds
+        setInterval(nextImage, 5000);
+    </script>
+    <script>
+        let halfMenu = false;
+        let fullMenuHide = true;
+        const sideBar = document.getElementById('sidebar')
+        const cardGrid = document.getElementById('content')
+        sideBar.classList.toggle('md:translate-x-0')
+        cardGrid.classList.remove('md:ml-64')
+    </script>
+{% endblock %}

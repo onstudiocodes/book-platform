@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'main',
     'accounts',
     'author',
+    'news',
+    'travel',
     'django_ckeditor_5',
     'django_cleanup',
     'rest_framework',
