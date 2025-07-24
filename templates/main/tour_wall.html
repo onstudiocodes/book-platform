@@ -9,10 +9,38 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
-        .prose img {
-            border-radius: 0.5rem;
-            margin: 1.5rem 0;
+        .stories-container {
+            overflow-y: auto;
+            scrollbar-width: none; /* For Firefox */
+            -ms-overflow-style: none; /* For IE and Edge */
+        }
+        .stories-container::-webkit-scrollbar {
+            display: none; /* For Chrome, Safari and Opera */
+        }
+        .ad-container {
+            position: sticky;
+            top: 20px;
+        }
+        @media (max-width: 1023px) {
+            .ad-container {
+                display: none;
+            }
+        }
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 {% endblock %}
@@ -39,245 +67,398 @@
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Filter Options -->
-            <div class="flex flex-wrap items-center justify-between mb-8 gap-4">
-                <div class="flex space-x-2">
-                    <button class="px-3 py-1 bg-indigo-600 text-white rounded-full text-sm">All</button>
-                    <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Mountains</button>
-                    <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Beaches</button>
-                    <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Forests</button>
-                    <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Historical</button>
+        <!-- Main Content with Sidebar -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+            <!-- Stories Content -->
+            <div class="flex-1">
+                <!-- Filter Options -->
+                <div class="flex flex-wrap items-center justify-between mb-8 gap-4">
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-1 bg-indigo-600 text-white rounded-full text-sm">All</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Mountains</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Beaches</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Forests</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Historical</button>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="mr-2">Sort by:</span>
+                        <select class="border-0 bg-transparent text-indigo-600 focus:ring-0">
+                            <option>Latest</option>
+                            <option>Popular</option>
+                            <option>Most Viewed</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="flex items-center text-sm text-gray-600">
-                    <span class="mr-2">Sort by:</span>
-                    <select class="border-0 bg-transparent text-indigo-600 focus:ring-0">
-                        <option>Latest</option>
-                        <option>Popular</option>
-                        <option>Most Viewed</option>
-                    </select>
-                </div>
-            </div>
 
-            <!-- Stories Container with Hidden Scrollbar -->
-            <div class="stories-container" style="max-height: calc(100vh - 250px);">
-                <!-- Featured Story -->
-                <div class="mb-12">
-                    <a href="single-story.html">
-                        <div class="relative rounded-xl overflow-hidden h-96">
-                            <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="Featured Tour" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end p-8">
-                                <div>
-                                    <span class="inline-block px-3 py-1 bg-green-500 text-white text-sm font-medium rounded-full mb-2">Featured</span>
-                                    <h2 class="text-3xl font-bold text-white mb-2">St. Martin's Island: Coral Paradise</h2>
-                                    <p class="text-gray-200 mb-4">Exploring Bangladesh's only coral island with its turquoise waters and white sandy beaches</p>
-                                    <div class="flex items-center text-white">
-                                        <span class="flex items-center mr-4">
-                                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            5 days
-                                        </span>
-                                        <span class="flex items-center">
-                                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            Cox's Bazar, Bangladesh
-                                        </span>
+                <!-- Stories Container with Hidden Scrollbar -->
+                <div class="stories-container" style="max-height: calc(100vh - 250px);">
+                    <!-- Featured Story -->
+                    <div class="mb-12">
+                        <a href="single-story.html">
+                            <div class="relative rounded-xl overflow-hidden h-96">
+                                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="Featured Tour" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end p-8">
+                                    <div>
+                                        <span class="inline-block px-3 py-1 bg-green-500 text-white text-sm font-medium rounded-full mb-2">Featured</span>
+                                        <h2 class="text-3xl font-bold text-white mb-2">St. Martin's Island: Coral Paradise</h2>
+                                        <p class="text-gray-200 mb-4">Exploring Bangladesh's only coral island with its turquoise waters and white sandy beaches</p>
+                                        <div class="flex items-center text-white">
+                                            <span class="flex items-center mr-4">
+                                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                5 days
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                                Cox's Bazar, Bangladesh
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </a>
+                    </div>
+
+                    <!-- Stories Grid -->
+                    <div id="stories-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
+                        <!-- Story Card 1 -->
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <a href="single-story.html">
+                                <div class="relative h-48">
+                                    <img src="https://images.unsplash.com/photo-1470114716159-e389f8712fda" alt="Tour Image" class="w-full h-full object-cover">
+                                    <div class="absolute top-4 right-4">
+                                        <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
+                                            <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="p-6">
+                                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                                        <span>Sajid Ahmed</span>
+                                        <span class="mx-2">•</span>
+                                        <span>2 weeks ago</span>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Sajek Valley: In the Realm of Clouds</h3>
+                                    <p class="text-gray-600 mb-4">A three-day adventure in the hills of Rangamati where clouds meet mountains...</p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Mountains
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Trekking
+                                            </span>
+                                        </div>
+                                        <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    </a>
-                </div>
 
-                <!-- Stories Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
-                    <!-- Story Card 1 -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                        <a href="">
-                            <div class="relative h-48">
-                                <img src="https://images.unsplash.com/photo-1470114716159-e389f8712fda" alt="Tour Image" class="w-full h-full object-cover">
-                                <div class="absolute top-4 right-4">
-                                    <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
-                                        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-2">
-                                    <span>Sajid Ahmed</span>
-                                    <span class="mx-2">•</span>
-                                    <span>2 weeks ago</span>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Sajek Valley: In the Realm of Clouds</h3>
-                                <p class="text-gray-600 mb-4">A three-day adventure in the hills of Rangamati where clouds meet mountains...</p>
-                                <div class="flex justify-between items-center">
-                                    <div class="flex space-x-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Mountains
-                                        </span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Trekking
-                                        </span>
+                        <!-- Story Card 2 -->
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <a href="single-story.html">
+                                <div class="relative h-48">
+                                    <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4" alt="Tour Image" class="w-full h-full object-cover">
+                                    <div class="absolute top-4 right-4">
+                                        <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
+                                            <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
                                 </div>
-                            </div>
-                        </a>
-                    </div>
+                                <div class="p-6">
+                                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                                        <span>Tanzina Akter</span>
+                                        <span class="mx-2">•</span>
+                                        <span>1 month ago</span>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Sundarbans: Kingdom of the Royal Bengal Tiger</h3>
+                                    <p class="text-gray-600 mb-4">Exploring the world's largest mangrove forest in southwest Bangladesh...</p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Forest
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                Wildlife
+                                            </span>
+                                        </div>
+                                        <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
 
-                    <!-- Story Card 2 -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                        <a href="single-story.html">
-                            <div class="relative h-48">
-                                <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4" alt="Tour Image" class="w-full h-full object-cover">
-                                <div class="absolute top-4 right-4">
-                                    <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
-                                        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-2">
-                                    <span>Tanzina Akter</span>
-                                    <span class="mx-2">•</span>
-                                    <span>1 month ago</span>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Sundarbans: Kingdom of the Royal Bengal Tiger</h3>
-                                <p class="text-gray-600 mb-4">Exploring the world's largest mangrove forest in southwest Bangladesh...</p>
-                                <div class="flex justify-between items-center">
-                                    <div class="flex space-x-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            Forest
-                                        </span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                            Wildlife
-                                        </span>
+                        <!-- Story Card 3 -->
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <a href="single-story.html">
+                                <div class="relative h-48">
+                                    <img src="https://images.unsplash.com/photo-1519046904884-53103b34b206" alt="Tour Image" class="w-full h-full object-cover">
+                                    <div class="absolute top-4 right-4">
+                                        <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
+                                            <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
                                 </div>
-                            </div>
-                        </a>
-                    </div>
+                                <div class="p-6">
+                                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                                        <span>Rahul Islam</span>
+                                        <span class="mx-2">•</span>
+                                        <span>3 months ago</span>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Kaptai Lake: Mountains on Water</h3>
+                                    <p class="text-gray-600 mb-4">Experiencing the beauty of Kaptai Lake in Rangamati where mountains rise from the water...</p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Lake
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Boat Tour
+                                            </span>
+                                        </div>
+                                        <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
 
-                    <!-- Story Card 3 -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                        <a href="single-story.html">
-                            <div class="relative h-48">
-                                <img src="https://images.unsplash.com/photo-1519046904884-53103b34b206" alt="Tour Image" class="w-full h-full object-cover">
-                                <div class="absolute top-4 right-4">
-                                    <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
-                                        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-2">
-                                    <span>Rahul Islam</span>
-                                    <span class="mx-2">•</span>
-                                    <span>3 months ago</span>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Kaptai Lake: Mountains on Water</h3>
-                                <p class="text-gray-600 mb-4">Experiencing the beauty of Kaptai Lake in Rangamati where mountains rise from the water...</p>
-                                <div class="flex justify-between items-center">
-                                    <div class="flex space-x-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Lake
-                                        </span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Boat Tour
-                                        </span>
+                        <!-- Additional Story Cards (sample) -->
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <a href="single-story.html">
+                                <div class="relative h-48">
+                                    <img src="https://images.unsplash.com/photo-1464037866556-6812c9d1c72e" alt="Tour Image" class="w-full h-full object-cover">
+                                    <div class="absolute top-4 right-4">
+                                        <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
+                                            <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
                                 </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <!-- Additional Story Cards (sample) -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                        <a href="single-story.html">
-                            <div class="relative h-48">
-                                <img src="https://images.unsplash.com/photo-1464037866556-6812c9d1c72e" alt="Tour Image" class="w-full h-full object-cover">
-                                <div class="absolute top-4 right-4">
-                                    <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
-                                        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-2">
-                                    <span>Maria Garcia</span>
-                                    <span class="mx-2">•</span>
-                                    <span>1 month ago</span>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Andes Mountain Expedition</h3>
-                                <p class="text-gray-600 mb-4">Trekking through the breathtaking landscapes of the Andes in Peru...</p>
-                                <div class="flex justify-between items-center">
-                                    <div class="flex space-x-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Mountains
-                                        </span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Expedition
-                                        </span>
+                                <div class="p-6">
+                                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                                        <span>Maria Garcia</span>
+                                        <span class="mx-2">•</span>
+                                        <span>1 month ago</span>
                                     </div>
-                                    <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    {% for story in stories %}
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                        <a href="{% url "main:tour_details" story.slug %}">
-                            <div class="relative h-48">
-                                <img src="{{story.images.first.image.url}}" alt="Tour Image" class="w-full h-full object-cover">
-                                <div class="absolute top-4 right-4">
-                                    <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
-                                        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-2 truncate">
-                                    <span>{{story.author.userprofile.full_name}}</span>
-                                    <span class="mx-2">•</span>
-                                    <span>{{story.created_at|time_since}}</span>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">{{story.title}}</h3>
-                                <p class="text-gray-600 mb-4 line-clamp-3">{{story.story|striptags}}</p>
-                                <div class="flex justify-between items-center">
-                                    <div class="flex space-x-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Lake
-                                        </span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Boat Tour
-                                        </span>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Andes Mountain Expedition</h3>
+                                    <p class="text-gray-600 mb-4">Trekking through the breathtaking landscapes of the Andes in Peru...</p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Mountains
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                Expedition
+                                            </span>
+                                        </div>
+                                        <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
                                     </div>
-                                    <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+                        </div>
                     </div>
-                    {% endfor %}
+                    
+                    <!-- Loading Spinner -->
+                    <div id="loading-spinner" class="loading-spinner"></div>
                 </div>
             </div>
-        </main>
+
+            <!-- Right Sidebar with Ads -->
+            <div class="lg:w-80 space-y-6">
+                <!-- Sticky container for ads -->
+                <div class="ad-container space-y-6">
+                    <!-- Ad 1 - Travel Booking -->
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                        <div class="text-center mb-3">
+                            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Sponsored</span>
+                        </div>
+                        <a href="#" class="block">
+                            <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4" alt="Book your next trip" class="w-full h-40 object-cover rounded-lg mb-3">
+                            <h4 class="font-bold text-gray-900 mb-1">Book Your Next Adventure</h4>
+                            <p class="text-sm text-gray-600 mb-3">Exclusive deals on hotels and flights. Save up to 40%!</p>
+                            <button class="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Explore Deals</button>
+                        </a>
+                    </div>
+
+                    <!-- Ad 2 - Travel Gear -->
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                        <div class="text-center mb-3">
+                            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Sponsored</span>
+                        </div>
+                        <a href="#" class="block">
+                            <img src="https://images.unsplash.com/photo-1520006403909-838d6b92c22e" alt="Travel gear" class="w-full h-40 object-cover rounded-lg mb-3">
+                            <h4 class="font-bold text-gray-900 mb-1">Essential Travel Gear</h4>
+                            <p class="text-sm text-gray-600 mb-3">Top-rated backpacks, cameras, and accessories for travelers.</p>
+                            <button class="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Shop Now</button>
+                        </a>
+                    </div>
+
+                    <!-- Ad 3 - Newsletter -->
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                        <h4 class="font-bold text-gray-900 mb-3">Travel Tips Newsletter</h4>
+                        <p class="text-sm text-gray-600 mb-4">Get weekly travel inspiration and exclusive tips straight to your inbox.</p>
+                        <form class="space-y-3">
+                            <input type="email" placeholder="Your email address" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Subscribe</button>
+                        </form>
+                        <p class="text-xs text-gray-500 mt-2">We respect your privacy. Unsubscribe at any time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const storiesGrid = document.getElementById('stories-grid');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const storiesContainer = document.querySelector('.stories-container');
+            
+            let isLoading = false;
+            let currentPage = 1;
+            const threshold = 200; // pixels from bottom to trigger load
+            
+            // Sample data for additional stories (in a real app, this would come from an API)
+            const additionalStories = [
+                {
+                    id: 5,
+                    author: "Lena Petrov",
+                    date: "2 weeks ago",
+                    title: "Alpine Meadows in Switzerland",
+                    description: "Hiking through the stunning alpine meadows with breathtaking mountain views.",
+                    image: "https://images.unsplash.com/photo-1476231682828-37e571bc172f",
+                    tags: ["Mountains", "Hiking"]
+                },
+                {
+                    id: 6,
+                    author: "Ahmed Khan",
+                    date: "3 weeks ago",
+                    title: "Desert Safari in Dubai",
+                    description: "An exhilarating experience riding through the golden dunes of the Arabian desert.",
+                    image: "https://images.unsplash.com/photo-1518630386542-9fc1ac0a4d10",
+                    tags: ["Desert", "Adventure"]
+                },
+                {
+                    id: 7,
+                    author: "Sophie Martin",
+                    date: "1 month ago",
+                    title: "Venice: The Floating City",
+                    description: "Exploring the romantic canals and historic architecture of Venice, Italy.",
+                    image: "https://images.unsplash.com/photo-1514890547357-a9ee288728e0",
+                    tags: ["Historical", "City"]
+                },
+                {
+                    id: 8,
+                    author: "David Wilson",
+                    date: "2 months ago",
+                    title: "Northern Lights in Norway",
+                    description: "Witnessing the magical aurora borealis in the Arctic Circle.",
+                    image: "https://images.unsplash.com/photo-1604085572504-a392ddf0d86a",
+                    tags: ["Arctic", "Nature"]
+                }
+            ];
+            
+            // Function to load more stories
+            function loadMoreStories() {
+                if (isLoading) return;
+                
+                isLoading = true;
+                loadingSpinner.style.display = 'block';
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    // In a real app, you would fetch data from your API here
+                    // For this example, we'll use our sample data
+                    
+                    // Create and append new story cards
+                    additionalStories.forEach(story => {
+                        const tagsHtml = story.tags.map(tag => {
+                            const colors = [
+                                { bg: 'bg-blue-100', text: 'text-blue-800' },
+                                { bg: 'bg-green-100', text: 'text-green-800' },
+                                { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+                                { bg: 'bg-purple-100', text: 'text-purple-800' },
+                                { bg: 'bg-red-100', text: 'text-red-800' }
+                            ];
+                            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                            
+                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${randomColor.bg} ${randomColor.text}">
+                                ${tag}
+                            </span>`;
+                        }).join('');
+                        
+                        const storyHtml = `
+                            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                                <a href="single-story.html">
+                                    <div class="relative h-48">
+                                        <img src="${story.image}" alt="Tour Image" class="w-full h-full object-cover">
+                                        <div class="absolute top-4 right-4">
+                                            <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
+                                                <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="flex items-center text-sm text-gray-500 mb-2">
+                                            <span>${story.author}</span>
+                                            <span class="mx-2">•</span>
+                                            <span>${story.date}</span>
+                                        </div>
+                                        <h3 class="text-xl font-semibold text-gray-900 mb-2">${story.title}</h3>
+                                        <p class="text-gray-600 mb-4">${story.description}</p>
+                                        <div class="flex justify-between items-center">
+                                            <div class="flex space-x-2">
+                                                ${tagsHtml}
+                                            </div>
+                                            <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        `;
+                        
+                        storiesGrid.insertAdjacentHTML('beforeend', storyHtml);
+                    });
+                    
+                    currentPage++;
+                    isLoading = false;
+                    loadingSpinner.style.display = 'none';
+                    
+                    // In a real app, you would check if there are more pages to load
+                    // and disable infinite scroll if you've reached the end
+                    
+                }, 1000); // Simulated network delay
+            }
+            
+            // Scroll event listener for infinite scroll
+            storiesContainer.addEventListener('scroll', function() {
+                const scrollTop = storiesContainer.scrollTop;
+                const scrollHeight = storiesContainer.scrollHeight;
+                const clientHeight = storiesContainer.clientHeight;
+                
+                if (scrollHeight - (scrollTop + clientHeight) < threshold) {
+                    loadMoreStories();
+                }
+            });
+            
+            // Initial load of more stories when page loads (optional)
+            // loadMoreStories();
+        });
+    </script>
 
     <script>
         let halfMenu = false;
