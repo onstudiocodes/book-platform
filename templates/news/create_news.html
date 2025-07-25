@@ -1,136 +1,202 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}
-News
-{% endblock %}
+{% block title %}News{% endblock %}
 {% block header %}
-    <style>
-        .image-upload-preview {
-            max-height: 300px;
-            object-fit: contain;
-            display: none;
-        }
-        .upload-area {
-            transition: all 0.3s ease;
-        }
-        .upload-area.drag-over {
-            background-color: #f0f9ff;
-            border-color: #3b82f6;
-        }
-    </style>
+<style>
+    .image-upload-preview {
+        max-height: 300px;
+        object-fit: contain;
+        display: none;
+    }
+    .upload-area {
+        transition: all 0.3s ease;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .upload-area.drag-over {
+        background-color: #f0f9ff;
+        border-color: #3b82f6;
+    }
+    .thumbnail-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .thumbnail-wrapper {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+    .thumbnail-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 0.25rem;
+    }
+    .remove-btn {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ef4444;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 10;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .remove-btn:hover {
+        background: #dc2626;
+    }
+    #upload-area-content {
+        text-align: center;
+        padding: 20px;
+    }
+</style>
 {% endblock %}
 {% block content %}
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <!-- Back Button -->
-        <a href="{% url "news:news_feed" %}" class="flex items-center text-blue-600 hover:text-blue-800 mb-6">
-            <i class="fas fa-arrow-left mr-2"></i> Back to News Feed
-        </a>
-        
-        <!-- Create News Form -->
-        <article class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="p-6">
-                <!-- Form Header -->
-                <header class="mb-6">
-                    <h1 class="text-3xl font-bold mb-2">Create New Article</h1>
-                    <p class="text-gray-600">Share your news with our community</p>
-                </header>
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Back Button -->
+    <a href="{% url 'news:news_feed' %}" class="flex items-center text-blue-600 hover:text-blue-800 mb-6">
+        <i class="fas fa-arrow-left mr-2"></i> Back to News Feed
+    </a>
+    
+    <!-- Create News Form -->
+    <article class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6">
+            <!-- Form Header -->
+            <header class="mb-6">
+                <h1 class="text-3xl font-bold mb-2">Create New News</h1>
+                <p class="text-gray-600">Share your news with our community</p>
+            </header>
 
-                <!-- Article Form -->
-                <form>
-                    <!-- Title -->
-                    <div class="mb-6">
-                        <label for="title" class="block text-gray-700 font-medium mb-2">Article Title*</label>
-                        <input type="text" id="title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter a compelling headline" required>
+            <!-- Article Form -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Title -->
+                <div class="mb-6">
+                    <label for="id_title" class="block text-gray-700 font-medium mb-2">News Title*</label>
+                    {{ form.title }}
+                </div>
+
+                <!-- Category Selection -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Categories*</label>
+                    <div class="flex flex-wrap gap-2">
+                        {% for value, label in form.category.field.choices %}
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="category" value="{{ value }}" class="category-checkbox" 
+                                       {% if value in form.category.value %}checked{% endif %}>
+                                <span class="category-tag ml-2 px-3 py-1 
+                                    {% if value == 'Politics' %}bg-red-100 text-red-800
+                                    {% elif value == 'Technology' %}bg-purple-100 text-purple-800
+                                    {% elif value == 'Business' %}bg-yellow-100 text-yellow-800
+                                    {% elif value == 'Sports' %}bg-green-100 text-green-800
+                                    {% elif value == 'Health' %}bg-red-100 text-red-800
+                                    {% elif value == 'Science' %}bg-yellow-100 text-yellow-800
+                                    {% endif %}">
+                                    {{ label }}
+                                </span>
+                            </label>
+                        {% endfor %}
                     </div>
+                </div>
 
-                    <!-- Category Selection -->
-                    <div class="mb-6">
-                        <label class="block text-gray-700 font-medium mb-2">Categories*</label>
-                        <div class="flex flex-wrap gap-2">
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox text-blue-600" name="categories[]" value="Politics">
-                                <span class="ml-2 px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">Politics</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox text-blue-600" name="categories[]" value="Technology">
-                                <span class="ml-2 px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Technology</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox text-blue-600" name="categories[]" value="Business">
-                                <span class="ml-2 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">Business</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox text-blue-600" name="categories[]" value="Sports">
-                                <span class="ml-2 px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Sports</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox text-blue-600" name="categories[]" value="Health">
-                                <span class="ml-2 px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">Health</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox text-blue-600" name="categories[]" value="Science">
-                                <span class="ml-2 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">Science</span>
-                            </label>
+                <!-- Featured Images (Multiple) -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">News Images (Max 5)</label>
+                    <div id="upload-container" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center upload-area">
+                        <div id="thumbnail-container" class="thumbnail-container">
+                            {% for image_form in formset %}
+                                {% if image_form.instance.image %}
+                                <div class="thumbnail-wrapper" data-id="{{ image_form.instance.id }}">
+                                    <img src="{{ image_form.instance.image.url }}" class="thumbnail-img">
+                                    <span class="remove-btn" onclick="removeExistingImage(this, '{{ image_form.DELETE.auto_id }}')">&times;</span>
+                                    {{ image_form.DELETE }}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div id="upload-area-content" {% if formset.total_form_count > 1 %}style="display: none;"{% endif %}>
+                            <i class="fas fa-image text-4xl text-blue-500 mb-3"></i>
+                            <p class="text-gray-600 mb-1">Drag & drop your images here or click to browse</p>
+                            <p class="text-gray-400 text-sm">Supports JPG, PNG (any resolution)</p>
+                            {{ formset.management_form }}
+                            <input type="file" id="main-image-upload" class="hidden" accept="image/*" multiple>
+                            {% for image_form in formset %}
+                                {{ image_form.image }}
+                            {% endfor %}
                         </div>
                     </div>
+                </div>
+                <!-- Content Editor -->
+                <div class="mb-6">
+                    <label for="id_content" class="block text-gray-700 font-medium mb-2">News Content*</label>
+                    {{ form.content }}
+                </div>
 
-                    <!-- Featured Image -->
-                    <div class="mb-6">
-                        <label class="block text-gray-700 font-medium mb-2">Featured Image</label>
-                        <div id="upload-container" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center upload-area">
-                            <img id="image-preview" class="image-upload-preview w-full mb-4 rounded-lg mx-auto">
-                            <div id="upload-area-content">
-                                <i class="fas fa-image text-4xl text-blue-500 mb-3"></i>
-                                <p class="text-gray-600 mb-1">Drag & drop your image here or click to browse</p>
-                                <p class="text-gray-400 text-sm">Supports JPG, PNG (any resolution)</p>
-                                <input type="file" id="image-upload" class="hidden" accept="image/*">
-                            </div>
-                        </div>
+                <!-- Submit Button -->
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i> Fields marked with * are required
                     </div>
+                    <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+                        <i class="fas fa-paper-plane mr-2"></i> Publish News
+                    </button>
+                </div>
+            </form>
+        </div>
+    </article>
+</div>
 
-                    <!-- Content Editor -->
-                    <div class="mb-6">
-                        <label for="content" class="block text-gray-700 font-medium mb-2">Article Content*</label>
-                        <textarea id="content" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write your article here..." required></textarea>
-                    </div>
+<script>
+    // Image upload functionality
+    const mainImageUpload = document.getElementById('main-image-upload');
+    const uploadContainer = document.getElementById('upload-container');
+    const uploadAreaContent = document.getElementById('upload-area-content');
+    const thumbnailContainer = document.getElementById('thumbnail-container');
+    const imageForms = document.querySelectorAll('[id^="id_images-"][id$="-image"]');
+    let uploadedImages = [];
+    let formCount = {{ formset.total_form_count }};
+    const maxImages = 5;
 
-                    <!-- Author Info -->
-                    <div class="mb-8">
-                        <label for="author" class="block text-gray-700 font-medium mb-2">Author Name*</label>
-                        <input type="text" id="author" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your name" required>
-                    </div>
+    // Initialize with existing images
+    document.querySelectorAll('.thumbnail-wrapper[data-id]').forEach(wrapper => {
+        uploadedImages.push({
+            id: wrapper.dataset.id,
+            existing: true
+        });
+    });
 
-                    <!-- Submit Button -->
-                    <div class="flex justify-between items-center">
-                        <div class="text-sm text-gray-500">
-                            <i class="fas fa-info-circle mr-1"></i> Fields marked with * are required
-                        </div>
-                        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
-                            <i class="fas fa-paper-plane mr-2"></i> Publish Article
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </article>
-    </div>
-
-    <script>
-        // Image upload functionality
-        const imageUpload = document.getElementById('image-upload');
-        const imagePreview = document.getElementById('image-preview');
-        const uploadContainer = document.getElementById('upload-container');
-        const uploadAreaContent = document.getElementById('upload-area-content');
-
-        // Click to upload
-        uploadContainer.addEventListener('click', () => {
-            imageUpload.click();
+    // Click to upload
+    if (uploadContainer && mainImageUpload) {
+        uploadContainer.addEventListener('click', (e) => {
+            // Only trigger if clicking on the upload area, not thumbnails
+            if (e.target === uploadContainer || e.target === uploadAreaContent || 
+                Array.from(uploadAreaContent.children).includes(e.target)) {
+                mainImageUpload.click();
+            }
         });
 
         // Handle file selection
-        imageUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                displayImagePreview(file);
+        mainImageUpload.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                handleFiles(files);
             }
         });
 
@@ -150,29 +216,120 @@ News
             e.preventDefault();
             uploadContainer.classList.remove('drag-over');
             
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.match('image.*')) {
-                displayImagePreview(file);
-                imageUpload.files = e.dataTransfer.files;
+            const files = Array.from(e.dataTransfer.files);
+            const imageFiles = files.filter(file => file.type.match('image.*'));
+            
+            if (imageFiles.length > 0) {
+                handleFiles(imageFiles);
+                mainImageUpload.files = e.dataTransfer.files;
             }
         });
+    }
 
-        function displayImagePreview(file) {
+    function handleFiles(files) {
+        // Check if adding these files would exceed the 5-image limit
+        if (uploadedImages.length + files.length > maxImages) {
+            alert(`You can upload a maximum of ${maxImages} images.`);
+            return;
+        }
+
+        files.forEach((file, index) => {
+            if (uploadedImages.length >= maxImages) return;
+            
             const reader = new FileReader();
             reader.onload = (e) => {
-                imagePreview.src = e.target.result;
-                imagePreview.style.display = 'block';
-                uploadAreaContent.style.display = 'none';
+                const imageData = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    src: e.target.result,
+                    file: file
+                };
+                
+                uploadedImages.push(imageData);
+                displayThumbnail(imageData);
+                
+                // Hide upload area if we have images
+                if (uploadedImages.length > 0 && uploadAreaContent) {
+                    uploadAreaContent.style.display = 'none';
+                }
+
+                // Update the next available form field
+                updateNextImageForm(file, index);
             };
             reader.readAsDataURL(file);
-        }
+        });
+    }
 
-        // Reset button (optional)
-        function resetImageUpload() {
-            imagePreview.src = '';
-            imagePreview.style.display = 'none';
-            uploadAreaContent.style.display = 'block';
-            imageUpload.value = '';
+    function displayThumbnail(imageData) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'thumbnail-wrapper';
+        wrapper.dataset.id = imageData.id;
+        
+        const img = document.createElement('img');
+        img.className = 'thumbnail-img';
+        img.src = imageData.src;
+        
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeImage(imageData.id);
+        });
+        
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        if (thumbnailContainer) {
+            thumbnailContainer.appendChild(wrapper);
         }
-    </script>
+    }
+
+    function removeImage(id) {
+        // Remove from DOM
+        const element = document.querySelector(`.thumbnail-wrapper[data-id="${id}"]`);
+        if (element) {
+            element.remove();
+        }
+        
+        // Remove from array
+        uploadedImages = uploadedImages.filter(img => img.id !== id);
+        
+        // Show upload area if no images left
+        if (uploadedImages.length === 0 && uploadAreaContent) {
+            uploadAreaContent.style.display = 'block';
+        }
+    }
+
+    function removeExistingImage(button, deleteFieldId) {
+        const wrapper = button.parentElement;
+        if (wrapper) {
+            wrapper.remove();
+        }
+        
+        // Mark the form for deletion
+        if (deleteFieldId) {
+            const deleteField = document.getElementById(deleteFieldId);
+            if (deleteField) {
+                deleteField.value = 'on';
+            }
+        }
+        
+        // Show upload area if no images left
+        if (document.querySelectorAll('.thumbnail-wrapper').length === 0 && uploadAreaContent) {
+            uploadAreaContent.style.display = 'block';
+        }
+    }
+
+    function updateNextImageForm(file, index) {
+        // Find the next available form and set its file
+        if (index < imageForms.length) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            imageForms[index].files = dataTransfer.files;
+            
+            // Trigger change event in case any listeners are attached
+            const event = new Event('change');
+            imageForms[index].dispatchEvent(event);
+        }
+    }
+</script>
 {% endblock %}

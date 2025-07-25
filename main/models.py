@@ -84,6 +84,7 @@ class News(models.Model):
     likes = models.ManyToManyField(User, related_name='liked_news', blank=True)
     dislikes = models.ManyToManyField(User, related_name='disliked_news', blank=True)
     views = models.PositiveIntegerField(default=0)
+    publish = models.BooleanField(default=False)
     
     def thumbnail(self):
         return self.images.first().image
