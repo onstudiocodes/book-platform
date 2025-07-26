@@ -45,6 +45,7 @@ class NewsSerializer(serializers.ModelSerializer):
     views_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    category = serializers.StringRelatedField()
 
     class Meta:
         model = News

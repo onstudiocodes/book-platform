@@ -71,14 +71,21 @@ class ReadingTime(models.Model):
     
     def get_hours(self):
         return f"{self.total_time/3600:.2f}"
-    
+
+class NewsCategory(models.Model):
+    name = models.CharField(max_length=50)
+    slug = AutoSlugField(populate_from="name", unique=True)
+
+    def __str__(self):
+        return self.name
+
 class News(models.Model):
     title = models.CharField(max_length=255)
     slug = AutoSlugField(populate_from='title', unique=True)
     description = models.TextField()
     content = CKEditor5Field(config_name="extends") 
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='news', blank=True, null=True)
+    category = models.ForeignKey(NewsCategory, on_delete=models.CASCADE, related_name='news', blank=True, null=True)
     published_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_news', blank=True)
