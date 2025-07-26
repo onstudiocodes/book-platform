@@ -5,6 +5,7 @@ module.exports = {
     "templates/author/*.{html,js}",
     "templates/components/*.{html,js}",
     "templates/main/*.{html,js}",
+    "templates/news/*.{html,js}",
     "static/js/*{html,js}"
 
   ],

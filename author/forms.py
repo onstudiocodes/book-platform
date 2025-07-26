@@ -27,37 +27,27 @@ CATEGORY_CHOICES = [
 
 class NewsForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditor5Widget())
-    category = forms.MultipleChoiceField(
-        choices=CATEGORY_CHOICES,
-        widget=forms.CheckboxSelectMultiple,
-        required=True
-    )
+    
 
     class Meta:
         model = News
-        fields = ['title', 'category', 'description', 'content']
+        fields = ['title', 'category', 'content']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'Enter a compelling headline'
-            }),
-            'description': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             }),
             'content': forms.Textarea(attrs={
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'rows': '12',
                 'placeholder': 'Write your news content here...'
             }),
+            'category': forms.RadioSelect(attrs={
+                'class': 'hidden'  # We'll style the labels instead
+            }),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
-            self.fields['category'].initial = self.instance.category.split(',') if self.instance.category else []
-
-    def clean_category(self):
-        return ','.join(self.cleaned_data['category'])
+   
 
 class NewsImageForm(forms.ModelForm):
     image = forms.ImageField(
@@ -65,7 +55,6 @@ class NewsImageForm(forms.ModelForm):
             'class': 'hidden',
             'accept': 'image/*',
             'multiple': False,  # Each form instance handles one file
-            'id': 'image-upload'
         }),
         required=False
     )
