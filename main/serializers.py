@@ -52,16 +52,16 @@ class NewsSerializer(serializers.ModelSerializer):
         fields = ['id', 'author', 'title', 'slug', 'description', 'content', 'author_name', 'category', 'published_date', 'updated_date', 'images', 'likes_count', 'dislikes_count', 'views_count', 'comments_count', 'is_liked']
 
     def get_likes_count(self, obj):
-        return obj.likes.count()
+        return getattr(obj, 'likes_count', 0)
 
     def get_dislikes_count(self, obj):
-        return obj.dislikes.count()
+        return getattr(obj, 'dislikes_count', 0)
 
     def get_views_count(self, obj):
         return obj.views  # Direct field, no need for `.count()`
     
     def get_comments_count(self, obj):
-        return obj.comments.count() if hasattr(obj, 'comments') else 0
+        return getattr(obj, 'comments_count', 0)
     
     def get_is_liked(self, obj):
         request = self.context.get('request')

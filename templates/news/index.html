@@ -422,7 +422,7 @@ News
         const newsFeed = document.getElementById('news-feed');
         const loadingSpinner = document.getElementById('loading-spinner');
         let isLoading = false;
-        let currentPage = 1;
+        let currentPage = 0;
         let hasMore = true;
 
         // Sample news data for demonstration
@@ -584,6 +584,7 @@ News
         // Initial load of more news when page loads
         window.addEventListener('load', () => {
             loadMoreNews();
+            console.log('working')
         });
     </script>
 

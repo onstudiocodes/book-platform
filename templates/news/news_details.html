@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block title %}
 News
 {% endblock %}
@@ -80,7 +81,7 @@ News
             <!-- Main Content Column (2/3 width) -->
             <div class="w-full lg:w-2/3">
                 <!-- Back Button -->
-                <a href="{% url "news:news_feed" %}" class="flex items-center text-blue-600 hover:text-blue-800 mb-6">
+                <a href="{% url 'news:news_feed' %}" class="flex items-center text-blue-600 hover:text-blue-800 mb-6">
                     <i class="fas fa-arrow-left mr-2"></i> Back to News Feed
                 </a>
                 
@@ -90,13 +91,12 @@ News
                         <!-- Article Header -->
                         <header class="mb-6">
                             <div class="flex items-center mb-4">
-                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Environment</span>
-                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded ml-2">Global</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">{{news.category}}</span>
                             </div>
-                            <h1 class="text-3xl font-bold mb-4">Global Climate Summit Reaches Historic Agreement</h1>
+                            <h1 class="text-3xl font-bold mb-4">{{news.title}}</h1>
                             <div class="flex items-center text-gray-600">
-                                <span class="mr-4">Posted by <span class="font-semibold">Environment Reporter</span></span>
-                                <span><i class="far fa-clock mr-1"></i> 2 hours ago</span>
+                                <span class="mr-4">Posted by <span class="font-semibold">{{news.author.userprofile.full_name}}</span></span>
+                                <span><i class="far fa-clock mr-1"></i> {{news.published_date|time_since}}</span>
                             </div>
                         </header>
 
@@ -104,16 +104,11 @@ News
                         <div class="mb-8 gallery-container">
                             <div class="relative overflow-hidden rounded-lg" style="height: 450px;">
                                 <!-- Images -->
-                                <img src="https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80" 
-                                     alt="Climate Summit" 
-                                     class="gallery-image active w-full h-full object-cover">
-                                <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80" 
-                                     alt="Climate Summit 2" 
-                                     class="gallery-image hidden w-full h-full object-cover">
-                                <img src="https://images.unsplash.com/photo-1508784411316-02b8cd4d3a3a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80" 
-                                     alt="Climate Summit 3" 
-                                     class="gallery-image hidden w-full h-full object-cover">
-                                
+                                {% for image in news.images.all %}
+                                <img src="{{image.image.url}}" 
+                                     alt="" 
+                                     class="gallery-image {% if forloop.first %}active{% else %}hidden{% endif %} w-full h-full object-cover">
+                                {% endfor %}
                                 <!-- Navigation Buttons -->
                                 <button class="gallery-nav-btn prev-btn" onclick="prevImage()">
                                     <i class="fas fa-chevron-left text-gray-800"></i>
@@ -122,46 +117,21 @@ News
                                     <i class="fas fa-chevron-right text-gray-800"></i>
                                 </button>
                             </div>
-                            <p class="text-sm text-gray-500 mt-2">World leaders at the Global Climate Summit 2023 (Image <span id="current-image-number">1</span> of 3)</p>
-                            
+                            <p class="text-sm text-gray-500 mt-2">
+                                World leaders at the Global Climate Summit 2023 (Image <span id="current-image-number">1</span> of {{news.images.count}})
+                            </p>
+
                             <!-- Indicators -->
                             <div class="gallery-indicators">
-                                <div class="indicator active" data-index="0" onclick="goToImage(0)"></div>
-                                <div class="indicator" data-index="1" onclick="goToImage(1)"></div>
-                                <div class="indicator" data-index="2" onclick="goToImage(2)"></div>
+                                {% for image in news.images.all %}
+                                <div class="indicator {% if forloop.first %}active{% endif %}" data-index="{{forloop.counter0}}" onclick="goToImage({{forloop.counter0}})"></div>
+                                {% endfor %}
                             </div>
                         </div>
 
                         <!-- Article Content -->
                         <div class="prose max-w-none mb-8">
-                            <p class="text-lg font-medium mb-4">World leaders have finally reached a consensus on new climate policies that aim to reduce carbon emissions by 50% by 2030, marking a historic moment in global environmental cooperation.</p>
-                            
-                            <p class="mb-4">After two weeks of intense negotiations at the annual Global Climate Summit, representatives from 195 countries agreed on a comprehensive plan to address climate change. The agreement includes binding commitments from all participating nations to significantly reduce greenhouse gas emissions.</p>
-                            
-                            <h2 class="text-2xl font-bold mt-8 mb-4">Key Points of the Agreement</h2>
-                            
-                            <ul class="list-disc pl-6 mb-6">
-                                <li class="mb-2">50% reduction in carbon emissions by 2030 compared to 2010 levels</li>
-                                <li class="mb-2">$100 billion annual climate fund for developing nations</li>
-                                <li class="mb-2">Complete phase-out of coal power in developed countries by 2035</li>
-                                <li class="mb-2">Global carbon pricing mechanism to be implemented by 2025</li>
-                                <li>Protection of 30% of Earth's land and oceans by 2030</li>
-                            </ul>
-                            
-                            <p class="mb-4">UN Secretary-General Antonio Guterres called the agreement "a turning point for humanity" during the closing ceremony. "This is the most significant step forward in our collective fight against climate change," he stated.</p>
-                            
-                            <blockquote class="border-l-4 border-blue-500 pl-4 italic my-6">
-                                "We are not just saving the planet for future generations - we are creating a better world for all of us today."
-                                <footer class="mt-2 text-gray-600">— Climate Summit Chairperson</footer>
-                            </blockquote>
-                            
-                            <p class="mb-4">The agreement comes after years of failed negotiations and increasing pressure from climate activists worldwide. Scientists warn that without immediate action, the world faces catastrophic consequences from rising global temperatures.</p>
-                            
-                            <h2 class="text-2xl font-bold mt-8 mb-4">Implementation Challenges</h2>
-                            
-                            <p class="mb-4">While the agreement has been celebrated as a breakthrough, experts caution that implementation will be challenging. Many countries will need to make significant changes to their energy infrastructure and industrial policies to meet the ambitious targets.</p>
-                            
-                            <p>The next summit in 2024 will focus on monitoring progress and addressing any implementation issues that arise in the coming year.</p>
+                            {{news.content|safe}}
                         </div>
 
                         <!-- Article Footer -->
@@ -172,7 +142,7 @@ News
                                         <i class="far fa-eye mr-1"></i> 1.2K views
                                     </span>
                                     <span class="flex items-center">
-                                        <i class="far fa-comment mr-1"></i> 84 comments
+                                        <i class="far fa-comment mr-1"></i> {{news.comments.count}} comments
                                     </span>
                                 </div>
                                 <div class="flex space-x-2">
@@ -190,7 +160,7 @@ News
 
                             <!-- Comments Section -->
                             <div class="mt-8">
-                                <h3 class="text-xl font-bold mb-4">Comments (84)</h3>
+                                <h3 class="text-xl font-bold mb-4">Comments ({{news.comments.count}})</h3>
                                 
                                 <!-- Comment Form -->
                                 <div class="mb-8">
@@ -203,42 +173,28 @@ News
                                 <!-- Comment List -->
                                 <div class="space-y-4">
                                     <!-- Comment 1 -->
+                                     {% for comment in news.comments.all %}
                                     <div class="bg-gray-50 p-4 rounded-lg">
                                         <div class="flex items-center mb-2">
-                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-2">JD</div>
-                                            <span class="font-semibold">John Doe</span>
-                                            <span class="text-gray-500 text-sm ml-2">• 1 hour ago</span>
+                                            <image class="w-8 h-8  rounded-full flex items-center justify-center text-white font-bold mr-2"
+                                            src="{{comment.user.userprofile.profile_picture.url}}">
+                                            <span class="font-semibold">{{comment.user.userprofile.full_name}}</span>
+                                            <span class="text-gray-500 text-sm ml-2">• {{comment.created_at|time_since}}</span>
                                         </div>
-                                        <p class="text-gray-700">This is a historic moment indeed! Finally our leaders are taking climate change seriously. Let's hope they follow through with actual implementation.</p>
+                                        <p class="text-gray-700">{{comment.content}}</p>
                                         <div class="flex items-center mt-2 text-sm text-gray-500">
                                             <button class="flex items-center mr-4 hover:text-blue-600">
-                                                <i class="far fa-thumbs-up mr-1"></i> 24
+                                                <i class="far fa-thumbs-up mr-1"></i> {{comment.likes.count}}
                                             </button>
                                             <button class="flex items-center mr-4 hover:text-blue-600">
-                                                <i class="far fa-thumbs-down mr-1"></i> 2
+                                                <i class="far fa-thumbs-down mr-1"></i> {{comment.dislikes.count}}
                                             </button>
                                             <button class="hover:text-blue-600">Reply</button>
                                         </div>
                                     </div>
+                                    {% endfor %}
                                     
-                                    <!-- Comment 2 -->
-                                    <div class="bg-gray-50 p-4 rounded-lg">
-                                        <div class="flex items-center mb-2">
-                                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-2">ES</div>
-                                            <span class="font-semibold">Eco Scientist</span>
-                                            <span class="text-gray-500 text-sm ml-2">• 45 minutes ago</span>
-                                        </div>
-                                        <p class="text-gray-700">While the targets are ambitious, I'm concerned about the lack of specific enforcement mechanisms. We've seen similar agreements fail before due to lack of accountability.</p>
-                                        <div class="flex items-center mt-2 text-sm text-gray-500">
-                                            <button class="flex items-center mr-4 hover:text-blue-600">
-                                                <i class="far fa-thumbs-up mr-1"></i> 15
-                                            </button>
-                                            <button class="flex items-center mr-4 hover:text-blue-600">
-                                                <i class="far fa-thumbs-down mr-1"></i> 0
-                                            </button>
-                                            <button class="hover:text-blue-600">Reply</button>
-                                        </div>
-                                    </div>
+                                   
                                 </div>
                             </div>
                         </footer>

@@ -19,6 +19,7 @@ from django.core.paginator import Paginator
 import json
 from .forms import TravelStoryForm
 from .models import TravelImage, TravelStory, TravelCategory
+from django.db.models import Count
 
 def index(request):
     context = {}
@@ -492,6 +493,10 @@ class NewsListCreateView(generics.ListCreateAPIView):
             'author', 'author__userprofile'
         ).prefetch_related(
             'likes', 'dislikes', 'images', 'comments'
+        ).annotate(
+            likes_count=Count('likes', distinct=True),
+            dislikes_count=Count('dislikes', distinct=True),
+            comments_count=Count('comments', distinct=True),
         ).order_by('-published_date')
 
         exclude_id = self.request.query_params.get('exclude')
