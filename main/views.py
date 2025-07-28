@@ -77,12 +77,7 @@ def load_more_data(request):
     data = []
 
     
-    news_items = get_news_items()[:5]  # Customize as needed
-    news_html = render_to_string('components/news_row.html', {
-        'news_items': news_items,
-        'title': "News"
-    }, request=request)
-    data.append(news_html)
+
     for idx, book in enumerate(current_books):
         html = render_to_string('components/book_card.html', {'book': book, 'request': request})
         data.append(html)

@@ -19,10 +19,7 @@
         .stories-container::-webkit-scrollbar {
             display: none; /* For Chrome, Safari and Opera */
         }
-        .ad-container {
-            position: sticky;
-            top: 20px;
-        }
+
         @media (max-width: 1023px) {
             .ad-container {
                 display: none;
@@ -91,7 +88,7 @@
                 </div>
 
                 <!-- Stories Container with Hidden Scrollbar -->
-                <div class="stories-container" style="max-height: calc(100vh - 250px);">
+                <div class="stories-container">
                     <!-- Featured Story -->
                     <div class="mb-12">
                         <a href="single-story.html">
@@ -444,16 +441,19 @@
                 }, 1000); // Simulated network delay
             }
             
+            let content =  document.getElementById('content')
+            
             // Scroll event listener for infinite scroll
-            storiesContainer.addEventListener('scroll', function() {
-                const scrollTop = storiesContainer.scrollTop;
-                const scrollHeight = storiesContainer.scrollHeight;
-                const clientHeight = storiesContainer.clientHeight;
+            content.addEventListener('scroll', function() {
+                const scrollTop = content.scrollTop;
+                const scrollHeight = content.scrollHeight;
+                const clientHeight = content.clientHeight;
                 
                 if (scrollHeight - (scrollTop + clientHeight) < threshold) {
                     loadMoreStories();
                 }
             });
+            
             
             // Initial load of more stories when page loads (optional)
             // loadMoreStories();
