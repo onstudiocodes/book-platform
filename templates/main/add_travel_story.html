@@ -33,6 +33,117 @@
             <form method="post" enctype="multipart/form-data" class="p-6">
                 {% csrf_token %}
                 
+                <!-- Thumbnail Upload -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Cover Thumbnail*</label>
+                    <div class="image-upload border-2 border-dashed border-gray-300 rounded-xl p-0 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative overflow-hidden"
+                        id="thumbnail-dropzone" style="min-height: 192px; height: 192px; display: flex; align-items: center; justify-content: center;">
+                        {{ form.thumbnail }}
+                        <div id="thumbnail-preview" class="absolute inset-0 flex items-center justify-center w-full h-full bg-gray-100 border-gray-300 rounded-lg overflow-hidden pointer-events-none">
+                            <span class="text-gray-400 text-xs">No image</span>
+                        </div>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none" id="thumbnail-overlay">
+                            <div class="flex justify-center mb-3 pointer-events-auto">
+                                <div class="upload-icon transition-transform duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-gray-500 mb-2 pointer-events-auto">Drag & drop thumbnail here or click to browse</p>
+                            <button type="button" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 pointer-events-auto"
+                                    id="thumbnail-browse-btn">Select File</button>
+                            <p class="text-xs text-gray-500 mt-3 pointer-events-auto">JPEG, PNG (Max 2MB, recommended size: 800x600px)</p>
+                        </div>
+                        {% if form.thumbnail.errors %}
+                            <div class="absolute bottom-2 left-2 right-2">
+                                <p class="text-red-500 text-sm mt-1">{{ form.thumbnail.errors.0 }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <script>
+                const thumbDropzone = document.getElementById('thumbnail-dropzone');
+                const thumbInput = document.getElementById('id_thumbnail');
+                const thumbPreview = document.getElementById('thumbnail-preview');
+                const thumbBrowseBtn = document.getElementById('thumbnail-browse-btn');
+                const thumbOverlay = document.getElementById('thumbnail-overlay');
+
+                // Hide the default input visually but keep it accessible
+                if (thumbInput) {
+                    thumbInput.classList.add('absolute', 'inset-0', 'w-full', 'h-full', 'opacity-0', 'cursor-pointer');
+                    thumbInput.style.position = 'absolute';
+                    thumbInput.style.width = '100%';
+                    thumbInput.style.height = '100%';
+                    thumbInput.style.opacity = 0;
+                    thumbInput.style.cursor = 'pointer';
+                    thumbInput.style.zIndex = 20;
+                }
+
+                thumbBrowseBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    thumbInput.click();
+                });
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    thumbDropzone.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    thumbDropzone.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    thumbDropzone.addEventListener(eventName, unhighlight, false);
+                });
+
+                function highlight() {
+                    thumbDropzone.classList.add('border-indigo-500', 'bg-indigo-50');
+                }
+
+                function unhighlight() {
+                    thumbDropzone.classList.remove('border-indigo-500', 'bg-indigo-50');
+                }
+
+                thumbDropzone.addEventListener('drop', handleThumbDrop, false);
+
+                function handleThumbDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    thumbInput.files = files;
+                    handleThumbFiles();
+                }
+
+                thumbInput.addEventListener('change', handleThumbFiles);
+
+                function handleThumbFiles() {
+                    thumbPreview.innerHTML = '';
+                    if (thumbInput.files && thumbInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            thumbPreview.innerHTML = '';
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'object-contain w-full h-full';
+                            img.style.maxWidth = '100%';
+                            img.style.maxHeight = '100%';
+                            thumbPreview.appendChild(img);
+                            // Hide overlay when image is present
+                            thumbOverlay.style.display = 'none';
+                        };
+                        reader.readAsDataURL(thumbInput.files[0]);
+                    } else {
+                        thumbPreview.innerHTML = '<span class="text-gray-400 text-xs">No image</span>';
+                        thumbOverlay.style.display = '';
+                    }
+                }
+                </script>
+
                 <!-- Title Section -->
                 <div class="mb-6">
                     <label for="id_title" class="block text-gray-700 font-medium mb-2">Post Title*</label>

@@ -145,6 +145,7 @@ class TravelStory(models.Model):
     ]
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
+    thumbnail = models.ImageField(upload_to='travel_images/', default='default_imgs/travel.jpg')
     title = models.CharField(max_length=255)
     slug = AutoSlugField(populate_from='title', unique=True)
     category = models.ForeignKey(TravelCategory, on_delete=models.SET_NULL, null=True, related_name="stories")

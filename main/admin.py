@@ -47,7 +47,7 @@ class TravelStoryAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'category', 'story', 'published')
+            'fields': ('thumbnail','title', 'category', 'story', 'published')
         }),
         ('Location Details', {
             'fields': ('country', 'location', 'latitude', 'longitude')

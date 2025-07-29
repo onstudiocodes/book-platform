@@ -597,9 +597,8 @@ def add_travel_story(request):
         if form.is_valid():
             travel_story = form.save(commit=False)
             travel_story.author = request.user
-            if 'publish' in request.POST:
-                travel_story.published = True
             travel_story.save()
+            
             
             # Handle multiple image uploads
             images = request.FILES.getlist('images')
@@ -609,7 +608,11 @@ def add_travel_story(request):
                 
             for image in images:
                 TravelImage.objects.create(travel_story=travel_story, image=image)
-                
+            
+            if 'publish' in request.POST:
+                travel_story.published = True
+            travel_story.save()
+
             messages.success(request, 'Travel story saved successfully!')
             return redirect('main:tour_details', slug=travel_story.slug)
     else:

@@ -28,11 +28,14 @@ class TravelStoryForm(forms.ModelForm):
     class Meta:
         model = TravelStory
         fields = [
-            'title', 'category', 'story', 'country', 'location',
+            'thumbnail','title', 'category', 'story', 'country', 'location',
             'latitude', 'longitude', 'duration', 'season', 
             'budget_level', 'pro_tips', 'tags'
         ]
         widgets = {
+            'thumbnail': forms.ClearableFileInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500',
+            }),
             'title': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500',
                 'placeholder': 'e.g., Trekking the Himalayas'
