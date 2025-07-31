@@ -47,11 +47,11 @@ Dashboard
                             <div>0 <button class="fa fa-circle-minus pl-1 text-gray-500"></button></div>
                         </li>
                     </ul>
-                    <a href="{% url 'author:content_analytics' book.slug %}"
+                    <a href="{% url 'author:content_analytics' 'book' book.slug %}"
                         class="px-4 py-2 font-medium block w-fit text-sm bg-gray-200 rounded-md hover:bg-gray-300">Go
                         to book
                         Analytics</a>
-                    <a href="{% url 'author:content_comments' book.slug %}"
+                    <a href="{% url 'author:content_comments' 'book' book.slug %}"
                         class="px-4 py-2 block w-fit font-medium text-sm bg-gray-200 rounded-md hover:bg-gray-300">
                         See comments({{book.comments.count}})
                 </a>

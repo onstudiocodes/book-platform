@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from main.models import Book, User, Comment, BookView, Booktranslation, News
+from main.models import Book, User, Comment, BookView, Booktranslation, News, TravelStory
 from django.contrib import messages
 from .forms import BookUploadForm, NewsForm, NewsImageFormSet, AudioForm, TranslationForm
 import base64
@@ -28,6 +28,9 @@ def author_content(request, content_type):
         items = Book.objects.filter(author=request.user)
     elif content_type == 'news':
         items = News.objects.filter(author=request.user)
+    elif content_type == 'tour':
+        items = TravelStory.objects.filter(author=request.user)
+
     rows_per_page = request.session.get('rows_per_page')
     if not rows_per_page:
         request.session['rows_per_page'] = 10
@@ -37,7 +40,7 @@ def author_content(request, content_type):
     page = request.GET.get('page')
     page_obj = paginator.get_page(page)
     context = {
-        'books': page_obj,
+        'content': page_obj,
         'content_type': content_type
     }
     return render(request, 'author/admin_content.html', context)
@@ -104,12 +107,14 @@ def author_copyright(request):
     return render(request, 'author/admin_copyright.html')
 
 @login_required(login_url='accounts:login')
-def content_details(request, slug):
-    if 'book-details' in request.META.get('PATH_INFO'):
+def content_details(request, content_type, slug):
+    if content_type == 'book-details':
         book = Book.objects.get(slug=slug)  # Fetch the existing book
+        content_type = "books"
 
-    else:
+    elif content_type == "news":
         book = News.objects.get(slug=slug)
+        content_type = "news"
     if request.method == "POST":
         form = BookUploadForm(request.POST, request.FILES, instance=book)  # Bind the form with the book instance
         print(request.FILES)
@@ -126,14 +131,18 @@ def content_details(request, slug):
         form = BookUploadForm(instance=book)  # Prefill the form with the existing book data
 
     context = {
-        'book': book,
-        'form': form
+        'obj': book,
+        'form': form,
+        'content_type': content_type
     }
     return render(request, 'author/content_details.html', context)
 
+def tour_details(request, slug):
+    return render(request, 'author/content_details.html')
+
 
 @login_required(login_url='accounts:login')
-def content_analytics(request, slug):
+def content_analytics(request,content_type, slug):
     book = Book.objects.get(slug=slug)
     days = request.GET.get('days', 90)
         
@@ -159,26 +168,35 @@ def content_analytics(request, slug):
         'start_date': start_date,
         'end_date': end_date,
         'days': days,
-        'book': book,
+        'obj': book,
         'follower_entries_labels': json.dumps(follower_entries_labels),
-        'follower_entries_data': json.dumps(follower_entries_data)
+        'follower_entries_data': json.dumps(follower_entries_data),
+        'content_type': content_type
     }
     
     return render(request, 'author/content_analytics.html', context)
 
 @login_required(login_url='accounts:login')
-def content_comments(request, slug):
-    book = Book.objects.get(slug=slug)
+def content_comments(request, content_type, slug):
+    if content_type=="books":
+        obj = Book.objects.get(slug=slug)
+    elif content_type=="news":
+        obj = News.objects.get(slug=slug)
     context = {
-        'book': book
+        'obj': obj,
+        'content_type': content_type
     }
     return render(request, 'author/content_comments.html', context)
 
 @login_required(login_url='accounts:login')
-def content_copyright(request, slug):
-    book = Book.objects.get(slug=slug)
+def content_copyright(request, content_type, slug):
+    if content_type=="books":
+        obj = Book.objects.get(slug=slug)
+    elif content_type=="news":
+        obj = News.objects.get(slug=slug)
     context = {
-        'book': book
+        'obj': obj,
+        'content_type': content_type
     }
     return render(request, 'author/content_copyright.html', context)
 

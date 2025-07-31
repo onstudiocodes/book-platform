@@ -4,6 +4,17 @@
 Content
 {% endblock %}
 {% block content %}
+<style>
+    .description {
+        display: -webkit-box;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        /* Limits text to 2 lines */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
 <header class="flex items-center justify-between mb-6">
     <div>
         <h2 class="text-3xl font-semibold">Channel Content</h2>
@@ -16,83 +27,19 @@ Content
     <li class="hover:border-gray-300 {% if content_type == 'news' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'news' %}`">
         News
     </li>
+    <li class="hover:border-gray-300 {% if content_type == 'tour' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'tour' %}`">
+        Tour
+    </li>
 
 </ul>
 <div class="w-full overflow-x-scroll">
     <table class="text-sm text-left rtl:text-right w-full overflow-x-scroll">
-        <thead class="text-xs text-gray-700 uppercase bg-gray-50 ">
-            <tr>
-                <th class="px-6 py-5 flex gap-3 items-center border-r h-full min-w-96" scope="col">
-                    <input id="select_all" name="" type="checkbox" /> Books
-                </th>
-                <th class="px-2 py-3" scope="col">Visibility</th>
-                <th class="px-2 py-3" scope="col">Restrictions</th>
-                <th class="px-2 py-3" scope="col">Date</th>
-                <th class="px-2 py-3" scope="col">Views</th>
-                <th class="px-2 py-3" scope="col">Comments</th>
-                <th class="px-2 py-3 text-end" scope="col">Likes(vs Dislikes)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- ------------------------ -->
-            <!-- Content item row -->
-            <!-- ------------------------ -->
-            <style>
-                .description {
-                    display: -webkit-box;
-                    line-clamp: 2;
-                    -webkit-line-clamp: 2;
-                    /* Limits text to 2 lines */
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            </style>
-            {% for book in books %}
-            <tr class="bg-white border-b align-top text-xs">
-                <th class="px-6 py-4 font-medium text-gray-900 flex gap-3 border-r" scope="col">
-                    <input id="select-{{book.id}}" class="select" name="" type="checkbox" />
-                    <img alt="" class="h-20 w-12 object-cover" src="{{book.thumbnail.url}}" />
-                    <div class="text-sm cursor-pointer"
-                    {% if content_type == 'books' %}
-                        onclick="location.href=`{% url 'author:content_details' book.slug %}`"
-                    {% else %}
-                        onclick="location.href=`/author/news-details/{{book.slug}}`"
-                    {% endif %}
-                        >
-
-                        <div class="font-bold">{{book.title}}</div>
-                        <div class="text-gray-600 description">
-                            {{book.description}}
-                        </div>
-                    </div>
-                </th>
-                <td class="px-2 py-6 whitespace-nowrap">
-                    <select name="" id="" data-book-id="{{book.id}}"
-                        class="block p-1 rounded visibility-toggle cursor-pointer">
-                        <option value="Public" {% if book.status == 'Public' %} selected {% endif %}>Public</option>
-                        <option value="Private" {% if book.status == 'Private' %} selected {% endif %}>Private</option>
-                    </select>
-                </td>
-                <td class="px-2 py-6">None</td>
-                <td class="px-2 py-4 whitespace-nowrap">
-                    <div class="">
-                        <div class="font-bold">{{book.published_date|date:'M d, Y'}}</div>
-                        <div class="text-gray-600">Published</div>
-                    </div>
-                </td>
-                <td class="px-2 py-4 text-end">{{book.views}}</td>
-                <td class="px-2 py-4 text-end">{{book.comments.count}}</td>
-                <td class="px-2 py-4 text-end">
-                    <div class="text-sm">
-                        <div class="font-bold">100%</div>
-                        <div class="text-gray-600">{{book.likes.count}} Likes</div>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-
-        </tbody>
+        {% if content_type == 'books' or content_type == 'news' %}
+            {% include "components/author_books_and_news_list.html" with books=content %}
+        {% endif %}
+        {% if content_type == 'tour' %}
+            {% include "components/author_tour_list.html" with tours=content %}
+        {% endif %}
     </table>
 </div>
 <div class="flex flex-col sm:flex-row text-sm sm:justify-end gap-6 p-4 bg-white border-b items-center text-gray-600">
