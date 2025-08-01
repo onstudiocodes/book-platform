@@ -41,22 +41,22 @@ Content analytics
             id="dropdownMenu">
             <ul class="py-1">
                 <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type book.slug %}?days=7">
+                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type obj.slug %}?days=7">
                         Last 7 days
                     </a>
                 </li>
                 <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type book.slug %}?days=28">
+                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type obj.slug %}?days=28">
                         Last 28 days
                     </a>
                 </li>
                 <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type book.slug %}?days=90">
+                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type obj.slug %}?days=90">
                         Last 90 days
                     </a>
                 </li>
                 <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type book.slug %}?days=365">
+                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:content_analytics' content_type obj.slug %}?days=365">
                         Last 365 days
                     </a>
                 </li>
@@ -97,7 +97,7 @@ Content analytics
                 </div>
                 <div class="text-center border-r space-y-2 my-2 p-2 cursor-pointer bg-gray-50">
                     <div class="text-sm">Reading time(hours)</div>
-                    <div class="text-xl">{{book.reading_time}} <i class="fa fa-circle-arrow-down text-gray-400"></i></div>
+                    <div class="text-xl">{{obj.reading_time}} <i class="fa fa-circle-arrow-down text-gray-400"></i></div>
                 </div>
                 <div class="text-center space-y-2 my-2 p-2 cursor-pointer bg-gray-50" onclick="showFollwerChart()">
                     <div class="text-sm">Subscribers</div>

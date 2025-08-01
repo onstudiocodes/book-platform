@@ -1,13 +1,13 @@
 from django.utils import timezone
 from datetime import timedelta
-from main.models import BookView
+from main.models import ObjView
 from django.db.models import Count
 from collections import defaultdict
 from django.db.models.functions import TruncDate
 from accounts.models import UserFollow
 from dateutil.relativedelta import relativedelta
 
-def get_last_n_days_data(model, n, user=None, book=None, formatted=False):
+def get_last_n_days_data(model, n, user=None, book=None, news=None, travel_story=None, formatted=False):
     startdate = (timezone.now() - timedelta(days=n)).date()  # Ensure date only
     
     if model==UserFollow:
@@ -39,14 +39,21 @@ def get_last_n_days_data(model, n, user=None, book=None, formatted=False):
         return result
     
     filters = {"created_at__date__gte": startdate}  # Filter by date only
-    if user and model!=BookView:
-        print('1')
+    if user and model!=ObjView:
         filters["user"] = user
-    elif user and model==BookView:
-        filters["book__author"] = user
-        print(2)
+    elif user and model==ObjView:
+        if book:
+            filters["book__author"] = user
+        elif news:
+            filters["news__author"] = user
+        elif travel_story:
+            filters["travel_story__author"] = user
     if book:
         filters["book"] = book
+    if news:
+        filters['news'] = news
+    if travel_story:
+        filters['travel_story'] = travel_story
 
     if not formatted:
         return model.objects.filter(**filters)
@@ -72,7 +79,7 @@ def get_last_n_days_data(model, n, user=None, book=None, formatted=False):
     return result
 
 
-def year_specific_data(model, year, user=None, book=None):
+def year_specific_data(model, year, user=None, book=None, news=None, travel_story=None):
     filters = {
         "created_at__year": year
     }
@@ -81,13 +88,21 @@ def year_specific_data(model, year, user=None, book=None):
     
     if book:
         filters["book"] = book
+    if news:
+        filters["news"] = news
+    if travel_story:
+        filters["travel_story"] = travel_story
 
     return model.objects.filter(**filters)
 
 def log_book_view(book, user=None):
-    BookView.objects.create(book=book, user=user)
-    book.views = BookView.objects.filter(book=book).count()
-    book.save()
+    ObjView.objects.create(book=book, user=user)
+
+def log_news_view(news, user=None):
+    ObjView.objects.create(news=news, user=user)
+
+def log_travel_story_view(travel_story, user=None):
+    ObjView.objects.create(travel_story=travel_story, user=user)
 
 def create_notification(user, message):
     from .models import Notification

@@ -9,14 +9,14 @@ Content audio
 </div>
 
 <div>
-    <form action="{% url 'author:content_audio' book.slug %}" enctype="multipart/form-data" class="sm:max-w-sm my-2 mb-6" method="post">
+    <form action="{% url 'author:content_audio' obj.slug %}" enctype="multipart/form-data" class="sm:max-w-sm my-2 mb-6" method="post">
         {% csrf_token %}
         {{form.as_p}}
         <button type="submit" class="p-2 border rounded mt-2 bg-green-600 hover:bg-green-700 text-white">Submit</button>
     </form>
 
     <div class="text-xl font-medium">Available audios</div>
-    {% with audios=book.audiobooks.all %}
+    {% with audios=obj.audiobooks.all %}
     {% if audios %}
     <table class="w-full text-left border-collapse table-auto">
         <tr class="*:border *:p-2">

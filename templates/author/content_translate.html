@@ -17,7 +17,7 @@ Content translate
     </form>
 </div>
 <div class="text-xl font-medium mt-4">Available translations</div>
-{% with translations=book.translations.all %}
+{% with translations=obj.translations.all %}
 {% if translations %}
 <table class="w-full text-left border-collapse table-auto">
     <tr class="*:border *:p-2">

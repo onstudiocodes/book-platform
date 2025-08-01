@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from main.models import Book, User, Comment, BookView, Booktranslation, News, TravelStory
+from main.models import Book, User, Comment, ObjView, Booktranslation, News, TravelStory
 from django.contrib import messages
 from .forms import BookUploadForm, NewsForm, NewsImageFormSet, AudioForm, TranslationForm
 import base64
@@ -59,12 +59,12 @@ def author_analytics(request):
     days = request.GET.get('days', 28)
         
     days = int(days)
-    entries = get_last_n_days_data(BookView, days, user=request.user, formatted=True)
+    entries = get_last_n_days_data(ObjView, days, user=request.user, formatted=True)
     follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True)
 
     start_date = (timezone.now() - datetime.timedelta(days=days)).date()
     end_date = timezone.now()
-    views = BookView.objects.filter(book__author=request.user, created_at__gte=start_date)
+    views = ObjView.objects.filter(book__author=request.user, created_at__gte=start_date)
 
     labels = [item['date'] for item in entries]
     data = [item['count'] for item in entries]
@@ -108,13 +108,15 @@ def author_copyright(request):
 
 @login_required(login_url='accounts:login')
 def content_details(request, content_type, slug):
-    if content_type == 'book-details':
+    if content_type == 'books':
         book = Book.objects.get(slug=slug)  # Fetch the existing book
         content_type = "books"
-
     elif content_type == "news":
         book = News.objects.get(slug=slug)
         content_type = "news"
+    elif content_type == "tour":
+        book = TravelStory.objects.get(slug=slug)
+        content_type = "tour"
     if request.method == "POST":
         form = BookUploadForm(request.POST, request.FILES, instance=book)  # Bind the form with the book instance
         print(request.FILES)
@@ -142,14 +144,28 @@ def tour_details(request, slug):
 
 
 @login_required(login_url='accounts:login')
-def content_analytics(request,content_type, slug):
-    book = Book.objects.get(slug=slug)
+def content_analytics(request, content_type, slug):
+    if content_type == "books":
+        obj = Book.objects.get(slug=slug)
+    elif content_type == "news":
+        obj = News.objects.get(slug=slug)
+    elif content_type == "tour":
+        obj = TravelStory.objects.get(slug=slug)
     days = request.GET.get('days', 90)
         
     days = int(days)
-    views = get_last_n_days_data(BookView, days, book=book)
-    entries = get_last_n_days_data(BookView, days, user=request.user, book=book, formatted=True)
-    follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True, book=book)
+    if content_type == "books":
+        views = get_last_n_days_data(ObjView, days, book=obj)
+        entries = get_last_n_days_data(ObjView, days, user=request.user, book=obj, formatted=True)
+        follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True, book=obj)
+    elif content_type == "news":
+        views = get_last_n_days_data(ObjView, days, news=obj)
+        entries = get_last_n_days_data(ObjView, days, user=request.user, news=obj, formatted=True)
+        follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True)
+    elif content_type == "tour":
+        views = get_last_n_days_data(ObjView, days, travel_story=obj)
+        entries = get_last_n_days_data(ObjView, days, user=request.user, travel_story=obj, formatted=True)
+        follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True)
 
     start_date = (timezone.now() - datetime.timedelta(days=days)).date()
     end_date = timezone.now()
@@ -158,7 +174,12 @@ def content_analytics(request,content_type, slug):
     follower_entries_labels = [item['date'] for item in follower_entries]
     follower_entries_data = [item['count'] for item in follower_entries]
 
-    followers = get_last_n_days_data(UserFollow, days, user=request.user, book=book).count()
+    if content_type == "books":
+        followers = get_last_n_days_data(UserFollow, days, user=request.user, book=obj).count()
+    elif content_type == "news":
+        followers = get_last_n_days_data(UserFollow, days, user=request.user).count()
+    elif content_type == "tour":
+        followers = get_last_n_days_data(UserFollow, days, user=request.user).count()
 
     context = {
         'views': views,
@@ -168,7 +189,7 @@ def content_analytics(request,content_type, slug):
         'start_date': start_date,
         'end_date': end_date,
         'days': days,
-        'obj': book,
+        'obj': obj,
         'follower_entries_labels': json.dumps(follower_entries_labels),
         'follower_entries_data': json.dumps(follower_entries_data),
         'content_type': content_type
@@ -182,6 +203,8 @@ def content_comments(request, content_type, slug):
         obj = Book.objects.get(slug=slug)
     elif content_type=="news":
         obj = News.objects.get(slug=slug)
+    elif content_type=="tour":
+        obj = TravelStory.objects.get(slug=slug)
     context = {
         'obj': obj,
         'content_type': content_type
@@ -194,6 +217,8 @@ def content_copyright(request, content_type, slug):
         obj = Book.objects.get(slug=slug)
     elif content_type=="news":
         obj = News.objects.get(slug=slug)
+    elif content_type=="tour":
+        obj = TravelStory.objects.get(slug=slug)
     context = {
         'obj': obj,
         'content_type': content_type
@@ -215,8 +240,9 @@ def content_translate(request, slug):
             messages.error(request, 'Invalid response')
     form = TranslationForm()
     context = {
-        'book': book,
-        'form': form
+        'obj': book,
+        'form': form,
+        'content_type': 'books'
     }
     return render(request, 'author/content_translate.html', context)
 
@@ -253,8 +279,9 @@ def content_audio(request, slug):
             messages.error(request, 'Invalid files')
     form = AudioForm()
     context = {
-        'book': book,
-        'form': form
+        'obj': book,
+        'form': form,
+        'content_type': 'books'
     }
     return render(request, 'author/content_audio.html', context)
 

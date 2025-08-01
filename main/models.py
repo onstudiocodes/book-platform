@@ -55,8 +55,10 @@ class Book(models.Model):
         return reverse('main:book_view', args=[self.slug])
     
 
-class BookView(models.Model):
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="book_views")
+class ObjView(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="book_views", blank=True, null=True)
+    news = models.ForeignKey("News", on_delete=models.CASCADE, related_name="news_views", blank=True, null=True)
+    travel_story = models.ForeignKey("TravelStory", on_delete=models.CASCADE, related_name="travel_story_views", blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
