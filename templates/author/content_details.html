@@ -18,76 +18,15 @@ Content details
 
 <div class="flex gap-4 flex-col sm:flex-row">
     <div class="sm:w-9/12">
-        <form action="{% url 'author:content_details' content_type obj.slug %}" method="post" enctype="multipart/form-data">
-            <div class="space-y-6 w-full mx-auto">
-
-                {% csrf_token %}
-                {{ form.media }}
-                <div>
-                    {{ form.language.label_tag }} {{form.language}}
-                </div>
-                <!-- Title Field -->
-                <div class="relative border rounded-md">
-                    <input type="text" id="title" name="title" placeholder=" " value="{{ obj.title }}"
-                        class="peer block w-full rounded-md h-20 border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-black focus:ring focus:ring-black focus:outline-none" />
-                    <label for="title"
-                        class="absolute left-3 top-2.5 text-sm text-gray-500 bg-white px-1 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-2.5 peer-focus:text-sm peer-focus:text-black">Title
-                        (required)</label>
-                </div>
-
-                <!-- Description Field -->
-                <div class="relative border rounded-md">
-                    <textarea id="description" name="description" placeholder=" " rows="4"
-                        class="peer block w-full rounded-md border-gray-300 px-4 pt-9 pb-2 text-sm text-gray-900 focus:border-black focus:ring focus:ring-black focus:outline-none">{{ obj.description }}</textarea>
-                    <label for="description"
-                        class="absolute left-3 top-2.5 text-sm text-gray-500 bg-white px-1 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-2.5 peer-focus:text-sm peer-focus:text-black">Description</label>
-                </div>
-                <div>
-                    {{form.content.label_tag}}
-                    {{form.content}}
-                </div>
-
-                <div>
-                    <div class="font-medium">Thumbnail</div>
-                    <div class="text-xs font-medium text-neutral-500">
-                        Set a thumbnail that stands out and draws viewers' attention. <a href=""
-                            class="text-blue-600">Learn
-                            more</a>
-                    </div>
-
-                    <label
-                        class="relative cursor-pointer inline-block border-2 border-dashed mt-3 border-gray-300 rounded-lg p-4 w-48 text-center">
-                        <span class="text-gray-500" id="image_span">Click to select an image</span>
-                        <input type="file" accept="image/*" onchange="previewImage(event)" name="thumbnail"
-                            class="absolute inset-0 opacity-0 cursor-pointer" value="{{obj.thumbnail.url}}" />
-                        <img id="image-preview" src="{{ obj.thumbnail.url }}"  alt="Image Preview"
-                            class="w-full h-auto rounded-lg mt-2" />
-                    
-                    </label>
-
-                    <script>
-                        function previewImage(event) {
-                            const file = event.target.files[0]
-                            const reader = new FileReader()
-
-                            reader.onload = function () {
-                                const preview = document.getElementById('image-preview')
-                                preview.src = reader.result
-                            }
-                            document.getElementById('image_span').classList.add('hidden')
-                            if (file) {
-                                reader.readAsDataURL(file)
-                            }
-                        }
-                    </script>
-                </div>
-
-                <div>
-                    {{ form.category.label_tag }} {{ form.category }}
-                </div>
-
-                <input type="submit" value="Save", class="py-2 px-4 border rounded cursor-pointer bg-gray-100 hover:bg-gray-200">
-            </div>
+        <form action="{% if content_type == 'tour' %}{% url "main:add_travel_story" %}{% else %}{% url 'author:content_details' content_type obj.slug %}{% endif %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.media }}
+            {% if content_type == "books" or content_type == "news" %}
+                {% include "components/author_news_books_details.html" %}
+            {% elif content_type == "tour" %}
+                <input type="hidden" name="source_template" value="content_details)({{form.instance.slug}}">
+                {% include "components/create_tour_form.html" %}
+            {% endif %}
         </form>
     </div>
     <div class="max-w-sm:3/12">
@@ -97,11 +36,11 @@ Content details
                 <div class="flex justify-between gap-4 items-center">
                     <div class="relative overflow-hidden">
                         <div class="text-xs font-medium text-neutral-500">{{content_type|slice:":4"|capfirst}} link</div>
-                        <a href="{{ request.scheme }}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}{% endif %}"
+                        <a href="{{ request.scheme }}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}{% elif content_type == 'tour' %}{% url 'main:tour_details' obj.slug %}{% endif %}"
                         
                             id="book_link"
                             class="inline-block max-w-40 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-blue-500 font-medium">
-                            {{request.scheme}}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}
+                            {{request.scheme}}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}{% elif content_type == 'tour' %}{% url 'main:tour_details' obj.slug %}
                             {% endif %}
                         </a>
                     </div>

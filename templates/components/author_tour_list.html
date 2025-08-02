@@ -17,7 +17,7 @@
         <th class="px-6 py-4 font-medium text-gray-900 flex gap-3 border-r" scope="col">
             <input id="select-{{tour.id}}" class="select" name="" type="checkbox" />
             <img alt="" class="h-20 w-12 object-cover" src="{{tour.thumbnail.url}}" />
-            <div class="text-sm cursor-pointer" onclick="location.href='/author/tour-details/{{tour.slug}}'">
+            <div class="text-sm cursor-pointer" onclick="location.href='/author/content-details/tour/{{tour.slug}}'">
                 <div class="font-bold">{{tour.title}}</div>
                 <div class="text-gray-600 description">
                     {{tour.story|striptags}}

@@ -11,7 +11,6 @@ urlpatterns = [
     path('copyright', views.author_copyright, name="author_copyright"),
     path('earn', views.author_earn, name="author_earn"),
     path('content-details/<str:content_type>/<str:slug>', views.content_details, name="content_details"),
-    path('tour-details/<str:slug>', views.tour_details, name="tour_details"),
     path('content-analytics/<str:content_type>/<str:slug>', views.content_analytics, name="content_analytics"),
     path('content-comments/<str:content_type>/<str:slug>', views.content_comments, name="content_comments"),
     path('book-translate/<str:slug>', views.content_translate, name="content_translate"),

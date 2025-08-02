@@ -614,6 +614,10 @@ def add_travel_story(request):
             travel_story.save()
 
             messages.success(request, 'Travel story saved successfully!')
+            source_template = request.POST.get('source_template')
+            if 'content_details' in source_template:
+                template, slug = source_template.split(')(')
+                return redirect('author:content_details', content_type='tour', slug=slug)
             return redirect('main:tour_details', slug=travel_story.slug)
     else:
         form = TravelStoryForm()

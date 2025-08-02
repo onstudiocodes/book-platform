@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from accounts.models import UserFollow
 from django.views.decorators.csrf import csrf_exempt
+from main.forms import TravelStoryForm
 
 # Create your views here.
 @login_required(login_url='accounts:login')
@@ -109,31 +110,33 @@ def author_copyright(request):
 @login_required(login_url='accounts:login')
 def content_details(request, content_type, slug):
     if content_type == 'books':
-        book = Book.objects.get(slug=slug)  # Fetch the existing book
+        obj = Book.objects.get(slug=slug)  # Fetch the existing book
         content_type = "books"
     elif content_type == "news":
-        book = News.objects.get(slug=slug)
+        obj = News.objects.get(slug=slug)
         content_type = "news"
     elif content_type == "tour":
-        book = TravelStory.objects.get(slug=slug)
+        obj = TravelStory.objects.get(slug=slug)
         content_type = "tour"
     if request.method == "POST":
-        form = BookUploadForm(request.POST, request.FILES, instance=book)  # Bind the form with the book instance
-        print(request.FILES)
+        form = BookUploadForm(request.POST, request.FILES, instance=obj)  # Bind the form with the book instance
         if form.is_valid():
-            book = form.save(commit=False)  # Get the book instance with updated data
-            book.author = request.user  # Ensure the author is set to the current user
+            obj = form.save(commit=False)  # Get the book instance with updated data
+            obj.author = request.user  # Ensure the author is set to the current user
             # Check if a new thumbnail is provided
             if 'thumbnail' in request.FILES:
-                book.thumbnail = request.FILES['thumbnail']
-            book.save()  # Save the updated book object to the database
+                obj.thumbnail = request.FILES['thumbnail']
+            obj.save()  # Save the updated book object to the database
             return redirect(request.META.get('HTTP_REFERER', '/fallback-url/'))  # Redirect after saving
 
     else:
-        form = BookUploadForm(instance=book)  # Prefill the form with the existing book data
+        if content_type == "news" or content_type == "books":
+            form = BookUploadForm(instance=obj)  # Prefill the form with the existing book data
+        elif content_type == "tour":
+            form = TravelStoryForm(instance=obj)
 
     context = {
-        'obj': book,
+        'obj': obj,
         'form': form,
         'content_type': content_type
     }
