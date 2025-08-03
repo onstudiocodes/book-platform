@@ -145,7 +145,7 @@
             <div class="flex flex-col">
               <div class="font-medium cursor-pointer hover:text-blue-500" onclick="location.href=`{% url 'main:profile' book.author.username %}`">{{ book.author.userprofile.full_name }}</div>
               <div class="font-sm text-xs">
-                <span id="followers_count">{{ book.author.followers_users.count }}</span> subscribers
+                <span id="followers_count">{{ book.author.followers_count }}</span> subscribers
               </div>
             </div>
           </div>
@@ -222,12 +222,12 @@
       <!-- Description container -->
       <div class="w-full bg-gray-200 p-4 rounded-lg">
         <div class="font-bold text-sm">
-          {{ book.views }} views {% now 'N j, Y' %}
+          {{ book.views_count }} views {% now 'N j, Y' %}
         </div>
         {{ book.description }}
       </div>
       <div class="font-bold text-lg py-3">
-        <span id="comment-count">{{ book.comments.count }}</span> Comments
+        <span id="comment-count">{{ book.comments_count }}</span> Comments
       </div>
 
       {% if user.is_authenticated %}

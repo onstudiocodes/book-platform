@@ -6,5 +6,7 @@ app_name = 'news'
 urlpatterns = [
     path('', views.home, name="news_feed"),
     path('create', views.create_news, name="create_news"),
-    path('details/<str:slug>', views.news_details, name="news_details")
+    path('details/<str:slug>', views.news_details, name="news_details"),
+    path('news-api/', views.NewsListCreateView.as_view(), name='news-list-create'),
+
 ]

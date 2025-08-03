@@ -214,15 +214,29 @@ def remove_from_collection(request, slug, collection_name):
 
 
 def book_view(request, slug):
-    book = Book.public_objects.get(slug=slug)
+    
+
+    book = Book.public_objects.annotate(
+        views_count=Count('book_views'),
+        comments_count=Count('comments'),
+        followers_count=Count('author__followers_users')
+        ).select_related('author').prefetch_related(
+            'comments',
+            'audiobooks',
+            'translations'
+        ).get(slug=slug)
+    
+    suggestions = Book.public_objects.all().select_related(
+        'author', 'author__userprofile'
+        ).order_by('?').exclude(id__in=[book.id])[:20]
+    
     user = request.user if request.user.is_authenticated else None
 
-    
     book_pdf_url = reverse('main:book_pdf_view', kwargs={'slug': book.slug})
 
     # Add to history
-    if request.user.is_authenticated:
-        if request.user != book.author:
+    if user:
+        if user != book.author:
             log_book_view(book=book, user=user)
 
         history, created = History.objects.update_or_create(
@@ -230,13 +244,19 @@ def book_view(request, slug):
             book=book,
             defaults={'updated_at': timezone.now()}
         )
+    else:
+        print('working')
+        session_key = request.session.get('session_key')
+        log_book_view(book=book, session_key=session_key)
 
     comments = Comment.objects.filter(book=book, parent=None).order_by('-created_at')
     follower = False
     if request.user.is_authenticated and UserFollow.objects.filter(follower=request.user, following=book.author).exists():
         follower = True
     
-    suggestions = Book.public_objects.all().order_by('?').exclude(id__in=[book.id])[:20]
+    suggestions = Book.public_objects.all().select_related(
+        'author', 'author__userprofile'
+        ).order_by('?').exclude(id__in=[book.id])[:20]
     return render(request, 'main/book_view.html', {
         'book': book, 
         'suggestions': suggestions, 
@@ -461,50 +481,8 @@ def temp_book_view(request):
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from .models import News
-from .serializers import NewsSerializer
-from rest_framework.pagination import PageNumberPagination
-
-class NewsPagination(PageNumberPagination):
-    page_size = 2  # Number of items per page
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 
 
-
-class NewsListCreateView(generics.ListCreateAPIView):
-    queryset = News.objects.select_related('author', 'author__userprofile').prefetch_related('likes', 'dislikes', 'images', 'comments').order_by('-published_date')
-    serializer_class = NewsSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = NewsPagination 
-    
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
-    
-    def get_queryset(self):
-        queryset = News.objects.select_related(
-            'author', 'author__userprofile'
-        ).prefetch_related(
-            'likes', 'dislikes', 'images', 'comments'
-        ).annotate(
-            likes_count=Count('likes', distinct=True),
-            dislikes_count=Count('dislikes', distinct=True),
-            comments_count=Count('comments', distinct=True),
-        ).order_by('-published_date')
-
-        exclude_id = self.request.query_params.get('exclude')
-        if exclude_id and exclude_id.isdigit():
-            queryset = queryset.exclude(id=int(exclude_id))
-        return queryset
-
-
-# Retrieve, update, or delete a specific news item
-class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = News.objects.all()
-    serializer_class = NewsSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 # Like/Unlike a news item
 @api_view(['POST'])
@@ -522,7 +500,6 @@ def like_news(request, pk):
         context['likes'] = news.likes.count()
         context['action'] = "unlike"
         context['message'] = "Unliked"
-        return Response(context)
     else:
         news.likes.add(user)
         context['status'] = "success"
@@ -531,7 +508,7 @@ def like_news(request, pk):
         context['message'] = "Liked"
         if user != news.author:
             create_notification(news.author, f"{user.userprofile.full_name} liked your news {news.title}")
-        return Response(context)
+    return Response(context)
 
 # Dislike/Undislike a news item
 @api_view(['POST'])
