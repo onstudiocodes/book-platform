@@ -98,10 +98,10 @@ def year_specific_data(model, year, user=None, book=None, news=None, travel_stor
 def log_book_view(book, user=None, session_key=None):
     ObjView.objects.create(book=book, user=user)
 
-def log_news_view(news, user=None, session_key=None):
+def log_news_view(news, user=None):
     ObjView.objects.create(news=news, user=user)
 
-def log_travel_story_view(travel_story, user=None, session_key=None):
+def log_travel_story_view(travel_story, user=None):
     ObjView.objects.create(travel_story=travel_story, user=user)
 
 def create_notification(user, message):

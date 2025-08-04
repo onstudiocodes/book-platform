@@ -139,7 +139,7 @@ News
                             <div class="flex justify-between items-center mb-6">
                                 <div class="flex space-x-4 text-gray-500">
                                     <span class="flex items-center">
-                                        <i class="far fa-eye mr-1"></i> 1.2K views
+                                        <i class="far fa-eye mr-1"></i> {{news.views}} views
                                     </span>
                                     <span class="flex items-center">
                                         <i class="far fa-comment mr-1"></i> {{news.comments.count}} comments
@@ -161,19 +161,53 @@ News
                             <!-- Comments Section -->
                             <div class="mt-8">
                                 <h3 class="text-xl font-bold mb-4">Comments ({{news.comments.count}})</h3>
-                                
+                                {% if user.is_authenticated %}
                                 <!-- Comment Form -->
-                                <div class="mb-8">
-                                    <textarea class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Add your comment..."></textarea>
+                                <form action="{%url 'news:comments' %}" method="post" class="mb-8" id="comment_form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="news" value="{{news.id}}" id="">
+                                    <input type="hidden" name="user" value="{{request.user.id}}" id="">
+
+                                    <textarea name="content" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Add your comment..."></textarea>
                                     <div class="flex justify-end mt-2">
-                                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Post Comment</button>
+                                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Post Comment</button>
                                     </div>
-                                </div>
+                                </form>
+                                {% else %}
+                                <div class="text-red-600">Please login first to add comment.</div>
+                                {% endif %}
                                 
+                                <script>
+                                    let commentForm = document.querySelector("#comment_form")
+                                    commentForm.addEventListener('submit', (e)=>{
+                                        e.preventDefault()
+                                        fetch(commentForm.action, {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                                'Accept': 'application/json',
+                                            },
+                                            body: new FormData(commentForm)
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            console.log(data);
+                                            if (data && data.success) {
+                                                location.reload();
+                                            } else {
+                                                alert(data.error || "Failed to post comment.");
+                                            }
+                                        })
+                                        .catch(error => {
+                                            alert("An error occurred. Please try again.");
+                                        });
+                                    })
+                                </script>
+
                                 <!-- Comment List -->
                                 <div class="space-y-4">
                                     <!-- Comment 1 -->
-                                     {% for comment in news.comments.all %}
+                                     {% for comment in comments %}
                                     <div class="bg-gray-50 p-4 rounded-lg">
                                         <div class="flex items-center mb-2">
                                             <image class="w-8 h-8  rounded-full flex items-center justify-center text-white font-bold mr-2"
@@ -184,10 +218,10 @@ News
                                         <p class="text-gray-700">{{comment.content}}</p>
                                         <div class="flex items-center mt-2 text-sm text-gray-500">
                                             <button class="flex items-center mr-4 hover:text-blue-600">
-                                                <i class="far fa-thumbs-up mr-1"></i> {{comment.likes.count}}
+                                                <i class="far fa-thumbs-up mr-1"></i> {{comment.likes_count}}
                                             </button>
                                             <button class="flex items-center mr-4 hover:text-blue-600">
-                                                <i class="far fa-thumbs-down mr-1"></i> {{comment.dislikes.count}}
+                                                <i class="far fa-thumbs-down mr-1"></i> {{comment.dislikes_count}}
                                             </button>
                                             <button class="hover:text-blue-600">Reply</button>
                                         </div>
@@ -217,39 +251,19 @@ News
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h3 class="font-bold text-lg mb-4">Related Articles</h3>
                     <div class="space-y-4">
-                        <a href="#" class="block group">
+                        {% for article in related_news %}
+                        <a href="{% url "news:news_details" article.slug %}" class="block group">
                             <div class="flex items-start">
-                                <img src="https://images.unsplash.com/photo-1604999565976-8913ad2ddb7c?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80" 
+                                <img src="{{article.images.first.image.url}}" 
                                      alt="Related article" 
                                      class="w-16 h-16 object-cover rounded mr-3">
                                 <div>
-                                    <h4 class="font-medium group-hover:text-blue-600">Scientists Warn of Climate Tipping Points</h4>
-                                    <p class="text-gray-500 text-xs">2 days ago</p>
+                                    <h4 class="font-medium group-hover:text-blue-600">{{article.title}}</h4>
+                                    <p class="text-gray-500 text-xs">{{article.created_at|time_since}}</p>
                                 </div>
                             </div>
                         </a>
-                        <a href="#" class="block group">
-                            <div class="flex items-start">
-                                <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80" 
-                                     alt="Related article" 
-                                     class="w-16 h-16 object-cover rounded mr-3">
-                                <div>
-                                    <h4 class="font-medium group-hover:text-blue-600">Renewable Energy Investments Reach Record High</h4>
-                                    <p class="text-gray-500 text-xs">3 days ago</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="#" class="block group">
-                            <div class="flex items-start">
-                                <img src="https://images.unsplash.com/photo-1618477388954-7852f32655ec?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80" 
-                                     alt="Related article" 
-                                     class="w-16 h-16 object-cover rounded mr-3">
-                                <div>
-                                    <h4 class="font-medium group-hover:text-blue-600">How Cities Are Adapting to Climate Change</h4>
-                                    <p class="text-gray-500 text-xs">1 week ago</p>
-                                </div>
-                            </div>
-                        </a>
+                        {% endfor %}
                     </div>
                 </div>
 

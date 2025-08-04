@@ -8,5 +8,6 @@ urlpatterns = [
     path('create', views.create_news, name="create_news"),
     path('details/<str:slug>', views.news_details, name="news_details"),
     path('news-api/', views.NewsListCreateView.as_view(), name='news-list-create'),
+    path('comments/', views.CommentListCreateAPIView.as_view(), name='comments' )
 
 ]

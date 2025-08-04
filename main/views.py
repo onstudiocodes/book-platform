@@ -226,9 +226,6 @@ def book_view(request, slug):
             'translations'
         ).get(slug=slug)
     
-    suggestions = Book.public_objects.all().select_related(
-        'author', 'author__userprofile'
-        ).order_by('?').exclude(id__in=[book.id])[:20]
     
     user = request.user if request.user.is_authenticated else None
 
@@ -245,9 +242,7 @@ def book_view(request, slug):
             defaults={'updated_at': timezone.now()}
         )
     else:
-        print('working')
-        session_key = request.session.get('session_key')
-        log_book_view(book=book, session_key=session_key)
+        log_book_view(book=book)
 
     comments = Comment.objects.filter(book=book, parent=None).order_by('-created_at')
     follower = False

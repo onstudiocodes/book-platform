@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import News, NewsImage
+from .models import News, NewsImage, Comment
 from accounts.models import User, UserProfile, UserFollow
 
 class FollowerSerializer(serializers.ModelSerializer):
@@ -31,3 +31,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         return obj.followers_users.count()
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'

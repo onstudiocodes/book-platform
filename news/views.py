@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from author.forms import NewsForm, NewsImageFormSet
-from main.models import News, NewsImage, NewsCategory
+from main.models import News, NewsImage, NewsCategory, Comment
 from django.db.models import Count
 from .serializers import NewsImageSerializer, NewsSerializer
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions, generics
-
+from main.utils import log_news_view
+from main.serializers import CommentSerializer
 
 # Create your views here.
 def home(request):
@@ -46,8 +47,28 @@ def create_news(request):
         'formset': formset
     })
 def news_details(request, slug):
-    news = get_object_or_404(News, slug=slug)
-    return render(request, 'news/news_details.html', {'news': news})
+    news = News.objects.select_related('author__userprofile').prefetch_related(
+        'images'
+    ).get(slug=slug)
+    user = request.user if request.user.is_authenticated else None
+    if user:
+        log_news_view(news=news, user=user)
+    else:
+        log_news_view(news=news)
+    news.views = news.news_views.count()
+    news.save()
+    comments = Comment.objects.filter(news=news).select_related(
+        'news__author__userprofile'
+        ).annotate(
+            likes_count=Count('likes'),
+            dislikes_count=Count('dislikes')
+        ).order_by('-created_at')
+
+    related_news = News.objects.order_by('?').prefetch_related(
+            'images'
+        ).exclude(id__in=[news.id])[:3]
+
+    return render(request, 'news/news_details.html', {'news': news, 'comments': comments, 'related_news': related_news})
 
 class NewsPagination(PageNumberPagination):
     page_size = 2  # Number of items per page
@@ -74,6 +95,7 @@ class NewsListCreateView(generics.ListCreateAPIView):
             likes_count=Count('likes', distinct=True),
             dislikes_count=Count('dislikes', distinct=True),
             comments_count=Count('comments', distinct=True),
+            views_count=Count('news_views', distinct=True)
         ).order_by('-published_date')
 
         exclude_id = self.request.query_params.get('exclude')
@@ -81,9 +103,28 @@ class NewsListCreateView(generics.ListCreateAPIView):
             queryset = queryset.exclude(id=int(exclude_id))
         return queryset
 
-
 # Retrieve, update, or delete a specific news item
 class NewsDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class CommentListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all().order_by('created_at')
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        news_id = self.request.query_params.get('news')
+        queryset = Comment.objects.all().order_by('created_at')
+        if news_id and news_id.isdigit():
+            queryset = queryset.filter(news_id=news_id).order_by('created_at')
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        response.data = {'success': True, 'comment': response.data}
+        return response
