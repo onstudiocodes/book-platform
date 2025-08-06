@@ -12,9 +12,11 @@ from main.serializers import CommentSerializer
 def home(request):
     categories = NewsCategory.objects.annotate(news_count=Count('news')).order_by('-news_count')
     recent_news = News.objects.order_by('-published_date')[:2]
+    trending_news = News.objects.annotate(views_count=Count('news_views')).order_by('-views_count')[:3]
     context = {
         'categories': categories,
-        'recent_news': recent_news
+        'recent_news': recent_news,
+        "trending_news": trending_news
     }
     return render(request, 'news/index.html', context)
 
@@ -101,6 +103,11 @@ class NewsListCreateView(generics.ListCreateAPIView):
         exclude_id = self.request.query_params.get('exclude')
         if exclude_id and exclude_id.isdigit():
             queryset = queryset.exclude(id=int(exclude_id))
+
+        category_name = self.request.query_params.get('category')
+        if category_name:
+            queryset = queryset.filter(category__name=category_name)
+
         return queryset
 
 # Retrieve, update, or delete a specific news item
