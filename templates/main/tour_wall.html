@@ -53,14 +53,15 @@
                 </div>
                 
                 <!-- Search Bar -->
-                <div class="relative">
+                <form class="relative" method="get" id="tour_search" autocomplete="off">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search destinations, places or tags...">
-                </div>
+                    <input name='q' type="text" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Search destinations, places or tags..." required>
+                    <button type="submit" style="display:none"></button>
+                </form>
             </div>
         </header>
 
@@ -68,15 +69,21 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
             <!-- Stories Content -->
             <div class="flex-1">
+                {% if q %}
+                <div class="text-md">
+                    Search results for "{{q}}"
+                </div>
+                {% endif %}
                 <!-- Filter Options -->
                 <div class="flex flex-wrap items-center justify-between mb-8 gap-4">
-                    <div class="flex space-x-2">
-                        <button class="px-3 py-1 bg-indigo-600 text-white rounded-full text-sm">All</button>
-                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Mountains</button>
-                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Beaches</button>
-                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Forests</button>
-                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50">Historical</button>
+                    <div class="flex space-x-2" id="tour-filter-buttons">
+                        <button class="px-3 py-1 rounded-full text-sm bg-indigo-600 text-white" data-filter="All">All</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50" data-filter="Mountains">Mountains</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50" data-filter="Beaches">Beaches</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50" data-filter="Forests">Forests</button>
+                        <button class="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm hover:bg-gray-50" data-filter="Historical">Historical</button>
                     </div>
+                   
                     <div class="flex items-center text-sm text-gray-600">
                         <span class="mr-2">Sort by:</span>
                         <select class="border-0 bg-transparent text-indigo-600 focus:ring-0">
@@ -90,15 +97,16 @@
                 <!-- Stories Container with Hidden Scrollbar -->
                 <div class="stories-container">
                     <!-- Featured Story -->
-                    <div class="mb-12">
-                        <a href="single-story.html">
+                     {% if featured %}
+                    <div class="mb-12" id="featured">
+                        <a href="{% url "travel:tour_details" featured.slug %}">
                             <div class="relative rounded-xl overflow-hidden h-96">
-                                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="Featured Tour" class="w-full h-full object-cover">
+                                <img src="{{featured.thumbnail.url}}" alt="Featured Tour" class="w-full h-full object-cover">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end p-8">
                                     <div>
                                         <span class="inline-block px-3 py-1 bg-green-500 text-white text-sm font-medium rounded-full mb-2">Featured</span>
-                                        <h2 class="text-3xl font-bold text-white mb-2">St. Martin's Island: Coral Paradise</h2>
-                                        <p class="text-gray-200 mb-4">Exploring Bangladesh's only coral island with its turquoise waters and white sandy beaches</p>
+                                        <h2 class="text-3xl font-bold text-white mb-2">{{featured.title}}</h2>
+                                        <p class="text-gray-200 mb-4">{{featured.story|striptags|truncatechars:50}}</p>
                                         <div class="flex items-center text-white">
                                             <span class="flex items-center mr-4">
                                                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,47 +127,12 @@
                             </div>
                         </a>
                     </div>
+                    {% endif %}
 
                     <!-- Stories Grid -->
                     <div id="stories-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
                         
-                        {% for story in stories %}
-                        <!-- Story Card -->
-                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                            <a href="{% url 'main:tour_details' story.slug %}">
-                                <div class="relative h-48">
-                                    <img src="{{story.thumbnail.url}}" alt="Tour Image" class="w-full h-full object-cover">
-                                    <div class="absolute top-4 right-4">
-                                        <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
-                                            <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <div class="flex items-center text-sm text-gray-500 mb-2">
-                                        <span class="whitespace-nowrap">{{story.author.userprofile.full_name}}</span>
-                                        <span class="mx-2">•</span>
-                                        <span class="whitespace-nowrap">{{story.created_at|time_since}}</span>
-                                    </div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">{{story.title}}</h3>
-                                    <p class="text-gray-600 mb-4">{{ story.story|striptags|truncatechars:50 }}</p>
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex space-x-2">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                Mountains
-                                            </span>
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Trekking
-                                            </span>
-                                        </div>
-                                        <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        {% endfor %}
+                      <!-- dynamically loaded -->
 
                         
                     </div>
@@ -205,71 +178,34 @@
         </div>
     </div>
 
+   
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
             const storiesGrid = document.getElementById('stories-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
             const storiesContainer = document.querySelector('.stories-container');
-            
+            const tourSearchForm = document.getElementById('tour_search');
+            const searchInput = tourSearchForm.querySelector('input[name="q"]');
+            const filterButtons = document.querySelectorAll('#tour-filter-buttons button');
+            let content = document.getElementById('content');
+
+            // State variables
             let isLoading = false;
-            let currentPage = 1;
+            let currentPage = 0;
             const threshold = 200; // pixels from bottom to trigger load
-            
-            // Sample data for additional stories (in a real app, this would come from an API)
-            const additionalStories = [
-                {
-                    id: 5,
-                    author: "Lena Petrov",
-                    date: "2 weeks ago",
-                    title: "Alpine Meadows in Switzerland",
-                    description: "Hiking through the stunning alpine meadows with breathtaking mountain views.",
-                    image: "https://images.unsplash.com/photo-1476231682828-37e571bc172f",
-                    tags: ["Mountains", "Hiking"]
-                },
-                {
-                    id: 6,
-                    author: "Ahmed Khan",
-                    date: "3 weeks ago",
-                    title: "Desert Safari in Dubai",
-                    description: "An exhilarating experience riding through the golden dunes of the Arabian desert.",
-                    image: "https://images.unsplash.com/photo-1518630386542-9fc1ac0a4d10",
-                    tags: ["Desert", "Adventure"]
-                },
-                {
-                    id: 7,
-                    author: "Sophie Martin",
-                    date: "1 month ago",
-                    title: "Venice: The Floating City",
-                    description: "Exploring the romantic canals and historic architecture of Venice, Italy.",
-                    image: "https://images.unsplash.com/photo-1514890547357-a9ee288728e0",
-                    tags: ["Historical", "City"]
-                },
-                {
-                    id: 8,
-                    author: "David Wilson",
-                    date: "2 months ago",
-                    title: "Northern Lights in Norway",
-                    description: "Witnessing the magical aurora borealis in the Arctic Circle.",
-                    image: "https://images.unsplash.com/photo-1604085572504-a392ddf0d86a",
-                    tags: ["Arctic", "Nature"]
-                }
-            ];
-            
-            // Function to load more stories
-            function loadMoreStories() {
-                if (isLoading) return;
-                
-                isLoading = true;
-                loadingSpinner.style.display = 'block';
-                
-                // Simulate API call delay
-                setTimeout(() => {
-                    // In a real app, you would fetch data from your API here
-                    // For this example, we'll use our sample data
-                    
-                    // Create and append new story cards
-                    additionalStories.forEach(story => {
-                        const tagsHtml = story.tags.map(tag => {
+            let hasMorePages = true; // Track if more pages are available
+
+            // Helper to render stories
+            function renderStories(data) {
+                if (!data) return;
+                data.results.forEach(story => {
+                    const tagsHtml = (story.tags || '')
+                        .split(',')
+                        .map(tag => tag.trim())
+                        .filter(tag => tag.length > 0)
+                        .slice(0, 2)
+                        .map(tag => {
                             const colors = [
                                 { bg: 'bg-blue-100', text: 'text-blue-800' },
                                 { bg: 'bg-green-100', text: 'text-green-800' },
@@ -278,76 +214,136 @@
                                 { bg: 'bg-red-100', text: 'text-red-800' }
                             ];
                             const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                            
                             return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${randomColor.bg} ${randomColor.text}">
                                 ${tag}
                             </span>`;
                         }).join('');
-                        
-                        const storyHtml = `
-                            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                                <a href="single-story.html">
-                                    <div class="relative h-48">
-                                        <img src="${story.image}" alt="Tour Image" class="w-full h-full object-cover">
-                                        <div class="absolute top-4 right-4">
-                                            <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
-                                                <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
+                    const storyHtml = `
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <a href="/travel/tour_details/${story.slug}">
+                                <div class="relative h-48">
+                                    <img src="${story.thumbnail}" alt="Tour Image" class="w-full h-full object-cover">
+                                    <div class="absolute top-4 right-4">
+                                        <button class="p-2 bg-white/90 rounded-full hover:bg-white transition-colors duration-200">
+                                            <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <div class="p-6">
-                                        <div class="flex items-center text-sm text-gray-500 mb-2">
-                                            <span>${story.author}</span>
-                                            <span class="mx-2">•</span>
-                                            <span>${story.date}</span>
-                                        </div>
-                                        <h3 class="text-xl font-semibold text-gray-900 mb-2">${story.title}</h3>
-                                        <p class="text-gray-600 mb-4">${story.description}</p>
-                                        <div class="flex justify-between items-center">
-                                            <div class="flex space-x-2">
-                                                ${tagsHtml}
-                                            </div>
-                                            <span class="text-indigo-600 hover:text-indigo-800 font-medium">Read More</span>
-                                        </div>
+                                </div>
+                                <div class="p-6">
+                                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                                        <span>${story.author.userprofile.full_name}</span>
+                                        <span class="mx-2">•</span>
+                                        <span>${story.time_since}</span>
                                     </div>
-                                </a>
-                            </div>
-                        `;
-                        
-                        storiesGrid.insertAdjacentHTML('beforeend', storyHtml);
-                    });
-                    
-                    currentPage++;
-                    isLoading = false;
-                    loadingSpinner.style.display = 'none';
-                    
-                    // In a real app, you would check if there are more pages to load
-                    // and disable infinite scroll if you've reached the end
-                    
-                }, 1000); // Simulated network delay
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">${story.title}</h3>
+                                    <p class="text-gray-600 mb-4 line-clamp-2">${story.desc}</p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            ${tagsHtml}
+                                        </div>
+                                        <span class="text-indigo-600 hover:text-indigo-800 font-medium truncate text-ellipsis">Read More</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                    storiesGrid.insertAdjacentHTML('beforeend', storyHtml);
+                });
+                currentPage++;
+                isLoading = false;
+                loadingSpinner.style.display = 'none';
+                if (!data.next) {
+                    hasMorePages = false;
+                }
             }
-            
-            let content =  document.getElementById('content')
-            
-            // Scroll event listener for infinite scroll
+
+            // Load stories with optional query
+            function loadMoreStories(q = null) {
+                if (isLoading || !hasMorePages) return;
+                isLoading = true;
+                loadingSpinner.style.display = 'block';
+                let url = `/travel?page=${currentPage + 1}`;
+                if (q) url += `&q=${encodeURIComponent(q)}`;
+                fetch(url)
+                    .then(response => {
+                        if (response.status === 404) {
+                            hasMorePages = false;
+                            loadingSpinner.style.display = 'none';
+                            return null;
+                        }
+                        return response.json();
+                    })
+                    .then(renderStories)
+                    .catch(() => {
+                        isLoading = false;
+                        loadingSpinner.style.display = 'none';
+                        hasMorePages = false;
+                    });
+            }
+
+            // Search form submit
+            tourSearchForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                currentPage = 0;
+                hasMorePages = true;
+                storiesGrid.innerHTML = '';
+                const featured = document.getElementById('featured');
+                if (featured) featured.style.display = 'none';
+                loadMoreStories(query);
+            });
+
+            // Filter buttons
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(b => {
+                        b.classList.remove('bg-indigo-600', 'text-white');
+                        b.classList.add('bg-white', 'border', 'border-gray-300', 'text-sm', 'hover:bg-gray-50');
+                    });
+                    // Add active class to clicked button
+                    this.classList.add('bg-indigo-600', 'text-white');
+                    this.classList.remove('bg-white', 'border', 'border-gray-300', 'hover:bg-gray-50');
+                    // Set q value and trigger submit event programmatically
+                    const filterValue = this.getAttribute('data-filter');
+                    searchInput.value = filterValue;
+                    if (filterValue === 'All') {
+                        currentPage = 0;
+                        hasMorePages = true;
+                        storiesGrid.innerHTML = '';
+                        searchInput.value = '';
+                        const featured = document.getElementById('featured');
+                        if (featured) featured.style.display = '';
+                        loadMoreStories();
+                    } else {
+                        const event = new Event('submit', { bubbles: true, cancelable: true });
+                        tourSearchForm.dispatchEvent(event);
+                    }
+                });
+            });
+
+            // Infinite scroll
             content.addEventListener('scroll', function() {
                 const scrollTop = content.scrollTop;
                 const scrollHeight = content.scrollHeight;
                 const clientHeight = content.clientHeight;
-                
                 if (scrollHeight - (scrollTop + clientHeight) < threshold) {
-                    loadMoreStories();
+                    // If searching, use query; else, load normally
+                    const q = searchInput.value.trim();
+                    if (q && q !== 'All') {
+                        loadMoreStories(q);
+                    } else {
+                        loadMoreStories();
+                    }
                 }
             });
-            
-            
-            // Initial load of more stories when page loads (optional)
-            // loadMoreStories();
+
+            // Initial load
+            loadMoreStories();
         });
     </script>
-
     <script>
         let halfMenu = false;
         let fullMenuHide = true;
@@ -355,5 +351,6 @@
         const cardGrid = document.getElementById('content')
         sideBar.classList.toggle('md:translate-x-0')
         cardGrid.classList.remove('md:ml-64')
+        document.getElementById('default-search').style.display='none';
     </script>
 {% endblock %}

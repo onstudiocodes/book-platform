@@ -555,46 +555,7 @@ def post_comment(request, news_id):
         })
     return JsonResponse({'status': 'error'}, status=400)
 
-def tour_wall(request):
-    stories = TravelStory.objects.exclude(published=False).prefetch_related('images')
-    return render(request, 'main/tour_wall.html', {'stories': stories})
 
-def tour_details(request, slug):
-    story = get_object_or_404(TravelStory, slug=slug)
-    return render(request, 'main/tour_details.html', {'story': story})
 
-def add_travel_story(request):
-    if request.method == 'POST':
-        form = TravelStoryForm(request.POST, request.FILES)
-        if form.is_valid():
-            travel_story = form.save(commit=False)
-            travel_story.author = request.user
-            travel_story.save()
-            
-            
-            # Handle multiple image uploads
-            images = request.FILES.getlist('images')
-            if len(images) < 3:
-                messages.error(request, 'At least 3 photos are required')
-                return render(request, 'main/add_travel_story.html', {'form': form})
-                
-            for image in images:
-                TravelImage.objects.create(travel_story=travel_story, image=image)
-            
-            if 'publish' in request.POST:
-                travel_story.published = True
-            travel_story.save()
-
-            messages.success(request, 'Travel story saved successfully!')
-            source_template = request.POST.get('source_template')
-            if 'content_details' in source_template:
-                template, slug = source_template.split(')(')
-                return redirect('author:content_details', content_type='tour', slug=slug)
-            return redirect('main:tour_details', slug=travel_story.slug)
-    else:
-        form = TravelStoryForm()
-    
-    return render(request, 'main/add_travel_story.html', {'form': form})
-    
 
 

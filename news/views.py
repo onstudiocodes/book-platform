@@ -122,10 +122,16 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        news_id = self.request.query_params.get('news')
+        content_type = self.request.query_params.get('type')
+        object_id = self.request.query_params.get('id')
         queryset = Comment.objects.all().order_by('created_at')
-        if news_id and news_id.isdigit():
-            queryset = queryset.filter(news_id=news_id).order_by('created_at')
+        if content_type and object_id and object_id.isdigit():
+            if content_type == 'news':
+                queryset = queryset.filter(news_id=object_id)
+            elif content_type == 'book':
+                queryset = queryset.filter(book_id=object_id)
+            elif content_type == 'travelstory':
+                queryset = queryset.filter(travelstory_id=object_id)
         return queryset
 
     def perform_create(self, serializer):

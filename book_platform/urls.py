@@ -25,6 +25,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('author/', include('author.urls') ),
     path('news/', include('news.urls')),
+    path('travel/', include('travel.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('silk/', include('silk.urls', namespace='silk'))
 ]

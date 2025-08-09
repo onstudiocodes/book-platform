@@ -13,7 +13,7 @@
         </div>
 
         <!-- Search Bar -->
-        <form action="{% url 'main:search' %}" method="get" class="hidden sm:flex md:flex items-center justify-center mx-4 flex-grow">
+        <form action="{% url 'main:search' %}" method="get" class="hidden sm:flex md:flex items-center justify-center mx-4 flex-grow" id="default-search">
             <input type="text" placeholder="Search" name="q" value="{{q}}"
                 class="w-2/4 border border-gray-300 rounded-l-full py-2 px-4 focus:outline-none">
             <button type="submit"
@@ -45,7 +45,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'main:add_travel_story' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <a href="{% url 'travel:add_travel_story' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                                 <i class="fa fa-map-marker-alt mr-2"></i> Create travel story
                             </a>
                         </li>
