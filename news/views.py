@@ -4,7 +4,7 @@ from main.models import News, NewsImage, NewsCategory, Comment
 from django.db.models import Count
 from .serializers import NewsImageSerializer, NewsSerializer
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import permissions, generics
+from rest_framework import permissions, generics, serializers
 from main.utils import log_news_view
 from main.serializers import CommentSerializer
 
@@ -135,7 +135,18 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        content_type = self.request.data.get('type')
+        object_id = self.request.data.get('id')
+
+        if content_type == 'news':
+            serializer.save(user=self.request.user, news_id=object_id)
+        elif content_type == 'book':
+            serializer.save(user=self.request.user, book_id=object_id)
+        elif content_type == 'travelstory':
+            serializer.save(user=self.request.user, travel_story_id=object_id)
+        else:
+            raise serializers.ValidationError({"error": "Invalid content type"})
+
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)

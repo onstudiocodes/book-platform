@@ -165,7 +165,8 @@ News
                                 <!-- Comment Form -->
                                 <form action="{%url 'news:comments' %}" method="post" class="mb-8" id="comment_form">
                                     {% csrf_token %}
-                                    <input type="hidden" name="news" value="{{news.id}}" id="">
+                                    <input type="hidden" name="id" value="{{news.id}}" id="">
+                                    <input type="hidden" name="type" value="news" id="">
                                     <input type="hidden" name="user" value="{{request.user.id}}" id="">
 
                                     <textarea name="content" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Add your comment..."></textarea>
@@ -193,8 +194,10 @@ News
                                         .then(data => {
                                             console.log(data);
                                             if (data && data.success) {
+                                                commentForm.reset();
                                                 location.reload();
                                             } else {
+                                                console.log(data)
                                                 alert(data.error || "Failed to post comment.");
                                             }
                                         })
