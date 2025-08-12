@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Book, Comment, News, History, Collection, ReadingList, Notification
+from .models import Book, Comment, News, History, Collection, ReadingList, Notification, ReadingTime, TravelStory
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from accounts.models import UserProfile, UserFollow
@@ -14,11 +14,8 @@ from django.core.serializers import serialize
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from .models import ReadingTime
 from django.core.paginator import Paginator
 import json
-from .forms import TravelStoryForm
-from .models import TravelImage, TravelStory, TravelCategory
 from django.db.models import Count
 
 def index(request):
@@ -113,13 +110,30 @@ def save_reading_time(request):
 from accounts.forms import profileForm
 def profile(request, username):
     
-    profile = User.objects.get(username=username)
+    profile = User.objects.select_related('userprofile').prefetch_related(
+        'collections',
+        'collections__reading_list__book'
+        ).get(username=username)
     follower = False
     if request.user.is_authenticated and UserFollow.objects.filter(follower=request.user, following=profile).exists():
         follower = True
     context = {'profile': profile, 'follower': follower}
 
-    books = Book.objects.filter(author__username=username)
+    books = Book.objects.filter(author__username=username).select_related(
+        'author', 'author__userprofile'
+        ).prefetch_related(
+            'readinglist_set'
+        ).order_by('-published_date')
+    news = News.objects.filter(author__username=username).select_related(
+        'author', 'author__userprofile'
+    ).prefetch_related(
+        'images', 'category'
+    ).order_by('-published_date')[:5]
+    travel_story = TravelStory.objects.filter(author__username=username).select_related(
+        'author', 'author__userprofile'
+    ).order_by('-created_at')[:5]
+    context['news'] = news
+    context['travel_story'] = travel_story
     paginator = Paginator(books, 10)
     initial_books = paginator.page(1)
     context['books'] = initial_books

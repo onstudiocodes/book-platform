@@ -43,12 +43,37 @@ Profile
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
     {% if books %}
     {% for book in books %}
-    {% include 'components/book_card.html' %}
+    {% include 'components/book_card.html' with user=profile %}
     {% endfor %}
     {% else %}
     No book published yet.
     {% endif %}
 </div>
+
+<h2 class="text-xl font-bold text-gray-700 mb-4 mt-8">News</h2>
+<div id="stories-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
+    {% if news %}
+    {% for news in news %}
+    {% include "components/news_card.html" %}
+    {% endfor %}
+    {% else %}
+    No news published yet.
+    {% endif %}
+</div>
+
+<h2 class="text-xl font-bold text-gray-700 mb-4 mt-8">Travel story</h2>
+<div id="stories-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
+    {% if travel_story %}
+    {% for story in travel_story %}
+    {% include "components/tour_card.html" %}
+    {% endfor %}
+    {% else %}
+    No story published yet.
+    {% endif %}
+
+</div>
+
+
 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
 {% endblock %}
@@ -71,6 +96,25 @@ Profile
         modal.classList.add('hidden')
         modal.classList.remove("flex")
     })
+    function getColorForCategory(category) {
+    const colors = {
+        'Politics': 'red',
+        'Technology': 'purple',
+        'Business': 'yellow',
+        'Sports': 'green',
+        'Entertainment': 'pink',
+        'Health': 'red',
+        'Science': 'yellow',
+        'World': 'blue',
+        'Environment': 'blue',
+        'Community': 'green',
+        'Local': 'blue',
+        'Global': 'green',
+        'Research': 'purple',
+        'Finance': 'yellow'
+    };
+    return colors[category] || 'gray';
+}
 </script>
 
 {% endblock %}

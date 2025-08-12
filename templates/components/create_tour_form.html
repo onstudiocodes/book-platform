@@ -5,13 +5,9 @@
         id="thumbnail-dropzone" style="min-height: 192px; height: 192px; display: flex; align-items: center; justify-content: center;">
         {{ form.thumbnail }}
         <div id="thumbnail-preview" class="absolute inset-0 flex items-center justify-center w-full h-full bg-gray-100 border-gray-300 rounded-lg overflow-hidden pointer-events-none">
-            {% if form.instance.thumbnail %}
-                <img src="{{ form.instance.thumbnail.url }}" alt="Current Thumbnail" class="object-contain w-full h-full">
-            {% else %}
-                <span class="text-gray-400 text-xs">No image</span>
-            {% endif %}
+            <span class="text-gray-400 text-xs">No image</span>
         </div>
-        <div class="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none" id="thumbnail-overlay" {% if form.instance.thumbnail %}style="display:none;"{% endif %}>
+        <div class="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none" id="thumbnail-overlay">
             <div class="flex justify-center mb-3 pointer-events-auto">
                 <div class="upload-icon transition-transform duration-200">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,14 +103,8 @@
             };
             reader.readAsDataURL(thumbInput.files[0]);
         } else {
-            // If form.instance.thumbnail exists, don't show overlay
-            {% if form.instance.thumbnail %}
-                thumbPreview.innerHTML = '<img src="{{ form.instance.thumbnail.url }}" alt="Current Thumbnail" class="object-contain w-full h-full">';
-                thumbOverlay.style.display = 'none';
-            {% else %}
-                thumbPreview.innerHTML = '<span class="text-gray-400 text-xs">No image</span>';
-                thumbOverlay.style.display = '';
-            {% endif %}
+            thumbPreview.innerHTML = '<span class="text-gray-400 text-xs">No image</span>';
+            thumbOverlay.style.display = '';
         }
     }
 </script>
@@ -136,7 +126,6 @@
         <label class="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:border-indigo-300 category-label">
             <input type="radio" name="category" value="{{ category.id }}" 
                     class="text-indigo-600 focus:ring-indigo-500" 
-                    {% if form.category.value == category.id %}checked{% endif %}
                     required>
             <span>{{ category.name }}</span>
         </label>
@@ -179,16 +168,7 @@
             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
     </div>
     <div id="file-list" class="mt-3 grid grid-cols-3 gap-2">
-        {% if form.instance.images.all %}
-            {% for image in form.instance.images.all %}
-                <div class="relative">
-                    <img src="{{ image.image.url }}" alt="Uploaded Image" class="rounded-lg object-cover h-32 w-full">
-                    <span class="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-                        Existing
-                    </span>
-                </div>
-            {% endfor %}
-        {% endif %}
+        <!-- Images will be displayed here after upload -->
     </div>
     {% if form.images.errors %}
         <p class="text-red-500 text-sm mt-1">{{ form.images.errors.0 }}</p>

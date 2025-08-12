@@ -27,7 +27,7 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('travel/', include('travel.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
-    # path('silk/', include('silk.urls', namespace='silk'))
+    path('silk/', include('silk.urls', namespace='silk'))
 ]
 
 if settings.DEBUG:
