@@ -20,17 +20,16 @@ Content
         <h2 class="text-3xl font-semibold">Channel Content</h2>
     </div>
 </header>
-<ul class="flex gap-4 font-medium text-gray-600 border-b-2 overflow-x-scroll *:p-2 *:cursor-pointer *:hover:border-b-2">
-    <li class="hover:border-gray-300 {% if content_type == 'books' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'books' %}`">
+<ul class="flex gap-4 font-medium text-gray-600 border-b-2 overflow-x-scroll">
+    <li class="p-2 cursor-pointer hover:border-b-2 hover:border-gray-300 {% if content_type == 'books' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'books' %}`">
         Books
     </li>
-    <li class="hover:border-gray-300 {% if content_type == 'news' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'news' %}`">
+    <li class="p-2 cursor-pointer hover:border-b-2 hover:border-gray-300 {% if content_type == 'news' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'news' %}`">
         News
     </li>
-    <li class="hover:border-gray-300 {% if content_type == 'tour' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'tour' %}`">
+    <li class="p-2 cursor-pointer hover:border-b-2 hover:border-gray-300 {% if content_type == 'tour' %} active-menu {% endif %}" onclick="location.href=`{% url 'author:author_content' 'tour' %}`">
         Tour
     </li>
-
 </ul>
 <div class="w-full overflow-x-scroll">
     <table class="text-sm text-left rtl:text-right w-full overflow-x-scroll">

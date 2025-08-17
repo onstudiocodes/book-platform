@@ -5,59 +5,223 @@ Publish Book
 {% endblock %}
 {% block header %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
     .ck-editor__editable {
-        min-height: 400px; /* Adjust the height */
+        min-height: 400px;
+        border-radius: 0.75rem;
+    }
+    .upload-area {
+        transition: all 0.3s ease;
+    }
+    .upload-area:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+        transition: all 0.3s ease;
+    }
+    .form-group:focus-within {
+        transform: translateY(-1px);
+    }
+    .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    /* Cropper specific styles */
+    .cropper-container {
+        max-width: 100% !important;
+        max-height: 100% !important;
+    }
+    .cropper-canvas {
+        max-width: 100% !important;
+        max-height: 100% !important;
+    }
+    #cropperImage {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+    #previewContainer canvas {
+        border-radius: 0.75rem;
     }
 </style>
 {% endblock %}
 {% block content %}
-<div class="w-full sm:max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-4">Publish a New Book</h2>
-    
-
-    <form id="bookForm" action="{% url 'author:write_book' %}" method="POST" enctype="multipart/form-data" class="space-y-4">
-        {% csrf_token %}
-        {{ form.media }}
-    
-        <!-- Thumbnail Image Input -->
-        <div>
-            <label class="block text-gray-700">Thumbnail Image</label>
-            <input type="file" name="thumbnail" id="imageInput" accept="image/*" class="mt-1 w-full border p-2 rounded">
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header Section -->
+        <div class="text-center mb-10">
+            <div class="gradient-bg rounded-2xl p-8 mb-8 shadow-2xl">
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-book-open mr-3"></i>Publish Your Book
+                </h1>
+                <p class="text-blue-100 text-lg">Share your story with the world and inspire readers everywhere</p>
+            </div>
         </div>
-    
-        <!-- Hidden input to store cropped image -->
-        <input type="hidden" name="cropped_thumbnail" id="croppedThumbnail">
-    
-        <!-- Cropper Modal -->
-        <div id="cropModal" class="hidden fixed inset-0 flex z-50 items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white p-4 rounded-lg">
-                <div class="w-96 h-96">
-                    <img id="cropperImage" src="" class="w-full">
+
+        <!-- Main Form Container -->
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <form id="bookForm" action="{% url 'author:write_book' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.media }}
+                
+                <div class="p-8 space-y-8">
+                    <!-- Thumbnail Upload Section -->
+                    <div class="form-group">
+                        <label class="block text-gray-700 text-lg font-semibold mb-4">
+                            <i class="fas fa-image mr-2 text-purple-600"></i>Book Cover
+                        </label>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Upload Area -->
+                            <div class="upload-area">
+                                <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 transition-colors duration-300">
+                                    <input type="file" name="thumbnail" id="imageInput" accept="image/*" 
+                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                    <div class="space-y-4">
+                                        <div class="mx-auto w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-cloud-upload-alt text-white text-2xl"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600 font-medium">Click to upload your book cover</p>
+                                            <p class="text-gray-400 text-sm">PNG, JPG up to 10MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Preview Area -->
+                            <div class="flex items-center justify-center">
+                                <div class="w-48 h-64 bg-gray-50 rounded-xl border-2 border-gray-200 flex items-center justify-center overflow-hidden shadow-lg">
+                                    <img id="thumbnailPreview" src="" class="w-full h-full object-cover hidden">
+                                    <div id="previewPlaceholder" class="text-gray-400 text-center">
+                                        <i class="fas fa-book text-4xl mb-2"></i>
+                                        <p class="text-sm">Cover Preview</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="cropped_thumbnail" id="croppedThumbnail">
+                    </div>
+
+                    <!-- Book Details Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Title -->
+                        <div class="form-group lg:col-span-2">
+                            <label class="block text-gray-700 text-lg font-semibold mb-3">
+                                <i class="fas fa-heading mr-2 text-blue-600"></i>Book Title
+                            </label>
+                            <input type="text" name="title" id="id_title"
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-lg placeholder-gray-400"
+                                   placeholder="Enter your captivating book title..." required>
+                        </div>
+
+                        <!-- Language -->
+                        <div class="form-group">
+                            <label class="block text-gray-700 text-lg font-semibold mb-3">
+                                <i class="fas fa-language mr-2 text-green-600"></i>Language
+                            </label>
+                            <input type="text" name="language" id="id_language"
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 placeholder-gray-400"
+                                   placeholder="e.g., English, Spanish, French..." required>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="form-group">
+                            <label class="block text-gray-700 text-lg font-semibold mb-3">
+                                <i class="fas fa-tags mr-2 text-orange-600"></i>Category
+                            </label>
+                            <select name="category" id="id_category"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 bg-white">
+                                <option value="">Select a category...</option>
+                                <!-- Options will be populated by Django form -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label class="block text-gray-700 text-lg font-semibold mb-3">
+                            <i class="fas fa-align-left mr-2 text-indigo-600"></i>Book Description
+                        </label>
+                        <textarea name="description" id="id_description" rows="4"
+                                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 placeholder-gray-400 resize-none"
+                                  placeholder="Write a compelling description that will attract readers..."></textarea>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="form-group">
+                        <label class="block text-gray-700 text-lg font-semibold mb-3">
+                            <i class="fas fa-edit mr-2 text-red-600"></i>Book Content
+                        </label>
+                        <div class="border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-100 transition-all duration-300">
+                            {{ form.content }}
+                        </div>
+                        <p class="text-gray-500 text-sm mt-2">Use the rich text editor to format your book content with headings, lists, and more.</p>
+                    </div>
                 </div>
-                <div class="flex justify-between mt-4">
-                    <button type="button" id="cancelCrop" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-                    <button type="button" id="cropImage" class="bg-blue-500 text-white px-4 py-2 rounded">Crop</button>
+
+                <!-- Footer Actions -->
+                <div class="bg-gray-50 px-8 py-6 border-t border-gray-200">
+                    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <span class="text-sm">Your book will be published immediately upon submission</span>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button type="button" onclick="history.back()" 
+                                    class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-300 font-medium">
+                                <i class="fas fa-arrow-left mr-2"></i>Cancel
+                            </button>
+                            <button type="submit" id="submitBtn" 
+                                    class="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                <i class="fas fa-rocket mr-2"></i>Publish Book
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cropper Modal -->
+    <div id="cropModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-75">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-crop-alt mr-2 text-purple-600"></i>Crop Your Book Cover
+                    </h3>
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <!-- Cropper Area -->
+                        <div class="flex-1">
+                            <div class="w-full h-96 bg-gray-100 rounded-xl overflow-hidden">
+                                <img id="cropperImage" src="" class="max-w-full block">
+                            </div>
+                        </div>
+                        <!-- Preview Area -->
+                        <div class="lg:w-64 flex flex-col items-center">
+                            <h4 class="text-lg font-semibold text-gray-700 mb-4">Preview</h4>
+                            <div class="w-48 h-64 bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden shadow-lg mb-4">
+                                <div id="previewContainer" class="w-full h-full bg-gray-100"></div>
+                            </div>
+                            <p class="text-sm text-gray-500 text-center">Drag to move, scroll to zoom</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between space-x-4 mt-6 pt-6 border-t border-gray-200">
+                        <button type="button" id="cancelCrop" 
+                                class="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors duration-300 font-medium">
+                            <i class="fas fa-times mr-2"></i>Cancel
+                        </button>
+                        <button type="button" id="cropImage" 
+                                class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-medium">
+                            <i class="fas fa-check mr-2"></i>Apply Crop
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    
-        <!-- Preview -->
-        <div class="mt-4">
-            <label class="block text-gray-700">Preview</label>
-            <img id="thumbnailPreview" src="" class="w-40 h-auto border rounded">
-        </div>
-        {{ form.language.label_tag }} {{form.language}}
-        {{ form.title.label_tag }} {{ form.title }}
-        {{ form.description.label_tag }} {{ form.description }}
-        {{ form.content.label_tag }} {{ form.content }}
-        {{ form.category.label_tag }} {{ form.category }}
-    
-        <div class="flex justify-end">
-            <button type="submit" id="submitBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Publish</button>
-        </div>
-    </form>
-    
+    </div>
+</div>
     <script>
         const imageInput = document.getElementById('imageInput');
         const cropperImage = document.getElementById('cropperImage');
@@ -65,10 +229,12 @@ Publish Book
         const cancelCrop = document.getElementById('cancelCrop');
         const cropImage = document.getElementById('cropImage');
         const thumbnailPreview = document.getElementById('thumbnailPreview');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const previewContainer = document.getElementById('previewContainer');
         const croppedThumbnailInput = document.getElementById('croppedThumbnail');
         const bookForm = document.getElementById('bookForm');
         let cropper;
-    
+
         // Show cropper modal when file is selected
         imageInput.addEventListener('change', function (event) {
             const file = event.target.files[0];
@@ -77,43 +243,169 @@ Publish Book
                 reader.onload = function (e) {
                     cropperImage.src = e.target.result;
                     cropModal.classList.remove('hidden');
-    
-                    // Initialize Cropper.js
-                    if (cropper) {
-                        cropper.destroy(); // Remove previous instance
-                    }
-                    cropper = new Cropper(cropperImage, {
-                        aspectRatio: 2 / 3,  // Book cover ratio
-                        viewMode: 1
-                    });
+
+                    // Small delay to ensure the modal is visible before initializing cropper
+                    setTimeout(() => {
+                        // Initialize Cropper.js
+                        if (cropper) {
+                            cropper.destroy(); // Remove previous instance
+                        }
+                        cropper = new Cropper(cropperImage, {
+                            aspectRatio: 2 / 3,  // Book cover ratio
+                            viewMode: 1,
+                            dragMode: 'move',
+                            background: true,
+                            autoCropArea: 0.8,
+                            responsive: true,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: false,
+                            minContainerWidth: 400,
+                            minContainerHeight: 300,
+                            ready: function () {
+                                // Update preview when cropper is ready
+                                updatePreview();
+                            },
+                            crop: function () {
+                                // Update preview on crop
+                                updatePreview();
+                            }
+                        });
+                    }, 100);
                 };
                 reader.readAsDataURL(file);
             }
         });
-    
+
+        // Function to update preview
+        function updatePreview() {
+            if (!cropper) return;
+            
+            const canvas = cropper.getCroppedCanvas({
+                width: 192,
+                height: 288,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+            
+            if (canvas) {
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(canvas);
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.objectFit = 'cover';
+            }
+        }
+
         // Cancel cropping
         cancelCrop.addEventListener('click', function () {
-            cropper.destroy();
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
             cropModal.classList.add('hidden');
+            imageInput.value = ''; // Clear the file input
+            previewContainer.innerHTML = '';
         });
-    
+
         // Crop and preview image
         cropImage.addEventListener('click', function () {
-            const canvas = cropper.getCroppedCanvas();
-            thumbnailPreview.src = canvas.toDataURL();  // Show cropped preview
-    
-            // Convert to Blob and store as Base64 in a hidden input
-            croppedThumbnailInput.value = canvas.toDataURL('image/jpeg');  
-    
+            if (!cropper) return;
+            
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 600,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+            
+            // Show cropped preview in main form
+            thumbnailPreview.src = canvas.toDataURL('image/jpeg', 0.8);
+            thumbnailPreview.classList.remove('hidden');
+            previewPlaceholder.classList.add('hidden');
+
+            // Convert to Base64 and store in hidden input
+            croppedThumbnailInput.value = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Clean up and close modal
             cropper.destroy();
+            cropper = null;
             cropModal.classList.add('hidden');
+            previewContainer.innerHTML = '';
         });
-    
-        // Handle form submission with the cropped image
+
+        // Handle form submission validation
         bookForm.addEventListener('submit', function (event) {
+            const title = document.getElementById('id_title').value.trim();
+            const language = document.getElementById('id_language').value.trim();
+            const description = document.getElementById('id_description').value.trim();
+            
+            if (!title || !language || !description) {
+                event.preventDefault();
+                alert("Please fill in all required fields.");
+                return;
+            }
+            
             if (!croppedThumbnailInput.value) {
                 event.preventDefault();
-                alert("Please select and crop an image before submitting.");
+                alert("Please select and crop a book cover image before submitting.");
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Publishing...';
+        });
+
+        // Add visual feedback for file drag and drop
+        const uploadArea = document.querySelector('.upload-area .relative');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            uploadArea.classList.add('border-purple-400', 'bg-purple-50');
+        }
+        
+        function unhighlight(e) {
+            uploadArea.classList.remove('border-purple-400', 'bg-purple-50');
+        }
+        
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                imageInput.files = files;
+                imageInput.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // Close modal when clicking outside
+        cropModal.addEventListener('click', function(e) {
+            if (e.target === cropModal) {
+                cancelCrop.click();
             }
         });
     </script>
@@ -124,61 +416,4 @@ Publish Book
 
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-
-<!-- <script>
-    const imageInput = document.getElementById('imageInput');
-    const cropperImage = document.getElementById('cropperImage');
-    const cropModal = document.getElementById('cropModal');
-    const cancelCrop = document.getElementById('cancelCrop');
-    const cropImage = document.getElementById('cropImage');
-    const thumbnailPreview = document.getElementById('thumbnailPreview');
-    const bookForm = document.getElementById('bookForm');
-
-    let cropper;
-
-    // Show cropper modal when file is selected
-    imageInput.addEventListener('change', function (event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                cropperImage.src = e.target.result;
-                cropModal.classList.remove('hidden');
-
-                // Initialize Cropper.js
-                if (cropper) {
-                    cropper.destroy(); // Remove previous instance
-                }
-                cropper = new Cropper(cropperImage, {
-                    aspectRatio: 2 / 3,  // Book cover ratio
-                    viewMode: 1
-                });
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // Cancel cropping
-    cancelCrop.addEventListener('click', function () {
-        cropper.destroy();
-        cropModal.classList.add('hidden');
-    });
-
-    // Crop and preview image
-    cropImage.addEventListener('click', function () {
-        const canvas = cropper.getCroppedCanvas();
-        thumbnailPreview.src = canvas.toDataURL();  // Show cropped preview
-
-        // Convert to Blob and append to form
-        canvas.toBlob(blob => {
-            const file = new File([blob], "cropped_thumbnail.jpg", { type: "image/jpeg" });
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            imageInput.files = dataTransfer.files;
-        });
-
-        cropper.destroy();
-        cropModal.classList.add('hidden');
-    });
-</script> -->
 {% endblock %}

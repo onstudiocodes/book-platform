@@ -9,11 +9,22 @@ class BookUploadForm(forms.ModelForm):
         model = Book
         fields = ['thumbnail', 'title', 'description','language', 'content', 'category']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'w-full border p-2 rounded'}),
-            'description': forms.TextInput(attrs={'class': 'w-full border p-2 rounded'}),
-            'content': forms.Textarea(attrs={'class': 'w-full border p-2 rounded'}),
-            'category': forms.Select(attrs={'class': 'w-full border p-2 rounded'}),
-            'language': forms.TextInput(attrs={'class': 'w-full border p-2 rounded mb-2'}),
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-lg placeholder-gray-400',
+                'placeholder': 'Enter your captivating book title...'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 placeholder-gray-400 resize-none',
+                'placeholder': 'Write a compelling description that will attract readers...',
+                'rows': 4
+            }),
+            'language': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 placeholder-gray-400',
+                'placeholder': 'e.g., English, Spanish, French...'
+            }),
+            'category': forms.Select(attrs={
+                'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 bg-white'
+            }),
         }
 
 CATEGORY_CHOICES = [
