@@ -35,7 +35,7 @@
                 <div class="p-6 border-b border-gray-200">
                     <h1 class="text-2xl font-bold text-gray-900 mb-2">{{story.title}}</h1>
                     <div class="flex items-center text-gray-600">
-                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Author" class="w-8 h-8 rounded-full mr-2">
+                        <img src="{{story.author.userprofile.profile_picture.url}}" alt="Author" class="w-8 h-8 rounded-full mr-2">
                         <span class="mr-4">{{story.author.userprofile.full_name}}</span>
                         <span class="flex items-center mr-4">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,9 +69,43 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {% for img in story.images.all %}
                             <div class="rounded-lg overflow-hidden">
-                                <img src="{{img.image.url}}" alt="Mountain View" class="w-full h-32 md:h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in">
+                                <img src="{{img.image.url}}" alt="Gallery Image {{ forloop.counter }}" class="gallery-image w-full h-32 md:h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in" data-index="{{ forloop.counter0 }}">
                             </div>
                             {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Image Modal/Lightbox -->
+                    <div id="imageModal" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-md z-50 hidden items-center justify-center">
+                        <div class="relative max-w-7xl max-h-full mx-4">
+                            <!-- Close Button -->
+                            <button id="closeModal" class="absolute top-4 right-4 z-10 text-gray-800 hover:text-gray-600 transition-colors bg-white bg-opacity-80 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Previous Button -->
+                            <button id="prevImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-800 hover:text-gray-600 transition-colors bg-white bg-opacity-80 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Next Button -->
+                            <button id="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-800 hover:text-gray-600 transition-colors bg-white bg-opacity-80 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Main Image -->
+                            <img id="modalImage" src="" alt="Gallery Image" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+                            
+                            <!-- Image Counter -->
+                            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-gray-800 bg-white bg-opacity-80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                                <span id="imageCounter">1 / 1</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -146,7 +180,7 @@
 
 
                             <div class="flex items-start space-x-4">
-                                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="w-10 h-10 rounded-full">
+                                <img src="{{user.userprofile.profile_picture.url}}" alt="User" class="w-10 h-10 rounded-full">
                                 <div class="flex-1">
                                     <textarea name="content" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Share your thoughts..."></textarea>
                                     <div class="mt-2 flex justify-end">
@@ -275,5 +309,99 @@
         const cardGrid = document.getElementById('content')
         sideBar.classList.toggle('md:translate-x-0')
         cardGrid.classList.remove('md:ml-64')
+
+        // Image Gallery Modal Functionality
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const imageCounter = document.getElementById('imageCounter');
+        const closeModal = document.getElementById('closeModal');
+        const prevImage = document.getElementById('prevImage');
+        const nextImage = document.getElementById('nextImage');
+        const galleryImages = document.querySelectorAll('.gallery-image');
+        
+        let currentImageIndex = 0;
+        let imageUrls = [];
+        
+        // Collect all image URLs
+        galleryImages.forEach((img, index) => {
+            imageUrls.push(img.src);
+        });
+        
+        // Open modal when gallery image is clicked
+        galleryImages.forEach((img, index) => {
+            img.addEventListener('click', () => {
+                currentImageIndex = index;
+                showImage();
+                imageModal.classList.remove('hidden');
+                imageModal.classList.add('flex');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+        });
+        
+        // Close modal
+        function closeImageModal() {
+            imageModal.classList.add('hidden');
+            imageModal.classList.remove('flex');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+        
+        // Show current image
+        function showImage() {
+            if (imageUrls.length > 0) {
+                modalImage.src = imageUrls[currentImageIndex];
+                imageCounter.textContent = `${currentImageIndex + 1} / ${imageUrls.length}`;
+                
+                // Hide/show navigation buttons based on position
+                prevImage.style.display = currentImageIndex === 0 ? 'none' : 'block';
+                nextImage.style.display = currentImageIndex === imageUrls.length - 1 ? 'none' : 'block';
+            }
+        }
+        
+        // Event listeners
+        closeModal.addEventListener('click', closeImageModal);
+        
+        prevImage.addEventListener('click', () => {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                showImage();
+            }
+        });
+        
+        nextImage.addEventListener('click', () => {
+            if (currentImageIndex < imageUrls.length - 1) {
+                currentImageIndex++;
+                showImage();
+            }
+        });
+        
+        // Close modal when clicking outside the image
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                closeImageModal();
+            }
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!imageModal.classList.contains('hidden')) {
+                switch(e.key) {
+                    case 'Escape':
+                        closeImageModal();
+                        break;
+                    case 'ArrowLeft':
+                        if (currentImageIndex > 0) {
+                            currentImageIndex--;
+                            showImage();
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (currentImageIndex < imageUrls.length - 1) {
+                            currentImageIndex++;
+                            showImage();
+                        }
+                        break;
+                }
+            }
+        });
     </script>
 {% endblock %}

@@ -96,12 +96,37 @@ def year_specific_data(model, year, user=None, book=None, news=None, travel_stor
     return model.objects.filter(**filters)
 
 def log_book_view(book, user=None, session_key=None):
+    """
+    Log a book view by creating an ObjView record and incrementing the book's view count
+    """
+    # Create the detailed view record
     ObjView.objects.create(book=book, user=user)
+    
+    # Increment the book's view counter
+    # Using F() to avoid race conditions and make it atomic
+    from django.db.models import F
+    book.__class__.objects.filter(id=book.id).update(views=F('views') + 1)
+    
+    # Refresh the book instance to get the updated view count
+    book.refresh_from_db(fields=['views'])
 
 def log_news_view(news, user=None):
+    """
+    Log a news view by creating an ObjView record and incrementing the news's view count
+    """
     ObjView.objects.create(news=news, user=user)
+    
+    # Increment the news view counter
+    from django.db.models import F
+    news.__class__.objects.filter(id=news.id).update(views=F('views') + 1)
+    
+    # Refresh the news instance to get the updated view count
+    news.refresh_from_db(fields=['views'])
 
 def log_travel_story_view(travel_story, user=None):
+    """
+    Log a travel story view by creating an ObjView record
+    """
     ObjView.objects.create(travel_story=travel_story, user=user)
 
 def create_notification(user, message):

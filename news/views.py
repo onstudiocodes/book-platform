@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from author.forms import NewsForm, NewsImageFormSet
 from main.models import News, NewsImage, NewsCategory, Comment
 from django.db.models import Count
@@ -13,13 +15,24 @@ def home(request):
     categories = NewsCategory.objects.annotate(news_count=Count('news')).order_by('-news_count')
     recent_news = News.objects.order_by('-published_date')[:2]
     trending_news = News.objects.annotate(views_count=Count('news_views')).order_by('-views_count')[:3]
+    
+    # Add pagination for news list
+    all_news = News.objects.order_by('-published_date')
+    paginator = Paginator(all_news, 10)  # 10 news items per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    is_paginated = page_obj.has_other_pages()
+    
     context = {
         'categories': categories,
         'recent_news': recent_news,
-        "trending_news": trending_news
+        "trending_news": trending_news,
+        'page_obj': page_obj,
+        'is_paginated': is_paginated,
     }
     return render(request, 'news/index.html', context)
 
+@login_required
 def create_news(request):
     if request.method == 'POST':
         form = NewsForm(request.POST)
@@ -49,9 +62,10 @@ def create_news(request):
         'formset': formset
     })
 def news_details(request, slug):
-    news = News.objects.select_related('author__userprofile').prefetch_related(
-        'images'
-    ).get(slug=slug)
+    news = get_object_or_404(
+        News.objects.select_related('author__userprofile').prefetch_related('images'),
+        slug=slug
+    )
     user = request.user if request.user.is_authenticated else None
     if user:
         log_news_view(news=news, user=user)
@@ -87,6 +101,9 @@ class NewsListCreateView(generics.ListCreateAPIView):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
     
     def get_queryset(self):
         queryset = News.objects.select_related(

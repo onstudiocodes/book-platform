@@ -25,16 +25,25 @@ class Book(models.Model):
     language = models.CharField(max_length=50, default="default")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='books')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='books', blank=True, null=True)
-    published_date = models.DateTimeField(auto_now_add=True)
+    published_date = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_date = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_books', blank=True)
     dislikes = models.ManyToManyField(User, related_name='disliked_books', blank=True)
-    views = models.PositiveIntegerField(default=0)
+    views = models.PositiveIntegerField(default=0, db_index=True)
     thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
-    status = models.CharField(max_length=50, default='Public')
+    status = models.CharField(max_length=50, default='Public', db_index=True)
 
     objects = models.Manager()
     public_objects = PublicBookManager()
+
+    class Meta:
+        ordering = ['-published_date']
+        indexes = [
+            models.Index(fields=['-views'], name='book_views_desc_idx'),
+            models.Index(fields=['-published_date'], name='book_published_desc_idx'),
+            models.Index(fields=['status', '-views'], name='book_status_views_idx'),
+            models.Index(fields=['status', '-published_date'], name='book_status_published_idx'),
+        ]
 
     def __str__(self):
         return self.title
@@ -60,7 +69,15 @@ class ObjView(models.Model):
     news = models.ForeignKey("News", on_delete=models.CASCADE, related_name="news_views", blank=True, null=True)
     travel_story = models.ForeignKey("TravelStory", on_delete=models.CASCADE, related_name="travel_story_views", blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['book', '-created_at'], name='objview_book_created_idx'),
+            models.Index(fields=['news', '-created_at'], name='objview_news_created_idx'),
+            models.Index(fields=['travel_story', '-created_at'], name='objview_travel_created_idx'),
+            models.Index(fields=['user', '-created_at'], name='objview_user_created_idx'),
+        ]
 
 class ReadingTime(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -88,15 +105,32 @@ class News(models.Model):
     content = CKEditor5Field(config_name="extends") 
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
     category = models.ForeignKey(NewsCategory, on_delete=models.CASCADE, related_name='news', blank=True, null=True)
-    published_date = models.DateTimeField(auto_now_add=True)
+    published_date = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_date = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_news', blank=True)
     dislikes = models.ManyToManyField(User, related_name='disliked_news', blank=True)
-    views = models.PositiveIntegerField(default=0)
+    views = models.PositiveIntegerField(default=0, db_index=True)
     publish = models.BooleanField(default=False)
     
-    def thumbnail(self):
-        return self.images.first().image
+    class Meta:
+        ordering = ['-published_date']
+        indexes = [
+            models.Index(fields=['-views'], name='news_views_desc_idx'),
+            models.Index(fields=['-published_date'], name='news_published_desc_idx'),
+        ]
+    
+    def __str__(self):
+        return self.title
+    
+    def likes_count(self):
+        return self.likes.count()
+    
+    def dislikes_count(self):
+        return self.dislikes.count()
+    
+    def get_thumbnail(self):
+        first_image = self.images.first()
+        return first_image.image if first_image else None
 
 class NewsImage(models.Model):
     news = models.ForeignKey(News, on_delete=models.CASCADE, related_name="images")
@@ -164,6 +198,9 @@ class TravelStory(models.Model):
     published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
 
 
 class TravelImage(models.Model):

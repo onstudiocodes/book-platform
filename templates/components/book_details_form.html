@@ -1,0 +1,321 @@
+{% load custom_filters %}
+<!-- Book Details Display and Edit Form -->
+<div class="space-y-8">
+    <!-- Header Section with Action Buttons -->
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-900">Book Details</h3>
+                <p class="text-sm text-gray-500">Edit and manage your book content</p>
+            </div>
+        </div>
+        <div class="flex space-x-3">
+            <button type="button" id="edit-mode-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-edit mr-2"></i>Edit Book
+            </button>
+            <button type="button" id="preview-mode-btn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors hidden">
+                <i class="fas fa-eye mr-2"></i>Preview
+            </button>
+        </div>
+    </div>
+
+    <!-- Thumbnail Section -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h4 class="text-lg font-medium text-gray-900">Book Cover</h4>
+        </div>
+        <div class="p-6">
+            <div class="relative group">
+                <div class="aspect-[3/4] w-64 rounded-lg overflow-hidden bg-gray-100 mx-auto">
+                    {% if obj.thumbnail %}
+                        <img src="{{ obj.thumbnail.url }}" alt="{{ obj.title }}" class="w-full h-full object-cover" id="current-thumbnail">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Edit mode thumbnail upload -->
+                <div class="hidden edit-mode-element mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Update Book Cover</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors cursor-pointer" id="thumbnail-dropzone">
+                        {{ form.thumbnail }}
+                        <div class="space-y-2">
+                            <svg class="mx-auto w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-600">Click to upload new cover image</p>
+                            <p class="text-xs text-gray-400">JPEG, PNG (Max 5MB)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Basic Information -->
+    <div class="bg-white rounded-xl border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h4 class="text-lg font-medium text-gray-900">Basic Information</h4>
+        </div>
+        <div class="p-6 space-y-6">
+            <!-- Title -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <div class="view-mode-element">
+                    <h2 class="text-2xl font-bold text-gray-900">{{ obj.title|default:"Untitled Book" }}</h2>
+                </div>
+                <div class="hidden edit-mode-element">
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Language -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                <div class="view-mode-element">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+                        </svg>
+                        {{ obj.language|default:"Not specified" }}
+                    </span>
+                </div>
+                <div class="hidden edit-mode-element">
+                    {{ form.language }}
+                    {% if form.language.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.language.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <div class="view-mode-element">
+                    {% if obj.category %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                            {{ obj.category.name }}
+                        </span>
+                    {% else %}
+                        <span class="text-gray-400">No category selected</span>
+                    {% endif %}
+                </div>
+                <div class="hidden edit-mode-element">
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status and Publication -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Publication Status</label>
+                    {% if obj.status == 'Public' %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                            Public
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <span class="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
+                            Private
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="text-right text-sm text-gray-500">
+                    <p>Published: {{ obj.published_date|date:"M d, Y" }}</p>
+                    <p>Updated: {{ obj.updated_date|date:"M d, Y g:i A" }}</p>
+                </div>
+            </div>
+
+            <!-- Book Statistics -->
+            <div class="grid grid-cols-3 gap-4 mt-6 p-4 bg-gray-50 rounded-lg">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ obj.views }}</div>
+                    <div class="text-sm text-gray-600">Views</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ obj.likes_count }}</div>
+                    <div class="text-sm text-gray-600">Likes</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600">{{ obj.reading_time }}h</div>
+                    <div class="text-sm text-gray-600">Avg. Reading Time</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="bg-white rounded-xl border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h4 class="text-lg font-medium text-gray-900">Description</h4>
+        </div>
+        <div class="p-6">
+            <div class="view-mode-element">
+                {% if obj.description %}
+                    <p class="text-gray-700 leading-relaxed">{{ obj.description }}</p>
+                {% else %}
+                    <p class="text-gray-400">No description provided yet.</p>
+                {% endif %}
+            </div>
+            <div class="hidden edit-mode-element">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Book Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="bg-white rounded-xl border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h4 class="text-lg font-medium text-gray-900">Book Content</h4>
+        </div>
+        <div class="p-6">
+            <div class="view-mode-element">
+                <div class="prose max-w-none">
+                    {{ obj.content|safe|default:"<p class='text-gray-400'>No content added yet.</p>" }}
+                </div>
+            </div>
+            <div class="hidden edit-mode-element">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Book Content</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.content.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons (Edit Mode) -->
+    <div class="hidden edit-mode-element bg-white rounded-xl border border-gray-200 p-6">
+        <div class="flex justify-between items-center">
+            <div class="text-sm text-gray-600">
+                <p>Last saved: {{ obj.updated_date|date:"M d, Y g:i A" }}</p>
+            </div>
+            <div class="flex space-x-4">
+                <button type="button" id="cancel-edit-btn" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                    Update Book
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for handling edit mode and file uploads -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editModeBtn = document.getElementById('edit-mode-btn');
+    const previewModeBtn = document.getElementById('preview-mode-btn');
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    const thumbnailDropzone = document.getElementById('thumbnail-dropzone');
+    const thumbnailInput = document.querySelector('#thumbnail-dropzone input[type="file"]');
+
+    // Mode switching
+    function toggleEditMode(isEdit) {
+        const viewElements = document.querySelectorAll('.view-mode-element');
+        const editElements = document.querySelectorAll('.edit-mode-element');
+        
+        viewElements.forEach(el => {
+            el.style.display = isEdit ? 'none' : 'block';
+        });
+        
+        editElements.forEach(el => {
+            el.style.display = isEdit ? 'block' : 'none';
+        });
+        
+        editModeBtn.style.display = isEdit ? 'none' : 'inline-flex';
+        previewModeBtn.style.display = isEdit ? 'inline-flex' : 'none';
+    }
+
+    editModeBtn.addEventListener('click', () => toggleEditMode(true));
+    previewModeBtn.addEventListener('click', () => toggleEditMode(false));
+    cancelEditBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
+            toggleEditMode(false);
+            location.reload();
+        }
+    });
+
+    // Thumbnail upload handling
+    if (thumbnailDropzone && thumbnailInput) {
+        thumbnailDropzone.addEventListener('click', () => thumbnailInput.click());
+        
+        thumbnailInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const currentThumbnail = document.getElementById('current-thumbnail');
+                    if (currentThumbnail) {
+                        currentThumbnail.src = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    // Form styling - only add classes if they don't already exist
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], select, textarea');
+    inputs.forEach(input => {
+        if (!input.classList.contains('cke_editable') && !input.classList.contains('w-full')) {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-blue-500', 'focus:border-blue-500');
+        }
+    });
+
+    // Hide file inputs visually but keep them functional
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        if (!input.closest('#thumbnail-dropzone')) {
+            input.style.display = 'none';
+        }
+    });
+});
+</script>
+
+<style>
+/* Custom styles for the book details form */
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.prose p {
+    margin-bottom: 1em;
+}
+
+.prose ul, .prose ol {
+    margin-bottom: 1em;
+}
+
+.prose blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1em;
+    margin: 1.5em 0;
+    font-style: italic;
+    color: #6b7280;
+}
+</style>

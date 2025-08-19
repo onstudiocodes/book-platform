@@ -1,0 +1,80 @@
+{% extends 'author/content_base.html' %}
+{% load static %}
+{% block title %}
+Create Travel Story
+{% endblock %}
+{% block content %}
+<header class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-3xl font-semibold">Create New Travel Story</h2>
+        <p class="text-gray-600 mt-1">Share your travel adventures with the world</p>
+    </div>
+    <div class="flex gap-4">
+        <a href="{% url 'author:author_content' 'tour' %}" class="py-2 px-4 bg-gray-100 rounded-full text-sm font-medium hover:bg-gray-200">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Tours
+        </a>
+    </div>
+</header>
+
+<div class="max-w-4xl mx-auto">
+    <form action="{% url 'author:create_travel_story' %}" method="post" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+        {{ form.media }}
+        
+        <!-- Include the create tour form -->
+        {% include "components/create_tour_form.html" %}
+        
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const titleField = document.getElementById('id_title');
+        const storyField = document.querySelector('[name="story"]');
+        const categoryFields = document.querySelectorAll('[name="category"]');
+        const imagesField = document.getElementById('id_images');
+        
+        let hasErrors = false;
+        
+        // Clear previous error messages
+        document.querySelectorAll('.validation-error').forEach(el => el.remove());
+        
+        // Validate title
+        if (!titleField.value.trim()) {
+            showError(titleField, 'Title is required');
+            hasErrors = true;
+        }
+        
+        // Validate category selection
+        const categorySelected = Array.from(categoryFields).some(radio => radio.checked);
+        if (!categorySelected) {
+            showError(document.querySelector('.category-label'), 'Please select a category');
+            hasErrors = true;
+        }
+        
+        // Validate images (minimum 3)
+        if (!imagesField.files || imagesField.files.length < 3) {
+            showError(imagesField.parentElement, 'Please upload at least 3 images');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+        }
+    });
+    
+    function showError(element, message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error text-red-500 text-sm mt-1';
+        errorDiv.textContent = message;
+        element.parentElement.appendChild(errorDiv);
+    }
+});
+</script>
+{% endblock %}

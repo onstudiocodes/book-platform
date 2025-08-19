@@ -97,9 +97,10 @@ def handleSignup(request):
 def logoutView(request):
     logout(request)
     messages.error(request, 'You are logged out successfully.')
-    return redirect('main:index')
+    return redirect('accounts:login')
 
 
+@login_required
 def profile(request):
-    return render(request, 'profile.html')
+    return render(request, 'main/profile.html', {'profile': request.user})
 

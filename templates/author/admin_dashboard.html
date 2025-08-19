@@ -27,7 +27,13 @@ Dashboard
                 {% with book=user.books.last %}
                 {% if book %}
                 <div class="space-y-2">
-                    <img alt="Latest Video" class="w-48 h-64 rounded-md" src="{{book.thumbnail.url}}" />
+                    {% if book.thumbnail %}
+                        <img alt="Latest Video" class="w-48 h-64 rounded-md" src="{{book.thumbnail.url}}" />
+                    {% else %}
+                        <div class="w-48 h-64 rounded-md bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-book text-4xl text-gray-400"></i>
+                        </div>
+                    {% endif %}
                     <p class="text-gray-600">{{book.title}}</p>
                     <ul class="text-sm space-y-2 py-4">
                         {% comment %} <li class="flex justify-between">

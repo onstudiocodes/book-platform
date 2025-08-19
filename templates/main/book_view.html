@@ -41,7 +41,13 @@
         <div class="border rounded-xl shadow-md mx-auto bg-white overflow-hidden" id="book-container">
           <!-- Cover and Read Now Button -->
           <div class="relative max-h-96" id="cover-container">
-            <img alt="Book Cover" class="mx-auto h-96 w-auto" src="{{ book.thumbnail.url }}" />
+            {% if book.thumbnail %}
+                <img alt="Book Cover" class="mx-auto h-96 w-auto" src="{{ book.thumbnail.url }}" />
+            {% else %}
+                <div class="mx-auto h-96 w-64 bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-book text-6xl text-gray-400"></i>
+                </div>
+            {% endif %}
             <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700" id="read-now-btn">Read Now</button>
           </div>
 
@@ -141,7 +147,13 @@
       <div class="flex flex-col space-y-2 md:flex-row justify-between">
         <div class="flex space-x-3 items-center justify-between">
           <div class="flex gap-2">
-            <img onclick="location.href=`{% url 'main:profile' book.author.username %}`" alt="" class="h-10 w-10 cursor-pointer" src="{{ book.author.userprofile.profile_picture.url }}" />
+            {% if book.author.userprofile.profile_picture %}
+                <img onclick="location.href=`{% url 'main:profile' book.author.username %}`" alt="" class="h-10 w-10 cursor-pointer" src="{{ book.author.userprofile.profile_picture.url }}" />
+            {% else %}
+                <div onclick="location.href=`{% url 'main:profile' book.author.username %}`" class="h-10 w-10 cursor-pointer bg-gray-300 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-gray-500"></i>
+                </div>
+            {% endif %}
             <div class="flex flex-col">
               <div class="font-medium cursor-pointer hover:text-blue-500" onclick="location.href=`{% url 'main:profile' book.author.username %}`">{{ book.author.userprofile.full_name }}</div>
               <div class="font-sm text-xs">
@@ -262,7 +274,13 @@
           <div class="flex gap-3">
             <!-- image container -->
             <div class="overflow-hidden bg-red-600 rounded-lg max-w-28">
-              <img alt="" class="h-full w-full object-cover" src="{{ item.thumbnail.url }}" />
+              {% if item.thumbnail %}
+                <img alt="" class="h-full w-full object-cover" src="{{ item.thumbnail.url }}" />
+              {% else %}
+                <div class="h-full w-full bg-gray-200 flex items-center justify-center">
+                  <i class="fas fa-book text-gray-400"></i>
+                </div>
+              {% endif %}
             </div>
             <!-- text container -->
             <div class="py-2">

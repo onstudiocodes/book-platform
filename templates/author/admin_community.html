@@ -14,6 +14,9 @@ Community
         Comments
     </li>
     <li class="hover:border-b-2 hover:border-gray-300 p-2 cursor-pointer">
+        Followers
+    </li>
+    <li class="hover:border-b-2 hover:border-gray-300 p-2 cursor-pointer">
         Mentions
     </li>
 </ul>
@@ -51,7 +54,13 @@ Community
         </div>
         <div>
             <div class="flex gap-4 items-center">
-                <img alt="" class="h-20 w-12 object-cover" src="{{comment.book.thumbnail.url}}" />
+                {% if comment.book.thumbnail %}
+                    <img alt="" class="h-20 w-12 object-cover" src="{{comment.book.thumbnail.url}}" />
+                {% else %}
+                    <div class="h-20 w-12 bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-book text-gray-400"></i>
+                    </div>
+                {% endif %}
                 <div class="text-sm whitespace-nowrap">
                     <div>{{comment.book.title}}</div>
                     <div>{{comment.book.published_date|date:'M d, Y'}}</div>
@@ -66,6 +75,25 @@ Community
     {% else %}
     No comments yet.
     {% endif %}
+
+    <!-- Followers Section -->
+    <div class="mt-8">
+        <h3 class="text-xl font-semibold mb-4">Your Followers</h3>
+        {% if followers %}
+            {% for follow in followers %}
+                <div class="flex items-center gap-4 p-4 border-b">
+                    <img alt="" class="h-12 w-12 rounded-full" 
+                         src="{% if follow.follower.userprofile.profile_picture %}{{ follow.follower.userprofile.profile_picture.url }}{% else %}/media/profile_pics/default.png{% endif %}" />
+                    <div>
+                        <div class="font-medium">{{ follow.follower.username }}</div>
+                        <div class="text-sm text-gray-600">{{ follow.follower.userprofile.full_name }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-gray-600">No followers yet.</p>
+        {% endif %}
+    </div>
 
     
 </div>

@@ -1,0 +1,37 @@
+# Testing requirements for Book Platform
+# Add these to your main requirements.txt or install separately for testing
+
+# Testing framework (already included with Django)
+# django>=4.0
+
+# Code coverage
+coverage>=6.0
+
+# Enhanced testing utilities
+factory-boy>=3.2.0  # For creating test data
+faker>=15.0.0       # For generating fake data
+
+# API testing
+djangorestframework-simplejwt>=5.0.0  # If using JWT authentication
+
+# Image testing
+Pillow>=9.0.0       # For image processing in tests (already in requirements)
+
+# Performance testing
+django-silk>=5.0.0  # For profiling (already in requirements)
+
+# Mock utilities (included with Python 3.3+)
+# unittest.mock
+
+# Optional: Advanced testing tools
+pytest-django>=4.5.0         # Alternative test runner
+pytest-cov>=4.0.0           # Coverage with pytest
+model-bakery>=1.5.0         # Alternative to factory-boy
+freezegun>=1.2.0             # For mocking datetime
+responses>=0.20.0            # For mocking HTTP requests
+
+# HTML validation
+html5lib>=1.1
+
+# Database testing
+django-extensions>=3.1.0    # For shell_plus and other utilities

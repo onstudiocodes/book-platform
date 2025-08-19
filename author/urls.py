@@ -11,6 +11,9 @@ urlpatterns = [
     path('copyright', views.author_copyright, name="author_copyright"),
     path('earn', views.author_earn, name="author_earn"),
     path('content-details/<str:content_type>/<str:slug>', views.content_details, name="content_details"),
+    path('update-book/<str:slug>/', views.update_book, name="update_book"),
+    path('update-news/<str:slug>/', views.update_news, name="update_news"),
+    path('update-travel-story/<str:slug>/', views.update_travel_story, name="update_travel_story"),
     path('content-analytics/<str:content_type>/<str:slug>', views.content_analytics, name="content_analytics"),
     path('content-comments/<str:content_type>/<str:slug>', views.content_comments, name="content_comments"),
     path('book-translate/<str:slug>', views.content_translate, name="content_translate"),
@@ -18,9 +21,13 @@ urlpatterns = [
     path('content-copyright/<str:content_type>/<str:slug>', views.content_copyright, name="content_copyright"),
     path('write-book', views.write_book, name="write_book"),
     path('create-news', views.create_news, name="create_news"),
+    path('create-travel-story', views.create_travel_story, name="create_travel_story"),
     path('get-translation/<int:book_id>/<int:translation_id>', views.get_translation, name='get_translation'),
     path('change-visibility/<int:book_id>/<str:status>', views.change_visibility, name="change_visibilty"),
+    path('change-news-visibility/<int:news_id>/<str:publish_status>', views.change_news_visibility, name="change_news_visibility"),
     path('delete-book/<int:book_id>', views.delete_book, name="delete_book"),
+    path('delete-news-image/<int:image_id>/', views.delete_news_image, name="delete_news_image"),
+    path('delete-travel-image/<int:image_id>/', views.delete_travel_image, name="delete_travel_image"),
     path('update-session-key/', views.update_session_key, name='update_session_key'),
 
 ]

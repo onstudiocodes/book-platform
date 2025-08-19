@@ -21,14 +21,26 @@ History
         onclick="location.href=`{% url 'main:book_view' history.book.slug %}`">
         <div class="relative bg-slate-300" style="padding-bottom: 150%;">
             <!-- 16:9 Aspect Ratio -->
-            <img alt="Book Thumbnail" class="absolute object-cover h-full w-full"
-                src="{{ history.book.thumbnail.url }}" />
+            {% if history.book.thumbnail %}
+                <img alt="Book Thumbnail" class="absolute object-cover h-full w-full"
+                    src="{{ history.book.thumbnail.url }}" />
+            {% else %}
+                <div class="absolute inset-0 flex items-center justify-center bg-gray-200">
+                    <i class="fas fa-book text-4xl text-gray-400"></i>
+                </div>
+            {% endif %}
         </div>
         <div class="p-1 my-2">
             <div class="flex gap-2 justify-between items-center">
                 <div onclick="event.stopPropagation();location.href=`{% url 'main:profile' history.book.author.username %}`">
-                    <img alt="" class="h-10 w-10 mx-1 border rounded-full"
-                        src="{{history.book.author.userprofile.profile_picture.url}}" />
+                    {% if history.book.author.userprofile.profile_picture %}
+                        <img alt="" class="h-10 w-10 mx-1 border rounded-full"
+                            src="{{history.book.author.userprofile.profile_picture.url}}" />
+                    {% else %}
+                        <div class="h-10 w-10 mx-1 border rounded-full bg-gray-300 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500"></i>
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="max-w-[60%]">
                     <h3 class="text-sm  font-bold truncate text-gray-800">

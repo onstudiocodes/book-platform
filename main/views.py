@@ -16,75 +16,146 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 import json
-from django.db.models import Count
+from django.db.models import Count, Q, Prefetch
+from django.core.cache import cache
+import hashlib
+from .query_optimizers import (
+    get_optimized_book_queryset, get_book_detail_queryset,
+    apply_cursor_pagination, parse_cursor, generate_cursor,
+    get_cached_user_data, set_cached_user_data, get_book_suggestions
+)
+
+
+def get_books_queryset(sort_type):
+    """
+    Get optimized queryset based on sort type with proper prefetching
+    """
+    base_queryset = get_optimized_book_queryset()
+    
+    if sort_type == 'trending':
+        # For trending, prioritize books with higher views but include all books
+        # This ensures we always have content while showing most viewed first
+        return base_queryset.order_by('-views', '-published_date')
+    elif sort_type == 'recent':
+        return base_queryset.order_by('-published_date')
+    elif sort_type == 'popular':
+        # For popular, prioritize books with more likes but include all books
+        # This ensures we always have content while showing most liked first
+        return base_queryset.annotate(
+            like_count=Count('likes')
+        ).order_by('-like_count', '-views', '-published_date')
+    else:  # recommended/default
+        # Use a deterministic but varied ordering instead of random
+        return base_queryset.order_by('-published_date')
+
 
 def index(request):
+    """
+    Optimized index view with cursor-based pagination
+    """
     context = {}
-    path_info = request.META.get('PATH_INFO')
-    items_per_page = 10  # Number of books to load initially
-
+    path_info = request.META.get('PATH_INFO', '/')
+    
     # Determine the sorting based on the path
     if path_info == "/trending":
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
+        sort_type = 'trending'
         context['page'] = "Trending"
     elif path_info == "/recent":
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-published_date')
+        sort_type = 'recent'
         context['page'] = "Recent"
     elif path_info == "/popular":
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
+        sort_type = 'popular'
         context['page'] = "Popular"
     else:
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('?')
+        sort_type = 'recommended'
         context['page'] = "Recommended"
-
-    # Paginate the initial set of books
-    paginator = Paginator(books, items_per_page)
-    initial_books = paginator.page(1)
+    
+    context['sort_type'] = sort_type
+    
+    # Get initial books (first page)
+    books_queryset = get_books_queryset(sort_type)
+    initial_books = list(books_queryset[:13])  # Load 13 books to check if there are more
+    
+    # Check if there are more books
+    has_more = len(initial_books) > 12
+    if has_more:
+        initial_books = initial_books[:12]  # Keep only 12 for display
+    
     context['books'] = initial_books
-
+    context['has_more'] = has_more
+    
+    # Get last cursor for pagination
+    if initial_books:
+        last_book = initial_books[-1]
+        context['last_cursor'] = generate_cursor(last_book, sort_type)
+    
+    # Cache following data for authenticated users
     if request.user.is_authenticated:
-        context['following'] = UserFollow.objects.filter(follower=request.user)[:3]
+        following = get_cached_user_data(request.user.id, 'following')
+        if following is None:
+            following = list(UserFollow.objects.filter(follower=request.user)[:3])
+            set_cached_user_data(request.user.id, 'following', following, 300)
+        context['following'] = following
 
     return render(request, 'main/index.html', context)
 
-def get_news_items():
-    return News.objects.order_by('-published_date')  # or however you want
 
 def load_more_data(request):
-    page = int(request.GET.get('page', 1))
-    items_per_page = 10
-
-    # Match filter with index logic
-    path_info = request.META.get('HTTP_REFERER', '')
-    if "/trending" in path_info:
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
-    elif "/recent" in path_info:
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-published_date')
-    elif "/popular" in path_info:
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('-views')
-    else:
-        books = Book.public_objects.all().prefetch_related('author__userprofile').order_by('?')
-
-    paginator = Paginator(books, items_per_page)
-
-    if page > paginator.num_pages:
-        return JsonResponse({'data': [], 'has_next': False})
-
-    current_books = paginator.page(page)
-    data = []
-
+    """
+    Optimized cursor-based pagination for infinite scroll
+    """
+    sort_type = request.GET.get('sort_type', 'recommended')
+    cursor = request.GET.get('cursor', '')
+    limit = min(int(request.GET.get('limit', 12)), 20)  # Cap at 20 items per request
     
+    try:
+        books_queryset = get_books_queryset(sort_type)
+        
+        # Parse and apply cursor-based filtering
+        cursor_data = parse_cursor(cursor, sort_type)
+        if cursor_data:
+            books_queryset = apply_cursor_pagination(books_queryset, sort_type, cursor_data)
+        
+        # Get the books
+        books = list(books_queryset[:limit + 1])  # Get one extra to check if there are more
+        has_more = len(books) > limit
+        
+        if has_more:
+            books = books[:limit]  # Remove the extra book
+        
+        # Generate HTML for each book
+        data = []
+        for book in books:
+            html = render_to_string('components/book_card.html', {
+                'book': book, 
+                'request': request
+            })
+            data.append(html)
+        
+        # Generate next cursor
+        next_cursor = ''
+        if books and has_more:
+            last_book = books[-1]
+            next_cursor = generate_cursor(last_book, sort_type)
+        
+        return JsonResponse({
+            'data': data,
+            'has_next': has_more,
+            'next_cursor': next_cursor
+        })
+        
+    except Exception as e:
+        print(f"Error in load_more_data: {e}")  # Debug logging
+        return JsonResponse({
+            'error': 'Failed to load more data',
+            'data': [],
+            'has_next': False
+        }, status=500)
 
-    for idx, book in enumerate(current_books):
-        html = render_to_string('components/book_card.html', {'book': book, 'request': request})
-        data.append(html)
 
-    
-
-    return JsonResponse({
-        'data': data,
-        'has_next': page < paginator.num_pages
-    })
+def get_news_items():
+    """Get news items for homepage"""
+    return News.objects.select_related('author', 'author__userprofile').order_by('-published_date')
 
 @csrf_exempt
 @login_required
@@ -228,51 +299,58 @@ def remove_from_collection(request, slug, collection_name):
 
 
 def book_view(request, slug):
-    
-
-    book = Book.public_objects.annotate(
-        views_count=Count('book_views'),
-        comments_count=Count('comments'),
-        followers_count=Count('author__followers_users')
-        ).select_related('author').prefetch_related(
-            'comments',
-            'audiobooks',
-            'translations'
+    """
+    Optimized book view with efficient queries and caching
+    """
+    try:
+        # Use the optimized queryset
+        book = get_book_detail_queryset().annotate(
+            views_count=Count('book_views', distinct=True),
+            comments_count=Count('comments', distinct=True),
+            followers_count=Count('author__followers_users', distinct=True)
         ).get(slug=slug)
-    
+        
+    except Book.DoesNotExist:
+        return render(request, '404.html', status=404)
     
     user = request.user if request.user.is_authenticated else None
-
     book_pdf_url = reverse('main:book_pdf_view', kwargs={'slug': book.slug})
 
-    # Add to history
+    # Add to history and log view
     if user:
         if user != book.author:
             log_book_view(book=book, user=user)
-
-        history, created = History.objects.update_or_create(
-            user=request.user,
-            book=book,
-            defaults={'updated_at': timezone.now()}
-        )
+            
+            # Use get_or_create with update to avoid extra queries
+            History.objects.update_or_create(
+                user=user,
+                book=book,
+                defaults={'updated_at': timezone.now()}
+            )
     else:
         log_book_view(book=book)
 
-    comments = Comment.objects.filter(book=book, parent=None).order_by('-created_at')
+    # Check if user follows the author (cached)
     follower = False
-    if request.user.is_authenticated and UserFollow.objects.filter(follower=request.user, following=book.author).exists():
-        follower = True
+    if user:
+        follower = get_cached_user_data(user.id, f'follows_{book.author.id}')
+        if follower is None:
+            follower = UserFollow.objects.filter(
+                follower=user, 
+                following=book.author
+            ).exists()
+            set_cached_user_data(user.id, f'follows_{book.author.id}', follower, 300)
     
-    suggestions = Book.public_objects.all().select_related(
-        'author', 'author__userprofile'
-        ).order_by('?').exclude(id__in=[book.id])[:20]
+    # Get optimized suggestions
+    suggestions = get_book_suggestions(book, limit=15)
+    
     return render(request, 'main/book_view.html', {
-        'book': book, 
-        'suggestions': suggestions, 
+        'book': book,
+        'suggestions': suggestions,
         'follower': follower,
-        'comments': comments,
+        'comments': getattr(book, 'top_comments', []),
         'book_pdf_url': book_pdf_url
-        })
+    })
 
 from django.http import HttpResponse
 from .utils import generate_book_pdf

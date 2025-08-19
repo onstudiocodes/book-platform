@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from rest_framework import generics, pagination
 from .serializers import TravelStorySerializer
 from main.models import TravelStory, TravelImage, TravelCategory
@@ -42,6 +43,7 @@ class TravelStoryListAPIView(generics.ListAPIView):
             queryset = queryset.distinct()
         return queryset
     
+@login_required
 def add_travel_story(request):
     if request.method == 'POST':
         form = TravelStoryForm(request.POST, request.FILES)

@@ -33,8 +33,14 @@
                         <div class="font-bold" id="back_text">Channel content</div>
                     </li>
                     <li class="flex flex-col">
-                        <img src="{{obj.thumbnail.url}}" id="sidebar_profile_img"
-                            class="h-24 w-24 mb-2 transition-all duration-300" alt="">
+                        {% if obj.thumbnail %}
+                            <img src="{{obj.thumbnail.url}}" id="sidebar_profile_img"
+                                class="h-24 w-24 mb-2 transition-all duration-300" alt="">
+                        {% else %}
+                            <div class="h-24 w-24 mb-2 bg-gray-200 flex items-center justify-center rounded">
+                                <i class="fas fa-book text-2xl text-gray-400"></i>
+                            </div>
+                        {% endif %}
                         <div class="text-sm font-bold">{{book.title}}</div>
                         <div class="text-sm font-thin max-w-40 whitespace-nowrap overflow-hidden overflow-ellipsis ">{{book.description}}</div>
                     </li>

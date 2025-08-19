@@ -6,21 +6,72 @@ Homepage
 {% block content %}
 <style>
     .spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border-left-color: #3498db;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-}
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border-left-color: #3498db;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 
+    /* Smooth loading animation for book cards */
+    .book-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Skeleton loading animation */
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    .loading-grid {
+        display: none;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem 0;
+    }
+
+    .loading-card {
+        height: 300px;
+        border-radius: 8px;
+    }
+
+    /* Error state */
+    .error-message {
+        background: #fee;
+        color: #c33;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        display: none;
+    }
 </style>
 <h2 class="text-xl font-bold text-gray-700 mb-4">
     {{page}} Books
@@ -32,11 +83,13 @@ Homepage
     {% include 'components/book_card.html' %}
 
     {% endfor %}
-    <div id="loading_spinner" style="display: none; text-align: center; padding: 1rem;">
-        <div class="spinner"></div>
-    </div>
 
+</div>
 
+<!-- Loading spinner outside the grid -->
+<div id="loading_spinner" style="display: none; text-align: center; padding: 1rem; margin-top: 1rem;">
+    <div class="spinner"></div>
+    <p class="text-gray-500 mt-2">Loading more books...</p>
 </div>
 <script>
     let halfMenu = true;
@@ -44,50 +97,170 @@ Homepage
 </script>
 
 <script>
-let page = 1;
-let loading = false; // Prevent multiple triggers
+let loading = false;
+let hasMore = {{ has_more|yesno:"true,false" }};
+let nextCursor = "{{ last_cursor|default:'' }}";
+const sortType = "{{ sort_type }}";
+let retryCount = 0;
+const maxRetries = 3;
 
 const bookContainer = document.getElementById("book_container");
 const loadMoreUrl = "{% url 'main:load_more_data' %}";
 const parent = bookContainer.parentElement;
-const spinner = document.getElementById("loading_spinner"); // Spinner div (added below in HTML)
+const spinner = document.getElementById("loading_spinner");
 
-function scrollHandler() {
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+const debouncedScrollHandler = debounce(() => {
     if (
-        parent.scrollHeight - parent.scrollTop <= parent.clientHeight + 100 &&
-        !loading
+        parent.scrollHeight - parent.scrollTop <= parent.clientHeight + 200 &&
+        !loading && hasMore
+    ) {
+        loadMoreBooks();
+    }
+}, 100);
+
+parent.addEventListener("scroll", debouncedScrollHandler);
+
+async function loadMoreBooks() {
+    if (loading || !hasMore) return;
+    
+    loading = true;
+    spinner.style.display = "block";
+
+    try {
+        const url = new URL(loadMoreUrl, window.location.origin);
+        url.searchParams.append('sort_type', sortType);
+        url.searchParams.append('cursor', nextCursor);
+        url.searchParams.append('limit', '12');
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // Reset retry count on successful load
+        retryCount = 0;
+
+        // Add smooth animation to new cards
+        data.data.forEach((bookHTML, index) => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = bookHTML;
+            const bookCard = tempDiv.firstElementChild;
+            
+            if (bookCard) {
+                bookCard.style.animationDelay = `${index * 0.1}s`;
+                bookContainer.appendChild(bookCard);
+            }
+        });
+
+        hasMore = data.has_next;
+        nextCursor = data.next_cursor || '';
+
+        if (!hasMore) {
+            parent.removeEventListener("scroll", debouncedScrollHandler);
+            showEndMessage();
+        }
+
+    } catch (error) {
+        console.error("Error loading more books:", error);
+        retryCount++;
+        
+        if (retryCount <= maxRetries) {
+            // Exponential backoff retry
+            setTimeout(() => {
+                loadMoreBooks();
+            }, Math.pow(2, retryCount) * 1000);
+        } else {
+            showErrorMessage();
+        }
+    } finally {
+        loading = false;
+        spinner.style.display = "none";
+    }
+}
+
+function showEndMessage() {
+    const endMessage = document.createElement('div');
+    endMessage.className = 'text-center text-gray-500 py-8';
+    endMessage.innerHTML = '<p>📚 You\'ve reached the end! No more books to show.</p>';
+    bookContainer.appendChild(endMessage);
+}
+
+function showErrorMessage() {
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'error-message';
+    errorMessage.innerHTML = `
+        <p>Failed to load more books. Please check your connection and try again.</p>
+        <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Retry
+        </button>
+    `;
+    bookContainer.appendChild(errorMessage);
+}
+
+// Intersection Observer for better performance
+if ('IntersectionObserver' in window) {
+    const sentinel = document.createElement('div');
+    sentinel.className = 'scroll-sentinel';
+    sentinel.style.height = '1px';
+    
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !loading && hasMore) {
+            loadMoreBooks();
+        }
+    }, {
+        rootMargin: '300px'
+    });
+    
+    // Append sentinel AFTER the book container, not inside it
+    bookContainer.parentElement.appendChild(sentinel);
+    observer.observe(sentinel);
+}
+
+// Preload content when user is near the end
+function preloadContent() {
+    if (
+        parent.scrollHeight - parent.scrollTop <= parent.clientHeight + 500 &&
+        !loading && hasMore
     ) {
         loadMoreBooks();
     }
 }
 
-parent.addEventListener("scroll", scrollHandler);
+window.addEventListener("resize", preloadContent);
 
-async function loadMoreBooks() {
-    loading = true;
-    spinner.style.display = "block"; // Show spinner
-    page += 1;
-
-    try {
-        const response = await fetch(`${loadMoreUrl}?page=${page}`);
-        const data = await response.json();
-        console.log(data)
-        data.data.forEach(bookHTML => {
-            bookContainer.insertAdjacentHTML("beforeend", bookHTML);
-        });
-
-        if (data.has_next === false) {
-            parent.removeEventListener("scroll", scrollHandler); // Stop listening
-        }
-    } catch (error) {
-        console.error("Error loading more books:", error);
-    } finally {
-        loading = false;
-        spinner.style.display = "none"; // Hide spinner
+// Handle visibility change to pause/resume loading
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Pause loading when tab is not visible
+    } else {
+        // Resume loading when tab becomes visible
+        preloadContent();
     }
-}
-
-
+});
 </script>
 <script>
   // Function to initialize a single .news-row

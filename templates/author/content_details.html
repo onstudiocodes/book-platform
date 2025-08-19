@@ -18,29 +18,37 @@ Content details
 
 <div class="flex gap-4 flex-col sm:flex-row">
     <div class="sm:w-9/12">
-        <form action="{% if content_type == 'tour' %}{% url "main:add_travel_story" %}{% else %}{% url 'author:content_details' content_type obj.slug %}{% endif %}" method="post" enctype="multipart/form-data">
+        <form action="{% if content_type == 'tour' %}{% url "author:update_travel_story" obj.slug %}{% else %}{% url 'author:content_details' content_type obj.slug %}{% endif %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.media }}
-            {% if content_type == "books" or content_type == "news" %}
-                {% include "components/author_news_books_details.html" %}
+            {% if content_type == "books" %}
+                {% include "components/book_details_form.html" %}
+            {% elif content_type == "news" %}
+                {% include "components/news_details_form.html" %}
             {% elif content_type == "tour" %}
                 <input type="hidden" name="source_template" value="content_details)({{form.instance.slug}}">
-                {% include "components/create_tour_form.html" %}
+                {% include "components/tour_details_form.html" %}
             {% endif %}
         </form>
     </div>
     <div class="max-w-sm:3/12">
         <div class="my-4 p-2 px-4">
             <div class="space-y-4">
-                <img alt="Latest Video" class="w-48 h-64 rounded-md" src="{{ obj.thumbnail.url }}" />
+                {% if obj.thumbnail %}
+                    <img alt="Latest Video" class="w-48 h-64 rounded-md" src="{{ obj.thumbnail.url }}" />
+                {% else %}
+                    <div class="w-48 h-64 rounded-md bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-book text-4xl text-gray-400"></i>
+                    </div>
+                {% endif %}
                 <div class="flex justify-between gap-4 items-center">
                     <div class="relative overflow-hidden">
                         <div class="text-xs font-medium text-neutral-500">{{content_type|slice:":4"|capfirst}} link</div>
-                        <a href="{{ request.scheme }}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}{% elif content_type == 'tour' %}{% url 'main:tour_details' obj.slug %}{% endif %}"
+                        <a href="{{ request.scheme }}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}{% elif content_type == 'tour' %}{% url 'travel:tour_details' obj.slug %}{% endif %}"
                         
                             id="book_link"
                             class="inline-block max-w-40 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-blue-500 font-medium">
-                            {{request.scheme}}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}{% elif content_type == 'tour' %}{% url 'main:tour_details' obj.slug %}
+                            {{request.scheme}}://{{ request.get_host }}{% if content_type == 'books' %}{% url 'main:book_view' obj.slug %}{% elif content_type == 'news' %}{% url 'news:news_details' obj.slug %}{% elif content_type == 'tour' %}{% url 'travel:tour_details' obj.slug %}
                             {% endif %}
                         </a>
                     </div>
@@ -51,12 +59,20 @@ Content details
                 <div class="flex justify-between border rounded-xl px-4 py-2 items-center cursor-pointer">
                     <div class="text-sm w-full">
                         <div class="text-neutral-500">Visibility</div>
-                        <select name="" id="" data-book-id="{{obj.id}}"
-                            class="block p-1 w-full rounded visibility-toggle">
-                            <option value="Public" {% if obj.status == 'Public' %} selected {% endif %}>Public</option>
-                            <option value="Private" {% if obj.status == 'Private' %} selected {% endif %}>Private
-                            </option>
-                        </select>
+                        {% if content_type == "news" %}
+                            <select name="" id="" data-news-id="{{obj.id}}"
+                                class="block p-1 w-full rounded visibility-toggle-news">
+                                <option value="True" {% if obj.publish %} selected {% endif %}>Published</option>
+                                <option value="False" {% if not obj.publish %} selected {% endif %}>Draft</option>
+                            </select>
+                        {% else %}
+                            <select name="" id="" data-book-id="{{obj.id}}"
+                                class="block p-1 w-full rounded visibility-toggle">
+                                <option value="Public" {% if obj.status == 'Public' %} selected {% endif %}>Public</option>
+                                <option value="Private" {% if obj.status == 'Private' %} selected {% endif %}>Private
+                                </option>
+                            </select>
+                        {% endif %}
                     </div>
                 </div>
                 <div>
@@ -92,6 +108,7 @@ Content details
 
 {% block scripts %}
 <script>
+    // Handle book visibility toggle
     document.querySelectorAll('.visibility-toggle').forEach(element => {
         element.addEventListener('change', function () {
             let book_id = this.getAttribute('data-book-id')
@@ -104,6 +121,24 @@ Content details
                 .catch(error => console.log(error))
 
             console.log(book_id)
+        })
+    })
+
+    // Handle news visibility toggle
+    document.querySelectorAll('.visibility-toggle-news').forEach(element => {
+        element.addEventListener('change', function () {
+            let news_id = this.getAttribute('data-news-id')
+            let publish_status = this.value
+            fetch(`/author/change-news-visibility/${news_id}/${publish_status}`)
+                .then(data => data.json())
+                .then(data => {
+                    console.log(data.status)
+                    if (data.status === 'success') {
+                        // Show success message or update UI
+                        console.log('News visibility updated successfully');
+                    }
+                })
+                .catch(error => console.log(error))
         })
     })
 </script>

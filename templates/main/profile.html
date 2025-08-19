@@ -12,8 +12,14 @@ Profile
 </div>
 <div class="flex flex-col gap-3 sm:flex-row sm:justify-between mt-4 sm:items-center">
     <div class="flex gap-4 text-neutral-600 items-center">
-        <img alt="" class="h-16 w-16 sm:w-32 sm:h-32 rounded-full"
-            src="{{ profile.userprofile.profile_picture.url }}" />
+        {% if profile.userprofile.profile_picture %}
+            <img alt="" class="h-16 w-16 sm:w-32 sm:h-32 rounded-full"
+                src="{{ profile.userprofile.profile_picture.url }}" />
+        {% else %}
+            <div class="h-16 w-16 sm:w-32 sm:h-32 rounded-full bg-gray-300 flex items-center justify-center">
+                <i class="fas fa-user text-2xl sm:text-4xl text-gray-500"></i>
+            </div>
+        {% endif %}
         <div class="space-y-2">
             <div class="text-2xl font-medium">{{ profile.userprofile.full_name }}</div>
             <div class="font-xs flex flex-col lg:flex-row gap-2">

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from main.models import Book, User, Comment, ObjView, Booktranslation, News, TravelStory
+from main.models import Book, User, Comment, ObjView, Booktranslation, News, TravelStory, TravelImage, NewsImage
 from django.contrib import messages
 from .forms import BookUploadForm, NewsForm, NewsImageFormSet, AudioForm, TranslationForm
 import base64
@@ -18,8 +18,13 @@ from main.forms import TravelStoryForm
 @login_required(login_url='accounts:login')
 def author_dashboard(request):
     followers_in_28 = get_last_n_days_data(UserFollow, user=request.user, n=28)
+    total_books = Book.objects.filter(author=request.user).count()
+    total_views = ObjView.objects.filter(book__author=request.user).count()
+    
     context = {
-        'followers_in_28': followers_in_28
+        'followers_in_28': followers_in_28,
+        'total_books': total_books,
+        'total_views': total_views
     }
     return render(request, 'author/admin_dashboard.html', context)
 
@@ -88,8 +93,10 @@ def author_analytics(request):
 @login_required(login_url='accounts:login')
 def author_community(request):
     comments = Comment.objects.filter(book__author=request.user)
+    followers = request.user.followers_users.all()
     context = {
-        'comments': comments
+        'comments': comments,
+        'followers': followers
     }
     return render(request, 'author/admin_community.html', context)
 
@@ -110,7 +117,7 @@ def author_copyright(request):
 @login_required(login_url='accounts:login')
 def content_details(request, content_type, slug):
     if content_type == 'books':
-        obj = Book.objects.get(slug=slug)  # Fetch the existing book
+        obj = Book.objects.get(slug=slug)
         content_type = "books"
     elif content_type == "news":
         obj = News.objects.get(slug=slug)
@@ -118,22 +125,25 @@ def content_details(request, content_type, slug):
     elif content_type == "tour":
         obj = TravelStory.objects.get(slug=slug)
         content_type = "tour"
+    
     if request.method == "POST":
-        form = BookUploadForm(request.POST, request.FILES, instance=obj)  # Bind the form with the book instance
-        if form.is_valid():
-            obj = form.save(commit=False)  # Get the book instance with updated data
-            obj.author = request.user  # Ensure the author is set to the current user
-            # Check if a new thumbnail is provided
-            if 'thumbnail' in request.FILES:
-                obj.thumbnail = request.FILES['thumbnail']
-            obj.save()  # Save the updated book object to the database
-            return redirect(request.META.get('HTTP_REFERER', '/fallback-url/'))  # Redirect after saving
+        if content_type == "tour":
+            # Redirect to separate update view for tours
+            return redirect('author:update_travel_story', slug=slug)
+        elif content_type == "news":
+            # Redirect to separate update view for news
+            return redirect('author:update_news', slug=slug)
+        elif content_type == "books":
+            # Redirect to separate update view for books
+            return redirect('author:update_book', slug=slug)
 
-    else:
-        if content_type == "news" or content_type == "books":
-            form = BookUploadForm(instance=obj)  # Prefill the form with the existing book data
-        elif content_type == "tour":
-            form = TravelStoryForm(instance=obj)
+    # Initialize forms
+    if content_type == "books":
+        form = BookUploadForm(instance=obj)
+    elif content_type == "news":
+        form = NewsForm(instance=obj)
+    elif content_type == "tour":
+        form = TravelStoryForm(instance=obj)
 
     context = {
         'obj': obj,
@@ -141,6 +151,155 @@ def content_details(request, content_type, slug):
         'content_type': content_type
     }
     return render(request, 'author/content_details.html', context)
+
+@login_required(login_url='accounts:login')
+def update_book(request, slug):
+    """
+    Separate view for handling book updates
+    """
+    try:
+        book = Book.objects.get(slug=slug, author=request.user)
+    except Book.DoesNotExist:
+        messages.error(request, 'Book not found or you do not have permission to edit it.')
+        return redirect('author:author_content', content_type='books')
+    
+    if request.method == "POST":
+        form = BookUploadForm(request.POST, request.FILES, instance=book)
+        
+        if form.is_valid():
+            # Save the form data
+            obj = form.save(commit=False)
+            obj.author = request.user
+            
+            # Handle thumbnail upload
+            if 'thumbnail' in request.FILES:
+                obj.thumbnail = request.FILES['thumbnail']
+            
+            obj.save()
+            messages.success(request, 'Book updated successfully!')
+            
+            # Redirect back to the details page
+            return redirect('author:content_details', content_type='books', slug=obj.slug)
+        
+        else:
+            # Form has errors
+            messages.error(request, 'Please correct the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    
+    # If GET request or form errors, redirect back to details page
+    return redirect('author:content_details', content_type='books', slug=book.slug)
+
+@login_required(login_url='accounts:login')
+def update_news(request, slug):
+    """
+    Separate view for handling news updates
+    """
+    try:
+        news = News.objects.get(slug=slug, author=request.user)
+    except News.DoesNotExist:
+        messages.error(request, 'News article not found or you do not have permission to edit it.')
+        return redirect('author:author_content', content_type='news')
+    
+    if request.method == "POST":
+        form = NewsForm(request.POST, request.FILES, instance=news)
+        
+        if form.is_valid():
+            # Save the form data
+            obj = form.save(commit=False)
+            obj.author = request.user
+            
+            # Handle description manually since it's not in the form
+            if 'description' in request.POST:
+                obj.description = request.POST['description']
+            
+            # Handle publish/draft logic
+            if 'publish' in request.POST:
+                obj.publish = True
+                messages.success(request, 'News article published successfully!')
+            elif 'draft' in request.POST:
+                obj.publish = False
+                messages.success(request, 'News article saved as draft!')
+            else:
+                messages.success(request, 'News article updated successfully!')
+            
+            obj.save()
+            
+            # Handle multiple image uploads
+            if 'news_images' in request.FILES:
+                uploaded_images = request.FILES.getlist('news_images')
+                for image in uploaded_images:
+                    NewsImage.objects.create(news=obj, image=image)
+                messages.info(request, f'{len(uploaded_images)} new images added to your article.')
+            
+            # Redirect back to the details page
+            return redirect('author:content_details', content_type='news', slug=obj.slug)
+        
+        else:
+            # Form has errors
+            messages.error(request, 'Please correct the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    
+    # If GET request or form errors, redirect back to details page
+    return redirect('author:content_details', content_type='news', slug=news.slug)
+
+@login_required(login_url='accounts:login')
+def update_travel_story(request, slug):
+    """
+    Separate view for handling travel story updates
+    """
+    try:
+        travel_story = TravelStory.objects.get(slug=slug, author=request.user)
+    except TravelStory.DoesNotExist:
+        messages.error(request, 'Travel story not found or you do not have permission to edit it.')
+        return redirect('author:author_content', content_type='tour')
+    
+    if request.method == "POST":
+        form = TravelStoryForm(request.POST, request.FILES, instance=travel_story)
+        
+        if form.is_valid():
+            # Save the form data
+            obj = form.save(commit=False)
+            obj.author = request.user
+            
+            # Handle thumbnail upload
+            if 'thumbnail' in request.FILES:
+                obj.thumbnail = request.FILES['thumbnail']
+            
+            # Handle publish/draft logic
+            if 'publish' in request.POST:
+                obj.published = True
+                messages.success(request, 'Travel story published successfully!')
+            elif 'draft' in request.POST:
+                obj.published = False
+                messages.success(request, 'Travel story saved as draft!')
+            else:
+                messages.success(request, 'Travel story updated successfully!')
+            
+            obj.save()
+            
+            # Handle multiple image uploads
+            if 'images' in request.FILES:
+                uploaded_images = request.FILES.getlist('images')
+                for image in uploaded_images:
+                    TravelImage.objects.create(travel_story=obj, image=image)
+                messages.info(request, f'{len(uploaded_images)} new images added to your story.')
+            
+            # Redirect back to the details page
+            return redirect('author:content_details', content_type='tour', slug=obj.slug)
+        
+        else:
+            # Form has errors
+            messages.error(request, 'Please correct the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    
+    # If GET request or form errors, redirect back to details page
+    return redirect('author:content_details', content_type='tour', slug=travel_story.slug)
 
 def tour_details(request, slug):
     return render(request, 'author/content_details.html')
@@ -186,6 +345,7 @@ def content_analytics(request, content_type, slug):
 
     context = {
         'views': views,
+        'entries': entries,
         'followers': followers,
         'labels': json.dumps(labels),
         'data': json.dumps(data),
@@ -282,6 +442,7 @@ def content_audio(request, slug):
             messages.error(request, 'Invalid files')
     form = AudioForm()
     context = {
+        'book': book,
         'obj': book,
         'form': form,
         'content_type': 'books'
@@ -310,6 +471,55 @@ def write_book(request):
             return redirect("main:index")
     form = BookUploadForm(request.POST or None, request.FILES or None)
     return render(request, "author/write_book.html", {"form": form})
+
+@login_required(login_url='accounts:login')
+def create_travel_story(request):
+    """
+    View for creating new travel stories
+    """
+    if request.method == 'POST':
+        form = TravelStoryForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            # Save the form data
+            travel_story = form.save(commit=False)
+            travel_story.author = request.user
+            
+            # Handle publish/draft logic
+            if 'publish' in request.POST:
+                travel_story.published = True
+                messages.success(request, 'Travel story published successfully!')
+            else:
+                travel_story.published = False
+                messages.success(request, 'Travel story saved as draft!')
+            
+            travel_story.save()
+            
+            # Handle multiple image uploads
+            if 'images' in request.FILES:
+                uploaded_images = request.FILES.getlist('images')
+                for image in uploaded_images:
+                    TravelImage.objects.create(travel_story=travel_story, image=image)
+                messages.info(request, f'{len(uploaded_images)} images added to your story.')
+            
+            # Redirect to the details page of the new story
+            return redirect('author:content_details', content_type='tour', slug=travel_story.slug)
+        
+        else:
+            # Form has errors
+            messages.error(request, 'Please correct the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    
+    else:
+        form = TravelStoryForm()
+    
+    context = {
+        'form': form,
+        'is_create': True
+    }
+    return render(request, 'author/create_travel_story.html', context)
 
 @login_required(login_url='accounts:login')
 def create_news(request):
@@ -344,6 +554,21 @@ def change_visibility(request, book_id, status):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'failed'})
 
+@login_required(login_url='accounts:login')
+def change_news_visibility(request, news_id, publish_status):
+    """
+    Change the publication status of a news article
+    """
+    try:
+        news = News.objects.get(id=news_id)
+        if news.author == request.user:
+            news.publish = publish_status.lower() == 'true'
+            news.save()
+            return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'failed', 'message': 'Permission denied'})
+    except News.DoesNotExist:
+        return JsonResponse({'status': 'failed', 'message': 'News not found'})
+
 def delete_book(request, book_id):
     book = Book.objects.get(id=book_id)
     if book.author == request.user:
@@ -352,3 +577,45 @@ def delete_book(request, book_id):
         return redirect('author:author_content')
     messages.error(request, 'Book not deleted')
     return redirect('author:author_content')
+
+@login_required(login_url='accounts:login')
+def delete_news_image(request, image_id):
+    """
+    Delete a news image if the user owns the news article
+    """
+    if request.method == 'POST':
+        try:
+            image = NewsImage.objects.get(id=image_id)
+            # Check if the current user owns the news article
+            if image.news.author == request.user:
+                image.delete()
+                return JsonResponse({'success': True, 'message': 'Image deleted successfully'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Permission denied'})
+        except NewsImage.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Image not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+@login_required(login_url='accounts:login')
+def delete_travel_image(request, image_id):
+    """
+    Delete a travel image if the user owns the travel story
+    """
+    if request.method == 'POST':
+        try:
+            image = TravelImage.objects.get(id=image_id)
+            # Check if the current user owns the travel story
+            if image.travel_story.author == request.user:
+                image.delete()
+                return JsonResponse({'success': True, 'message': 'Image deleted successfully'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Permission denied'})
+        except TravelImage.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Image not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
