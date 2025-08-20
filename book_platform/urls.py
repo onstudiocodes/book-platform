@@ -31,7 +31,6 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('travel/', include('travel.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
-    path('silk/', include('silk.urls', namespace='silk'))
 ]
 
 # Serve static and media files (works for both DEBUG=True and DEBUG=False)

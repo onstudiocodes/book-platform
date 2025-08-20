@@ -28,7 +28,7 @@ This document outlines the comprehensive optimizations made to improve the infin
 
 #### Database Indexes Added
 - Added `db_index=True` to frequently queried fields:
-  - `published_date` - for date-based sorting
+  - `created_at` - for date-based sorting
   - `views` - for popularity-based sorting  
   - `status` - for filtering public books
 - Created composite indexes for optimal query performance:

@@ -54,14 +54,14 @@ Content
         </select>
     </div>
     <div class="*:p-2">
-        <div class="inline-block">Page {{ books.number }} of {{ books.paginator.num_pages }}</div>
+        <div class="inline-block">Page {{ content.number }} of {{ content.paginator.num_pages }}</div>
         <i class="fa fa-angles-left block cursor-pointer" title="First page" onclick="location.href=`?page=1`"></i>
-        <i class="fa fa-angle-left block cursor-pointer" title="Previous page" {% if books.has_previous %}
-            onclick="location.href=`?page={{books.previous_page_number}}`" {% endif %}></i>
-        <i class="fa fa-angle-right block cursor-pointer" title="Next page" {% if books.has_next %}
-            onclick="location.href=`?page={{books.next_page_number}}`" {% endif %}></i>
+        <i class="fa fa-angle-left block cursor-pointer" title="Previous page" {% if content.has_previous %}
+            onclick="location.href=`?page={{content.previous_page_number}}`" {% endif %}></i>
+        <i class="fa fa-angle-right block cursor-pointer" title="Next page" {% if content.has_next %}
+            onclick="location.href=`?page={{content.next_page_number}}`" {% endif %}></i>
         <i class="fa fa-angles-right block cursor-pointer" title="Last page"
-            onclick="location.href=`?page={{books.paginator.num_pages}}`"></i>
+            onclick="location.href=`?page={{content.paginator.num_pages}}`"></i>
     </div>
 
 </div>
@@ -71,16 +71,20 @@ Content
 <script>
     document.querySelectorAll('.visibility-toggle').forEach(element => {
         element.addEventListener('change', function () {
-            let book_id = this.getAttribute('data-book-id')
+            let item_id = this.getAttribute('data-book-id')
             let status = this.value
-            fetch(`/author/change-visibility/${book_id}/${status}`)
-                .then(data => data.json())
-                .then(data => {
-                    console.log(data.status)
-                })
-                .catch(error => console.log(error))
-
-            console.log(book_id)
+            let content_type = '{{ content_type }}'
+            
+            if (content_type === 'books') {
+                fetch(`/author/change-visibility/${item_id}/${status}`)
+                    .then(data => data.json())
+                    .then(data => {
+                        console.log(data.status)
+                    })
+                    .catch(error => console.log(error))
+            }
+            
+            console.log(item_id)
         })
     })
 

@@ -279,7 +279,7 @@ class NewsSerializerTest(TestCase):
         
         expected_fields = [
             'id', 'title', 'slug', 'description', 'content', 'author',
-            'category', 'published_date', 'updated_date', 'likes_count',
+            'category', 'created_at', 'updated_date', 'likes_count',
             'dislikes_count', 'comments_count', 'views_count', 'images'
         ]
         

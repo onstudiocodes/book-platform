@@ -34,7 +34,7 @@ class NewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = News
-        fields = ['id', 'author', 'title', 'slug', 'description', 'content', 'author_name', 'category', 'category_id', 'published_date', 'updated_date', 'images', 'thumbnail', 'views_count', 'is_liked', 'likes_count', 'dislikes_count', 'comments_count', 'time_since_created']
+        fields = ['id', 'author', 'title', 'slug', 'description', 'content', 'author_name', 'category', 'category_id', 'created_at', 'updated_date', 'images', 'thumbnail', 'views_count', 'is_liked', 'likes_count', 'dislikes_count', 'comments_count', 'time_since_created']
 
     def get_thumbnail(self, obj):
         first_image = obj.images.first()
@@ -73,4 +73,4 @@ class NewsSerializer(serializers.ModelSerializer):
         return False
     
     def get_time_since_created(self, obj):
-        return time_since_custom(obj.published_date)
+        return time_since_custom(obj.created_at)

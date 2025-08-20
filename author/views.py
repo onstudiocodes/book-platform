@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.contrib.auth.decorators import login_required
 from main.models import Book, User, Comment, ObjView, Booktranslation, News, TravelStory, TravelImage, NewsImage
 from django.contrib import messages
@@ -13,13 +13,20 @@ from django.core.paginator import Paginator
 from accounts.models import UserFollow
 from django.views.decorators.csrf import csrf_exempt
 from main.forms import TravelStoryForm
+from django.db import models
 
 # Create your views here.
 @login_required(login_url='accounts:login')
 def author_dashboard(request):
     followers_in_28 = get_last_n_days_data(UserFollow, user=request.user, n=28)
     total_books = Book.objects.filter(author=request.user).count()
-    total_views = ObjView.objects.filter(book__author=request.user).count()
+    
+    # Count total views for all content types by this author
+    total_views = ObjView.objects.filter(
+        models.Q(book__author=request.user) | 
+        models.Q(news__author=request.user) | 
+        models.Q(travel_story__author=request.user)
+    ).count()
     
     context = {
         'followers_in_28': followers_in_28,
@@ -60,34 +67,97 @@ def update_session_key(request):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'failed'})
 
-@login_required(login_url='accounts:login',)
+@login_required(login_url='accounts:login')
 def author_analytics(request):
-    days = request.GET.get('days', 28)
-        
-    days = int(days)
-    entries = get_last_n_days_data(ObjView, days, user=request.user, formatted=True)
-    follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True)
-
-    start_date = (timezone.now() - datetime.timedelta(days=days)).date()
-    end_date = timezone.now()
-    views = ObjView.objects.filter(book__author=request.user, created_at__gte=start_date)
-
-    labels = [item['date'] for item in entries]
-    data = [item['count'] for item in entries]
-    follower_entries_labels = [item['date'] for item in follower_entries]
-    follower_entries_data = [item['count'] for item in follower_entries]
-
-
+    """Enhanced author analytics with comprehensive data"""
+    days = int(request.GET.get('days', 28))
+    
+    # Import the new analytics service
+    from main.utils import AnalyticsService
+    
+    # Get comprehensive analytics data
+    views_analytics = AnalyticsService.get_content_views_analytics(
+        user=request.user, 
+        days=days
+    )
+    
+    follower_analytics = AnalyticsService.get_follower_analytics(
+        user=request.user, 
+        days=days
+    )
+    
+    content_comparison = AnalyticsService.get_content_performance_comparison(
+        user=request.user, 
+        days=days
+    )
+    
+    top_content = AnalyticsService.get_top_performing_content(
+        user=request.user, 
+        days=days, 
+        limit=5
+    )
+    
+    # Calculate additional metrics
+    total_content = (
+        content_comparison['books']['content_count'] + 
+        content_comparison['news']['content_count'] + 
+        content_comparison['travel']['content_count']
+    )
+    
+    # Engagement rate calculation
+    total_followers = request.user.followers_users.count()
+    engagement_rate = 0
+    if total_followers > 0:
+        engagement_rate = round(
+            (views_analytics['summary']['total_views'] / total_followers) * 100, 
+            2
+        )
+    
+    # Prepare chart data
+    views_labels = [item['date'] for item in views_analytics['time_series']]
+    views_data = [item['count'] for item in views_analytics['time_series']]
+    
+    unique_viewers_data = [item['count'] for item in views_analytics['unique_viewers_series']]
+    
+    follower_labels = [item['date'] for item in follower_analytics['new_followers_series']]
+    follower_data = [item['count'] for item in follower_analytics['new_followers_series']]
+    
+    cumulative_followers_data = [item['total_followers'] for item in follower_analytics['cumulative_followers_series']]
+    
     context = {
-        'views': views,
-        'labels': json.dumps(labels),
-        'data': json.dumps(data),
-        'start_date': start_date,
-        'end_date': end_date,
+        'views_analytics': views_analytics,
+        'follower_analytics': follower_analytics,
+        'content_comparison': content_comparison,
+        'top_content': top_content,
         'days': days,
-        'follower_entries_labels': json.dumps(follower_entries_labels),
-        'follower_entries_data': json.dumps(follower_entries_data)
+        'total_content': total_content,
+        'engagement_rate': engagement_rate,
+        
+        # Chart data
+        'views_labels': json.dumps(views_labels),
+        'views_data': json.dumps(views_data),
+        'unique_viewers_data': json.dumps(unique_viewers_data),
+        'follower_labels': json.dumps(follower_labels),
+        'follower_data': json.dumps(follower_data),
+        'cumulative_followers_data': json.dumps(cumulative_followers_data),
+        
+        # Date range
+        'start_date': views_analytics['summary']['date_range']['start'],
+        'end_date': views_analytics['summary']['date_range']['end'],
+        
+        # Legacy compatibility
+        'views': ObjView.objects.filter(
+            models.Q(book__author=request.user) | 
+            models.Q(news__author=request.user) | 
+            models.Q(travel_story__author=request.user),
+            created_at__date__gte=views_analytics['summary']['date_range']['start']
+        ),
+        'labels': json.dumps(views_labels),
+        'data': json.dumps(views_data),
+        'follower_entries_labels': json.dumps(follower_labels),
+        'follower_entries_data': json.dumps(follower_data)
     }
+    
     return render(request, 'author/admin_analytics.html', context)
 
 @login_required(login_url='accounts:login')
@@ -178,17 +248,26 @@ def update_book(request, slug):
             obj.save()
             messages.success(request, 'Book updated successfully!')
             
-            # Redirect back to the details page
-            return redirect('author:content_details', content_type='books', slug=obj.slug)
+            # Stay on the same page instead of redirecting
+            form = BookUploadForm(instance=obj)  # Refresh form with updated data
+            context = {
+                'obj': obj,
+                'form': form,
+                'content_type': 'books'
+            }
+            return render(request, 'author/content_details.html', context)
         
         else:
-            # Form has errors
+            # Form has errors, render the content_details template with errors
             messages.error(request, 'Please correct the errors below.')
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
+            context = {
+                'obj': book,
+                'form': form,
+                'content_type': 'books'
+            }
+            return render(request, 'author/content_details.html', context)
     
-    # If GET request or form errors, redirect back to details page
+    # If GET request, redirect back to details page
     return redirect('author:content_details', content_type='books', slug=book.slug)
 
 @login_required(login_url='accounts:login')
@@ -233,17 +312,26 @@ def update_news(request, slug):
                     NewsImage.objects.create(news=obj, image=image)
                 messages.info(request, f'{len(uploaded_images)} new images added to your article.')
             
-            # Redirect back to the details page
-            return redirect('author:content_details', content_type='news', slug=obj.slug)
+            # Stay on the same page instead of redirecting
+            form = NewsForm(instance=obj)  # Refresh form with updated data
+            context = {
+                'obj': obj,
+                'form': form,
+                'content_type': 'news'
+            }
+            return render(request, 'author/content_details.html', context)
         
         else:
-            # Form has errors
+            # Form has errors, render the content_details template with errors
             messages.error(request, 'Please correct the errors below.')
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
+            context = {
+                'obj': news,
+                'form': form,
+                'content_type': 'news'
+            }
+            return render(request, 'author/content_details.html', context)
     
-    # If GET request or form errors, redirect back to details page
+    # If GET request, redirect back to details page
     return redirect('author:content_details', content_type='news', slug=news.slug)
 
 @login_required(login_url='accounts:login')
@@ -288,17 +376,26 @@ def update_travel_story(request, slug):
                     TravelImage.objects.create(travel_story=obj, image=image)
                 messages.info(request, f'{len(uploaded_images)} new images added to your story.')
             
-            # Redirect back to the details page
-            return redirect('author:content_details', content_type='tour', slug=obj.slug)
+            # Stay on the same page instead of redirecting
+            form = TravelStoryForm(instance=obj)  # Refresh form with updated data
+            context = {
+                'obj': obj,
+                'form': form,
+                'content_type': 'tour'
+            }
+            return render(request, 'author/content_details.html', context)
         
         else:
-            # Form has errors
+            # Form has errors, render the content_details template with errors
             messages.error(request, 'Please correct the errors below.')
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
+            context = {
+                'obj': travel_story,
+                'form': form,
+                'content_type': 'tour'
+            }
+            return render(request, 'author/content_details.html', context)
     
-    # If GET request or form errors, redirect back to details page
+    # If GET request, redirect back to details page
     return redirect('author:content_details', content_type='tour', slug=travel_story.slug)
 
 def tour_details(request, slug):
@@ -307,55 +404,104 @@ def tour_details(request, slug):
 
 @login_required(login_url='accounts:login')
 def content_analytics(request, content_type, slug):
+    """Enhanced content-specific analytics"""
+    # Get content object
     if content_type == "books":
-        obj = Book.objects.get(slug=slug)
+        obj = Book.objects.get(slug=slug, author=request.user)
     elif content_type == "news":
-        obj = News.objects.get(slug=slug)
+        obj = News.objects.get(slug=slug, author=request.user)
     elif content_type == "tour":
-        obj = TravelStory.objects.get(slug=slug)
-    days = request.GET.get('days', 90)
+        obj = TravelStory.objects.get(slug=slug, author=request.user)
+    else:
+        raise Http404("Invalid content type")
+    
+    days = int(request.GET.get('days', 90))
+    
+    # Import the new analytics service
+    from main.utils import AnalyticsService
+    
+    # Get comprehensive analytics for this specific content
+    # Map content_type for analytics service
+    analytics_content_type = content_type
+    if content_type == "tour":
+        analytics_content_type = "travel"
+    
+    content_analytics = AnalyticsService.get_content_views_analytics(
+        user=request.user,
+        content_type=analytics_content_type,
+        content_obj=obj,
+        days=days
+    )
+    
+    # Get author's overall follower analytics for comparison
+    follower_analytics = AnalyticsService.get_follower_analytics(
+        user=request.user,
+        days=days
+    )
+    
+    # Calculate content-specific metrics
+    content_age_days = (timezone.now().date() - obj.created_at.date()).days
+    avg_daily_views = content_analytics['summary']['total_views'] / max(content_age_days, 1)
+    
+    # Get related content performance for comparison
+    top_content = AnalyticsService.get_top_performing_content(
+        user=request.user,
+        content_type=analytics_content_type,
+        days=days,
+        limit=5
+    )
+    
+    # Prepare chart data
+    views_labels = [item['date'] for item in content_analytics['time_series']]
+    views_data = [item['count'] for item in content_analytics['time_series']]
+    unique_viewers_data = [item['count'] for item in content_analytics['unique_viewers_series']]
+    
+    follower_labels = [item['date'] for item in follower_analytics['new_followers_series']]
+    follower_data = [item['count'] for item in follower_analytics['new_followers_series']]
+    
+    # Legacy compatibility for existing templates
+    legacy_filter = {}
+    if content_type == "books":
+        legacy_filter['book'] = obj
+    elif content_type == "news":
+        legacy_filter['news'] = obj
+    elif content_type == "tour":
+        legacy_filter['travel_story'] = obj
         
-    days = int(days)
-    if content_type == "books":
-        views = get_last_n_days_data(ObjView, days, book=obj)
-        entries = get_last_n_days_data(ObjView, days, user=request.user, book=obj, formatted=True)
-        follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True, book=obj)
-    elif content_type == "news":
-        views = get_last_n_days_data(ObjView, days, news=obj)
-        entries = get_last_n_days_data(ObjView, days, user=request.user, news=obj, formatted=True)
-        follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True)
-    elif content_type == "tour":
-        views = get_last_n_days_data(ObjView, days, travel_story=obj)
-        entries = get_last_n_days_data(ObjView, days, user=request.user, travel_story=obj, formatted=True)
-        follower_entries = get_last_n_days_data(UserFollow, days, user=request.user, formatted=True)
-
-    start_date = (timezone.now() - datetime.timedelta(days=days)).date()
-    end_date = timezone.now()
-    labels = [item['date'] for item in entries]
-    data = [item['count'] for item in entries]
-    follower_entries_labels = [item['date'] for item in follower_entries]
-    follower_entries_data = [item['count'] for item in follower_entries]
-
-    if content_type == "books":
-        followers = get_last_n_days_data(UserFollow, days, user=request.user, book=obj).count()
-    elif content_type == "news":
-        followers = get_last_n_days_data(UserFollow, days, user=request.user).count()
-    elif content_type == "tour":
-        followers = get_last_n_days_data(UserFollow, days, user=request.user).count()
-
+    views_queryset = ObjView.objects.filter(
+        **legacy_filter,
+        created_at__date__gte=content_analytics['summary']['date_range']['start']
+    )
+    
     context = {
-        'views': views,
-        'entries': entries,
-        'followers': followers,
-        'labels': json.dumps(labels),
-        'data': json.dumps(data),
-        'start_date': start_date,
-        'end_date': end_date,
-        'days': days,
         'obj': obj,
-        'follower_entries_labels': json.dumps(follower_entries_labels),
-        'follower_entries_data': json.dumps(follower_entries_data),
-        'content_type': content_type
+        'content_type': content_type,
+        'days': days,
+        'content_analytics': content_analytics,
+        'follower_analytics': follower_analytics,
+        'top_content': top_content,
+        'content_age_days': content_age_days,
+        'avg_daily_views': round(avg_daily_views, 2),
+        
+        # Chart data
+        'views_labels': json.dumps(views_labels),
+        'views_data': json.dumps(views_data),
+        'unique_viewers_data': json.dumps(unique_viewers_data),
+        'follower_labels': json.dumps(follower_labels),
+        'follower_data': json.dumps(follower_data),
+        
+        # Date range
+        'start_date': content_analytics['summary']['date_range']['start'],
+        'end_date': content_analytics['summary']['date_range']['end'],
+        
+        # Legacy compatibility
+        'views': views_queryset,
+        'entries': content_analytics['time_series'],
+        'followers': follower_analytics['summary']['total_followers'],
+        'labels': json.dumps(views_labels),
+        'data': json.dumps(views_data),
+        'follower_entries_labels': json.dumps(follower_labels),
+        'follower_entries_data': json.dumps(follower_data),
     }
     
     return render(request, 'author/content_analytics.html', context)

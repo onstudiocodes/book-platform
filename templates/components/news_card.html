@@ -7,7 +7,7 @@
     {% endwith %}
     <div class="p-6">
         <h2 class="text-xl font-bold mb-2">{{news.title}}</h2>
-        <p class="text-gray-600 mb-4">Posted by <span class="font-semibold">{{news.author.userprofile.full_name}}</span> • {{news.published_date|time_since}}</p>
+        <p class="text-gray-600 mb-4">Posted by <span class="font-semibold">{{news.author.userprofile.full_name}}</span> • {{news.created_at|time_since}}</p>
         <div class="flex items-center mb-4">
         <span class="bg-{{ news.category.name|get_color_for_category }}-100 text-{{ news.category.name|get_color_for_category }}-800 text-xs font-medium px-2.5 py-0.5 rounded">{{news.category}}</span>
         </div>

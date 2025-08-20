@@ -3,183 +3,403 @@
 {% block title %}
 Analytics
 {% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/analytics.css' %}">
+{% endblock %}
+
 {% block content %}
 <header class="flex items-center justify-between mb-6">
     <div>
-        <h2 class="text-3xl font-semibold">Channel analytics</h2>
+        <h2 class="text-3xl font-semibold">Channel Analytics</h2>
+        <p class="text-gray-600 mt-1">Track your content performance and audience growth</p>
+        <div id="lastUpdated" class="text-xs text-gray-500 mt-1">Last updated: {{ "now"|date:"H:i:s" }}</div>
     </div>
-    <button class="py-2 px-4 bg-gray-100 rounded-full text-sm font-medium hover:bg-gray-200">Advanced
-        Mode</button>
+    <div class="flex gap-2 items-center">
+        <!-- Live Update Toggle -->
+        <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="liveToggle" class="rounded">
+            <span>Live updates</span>
+            <div id="liveIndicator" class="w-2 h-2 bg-green-500 rounded-full opacity-0 transition-opacity duration-300"></div>
+        </label>
+        
+        <button id="refreshData" class="py-2 px-4 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
+        <button id="exportData" class="py-2 px-4 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200">
+            <i class="fas fa-download mr-2"></i>Export Data
+        </button>
+        <button class="py-2 px-4 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200">
+            Advanced Mode
+        </button>
+    </div>
 </header>
-<div class="flex justify-between items-end border-b">
+
+<!-- Analytics Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="analytics-card bg-white p-6 rounded-xl shadow-sm border">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Views</p>
+                <p id="totalViews" class="text-2xl font-bold text-gray-900">{{views_analytics.summary.total_views|floatformat:0}}</p>
+                <p class="text-xs text-green-600 mt-1">
+                    <i class="fas fa-arrow-up"></i> +{{views_analytics.summary.avg_daily_views|floatformat:1}}/day avg
+                </p>
+            </div>
+            <div class="metric-icon bg-blue-100">
+                <i class="fas fa-eye text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="analytics-card bg-white p-6 rounded-xl shadow-sm border">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Unique Viewers</p>
+                <p class="text-2xl font-bold text-gray-900">{{views_analytics.summary.unique_viewers|floatformat:0}}</p>
+                <p class="text-xs text-blue-600 mt-1">
+                    {{engagement_rate}}% engagement rate
+                </p>
+            </div>
+            <div class="metric-icon bg-green-100">
+                <i class="fas fa-users text-green-600"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="analytics-card bg-white p-6 rounded-xl shadow-sm border">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Followers</p>
+                <p id="totalFollowers" class="text-2xl font-bold text-gray-900">{{follower_analytics.summary.total_followers}}</p>
+                <p class="text-xs text-purple-600 mt-1">
+                    <i class="fas fa-arrow-up"></i> +<span id="recent24hFollowers">{{follower_analytics.summary.new_followers_period}}</span> this period
+                </p>
+            </div>
+            <div class="metric-icon bg-purple-100">
+                <i class="fas fa-user-plus text-purple-600"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="analytics-card bg-white p-6 rounded-xl shadow-sm border">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Content</p>
+                <p class="text-2xl font-bold text-gray-900">{{total_content}}</p>
+                <p class="text-xs text-gray-600 mt-1">
+                    Books, News & Travel Stories
+                </p>
+            </div>
+            <div class="metric-icon bg-orange-100">
+                <i class="fas fa-book text-orange-600"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Range Selector -->
+<div class="flex justify-between items-end border-b mb-6">
     <ul class="flex gap-4 font-medium text-gray-600 text-sm overflow-x-scroll">
-        <li class="p-2 cursor-pointer text-black border-b-2 font-bold border-gray-500">
+        <li class="p-2 cursor-pointer text-black border-b-2 font-bold border-blue-500">
             Overview
         </li>
         <li class="hover:border-b-2 hover:border-gray-300 p-2 cursor-pointer">
-            Content
+            Content Performance
         </li>
         <li class="hover:border-b-2 hover:border-gray-300 p-2 cursor-pointer">
-            Audience
+            Audience Growth
         </li>
         <li class="hover:border-b-2 hover:border-gray-300 p-2 cursor-pointer">
-            Trends
+            Engagement Trends
         </li>
     </ul>
     <div class="relative pb-2">
         <div class="flex gap-6 cursor-pointer dropdownButton">
-            <div class="text-xs hidden sm:block"> {{start_date}} - {{end_date|date:'M. d, Y'}} <div class="text-sm">Last {{days}} days</div>
+            <div class="text-xs hidden sm:block"> 
+                {{start_date}} - {{end_date|date:'M. d, Y'}} 
+                <div class="text-sm">Last {{days}} days</div>
             </div>
-            <button><i class="fa fa-chevron-down p-2 rounded-full"></i></button>
+            <button><i class="fa fa-chevron-down p-2 rounded-full hover:bg-gray-100"></i></button>
         </div>
         <!-- Dropdown Menu -->
-        <div class="dropdownMenu absolute right-0 w-48 z-40 bg-white border border-gray-200 rounded-lg shadow-lg hidden"
-            id="dropdownMenu">
+        <div class="dropdownMenu absolute right-0 w-48 z-40 bg-white border border-gray-200 rounded-lg shadow-lg hidden">
             <ul class="py-1">
-                <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=7">
-                        Last 7 days
-                    </a>
-                </li>
-                <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=28">
-                        Last 28 days
-                    </a>
-                </li>
-                <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=90">
-                        Last 90 days
-                    </a>
-                </li>
-                <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=365">
-                        Last 365 days
-                    </a>
-                </li>
-                <li class="border-b">
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="#">
-                        Lifetime
-                    </a>
-                </li>
-                <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="#">
-                        2024
-                    </a>
-                </li>
-                <li class="border-b">
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="#">
-                        2025
-                    </a>
-                </li>
-                <li>
-                    <a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="#">
-                        Custom
-                    </a>
-                </li>
+                <li><a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=7">Last 7 days</a></li>
+                <li><a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=28">Last 28 days</a></li>
+                <li><a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=90">Last 90 days</a></li>
+                <li><a class="block px-4 py-2 text-gray-700 hover:bg-gray-100" href="{% url 'author:author_analytics' %}?days=365">Last 365 days</a></li>
             </ul>
         </div>
     </div>
 </div>
-<div class="flex flex-col sm:flex-row gap-4">
-    <div class="sm:w-9/12">
-        <div class="text-center text-xl sm:text-3xl font-medium py-6">
-            Your channel got {{views.count}} reads in last {{days}} days
-        </div>
-        <div class="border rounded-xl">
-            <div class="grid grid-cols-3">
-                <div class="text-center border-r space-y-2 my-2 p-2 cursor-pointer" onclick="showReadsChart()">
-                    <div class="text-sm">Reads</div>
-                    <div class="text-xl">{{views.count}} <i class="fa fa-circle-arrow-down text-gray-400"></i></div>
-                </div>
-                <div class="text-center border-r space-y-2 my-2 p-2 cursor-pointer bg-gray-50">
-                    <div class="text-sm">Reading time(hours)</div>
-                    <div class="text-xl">{{user.userprofile.get_total_reading_time}} <i class="fa fa-circle-arrow-down text-gray-400"></i></div>
-                </div>
-                <div class="text-center space-y-2 my-2 p-2 cursor-pointer bg-gray-50" onclick="showFollwerChart()">
-                    <div class="text-sm">Subscribers</div>
-                    <div class="text-xl">+{{user.followers_users.count}} <i class="fa fa-circle-arrow-down text-gray-400"></i></div>
-                </div>
-            </div>
-            <div>
-                <canvas class="h-72 px-6" id="myChart"></canvas>
-            </div>
-            <div class="hidden">
-                <canvas class="h-72 px-6" id="follower_chart"></canvas>
 
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Chart Area -->
+    <div class="lg:col-span-2">
+        <!-- Chart Controls -->
+        <div class="chart-container mb-6">
+            <div class="chart-header">
+                <h3 class="chart-title">Performance Overview</h3>
+                <div class="chart-controls">
+                    <button onclick="showChart('views')" id="viewsBtn" class="chart-toggle-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-100 text-blue-700">
+                        <i class="fas fa-eye mr-2"></i>Views
+                    </button>
+                    <button onclick="showChart('unique_viewers')" id="uniqueViewersBtn" class="chart-toggle-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                        <i class="fas fa-users mr-2"></i>Unique Viewers
+                    </button>
+                    <button onclick="showChart('followers')" id="followersBtn" class="chart-toggle-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                        <i class="fas fa-user-plus mr-2"></i>New Followers
+                    </button>
+                    <button onclick="showChart('cumulative_followers')" id="cumulativeFollowersBtn" class="chart-toggle-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                        <i class="fas fa-chart-line mr-2"></i>Total Followers
+                    </button>
+                </div>
             </div>
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <button class="py-2 px-4 mx-6 my-3 rounded-full bg-gray-100 hover:bg-gray-200 font-medium text-sm">See
-                more</button>
+            <div class="h-96">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Content Performance Breakdown -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">Content Performance by Type</h3>
+            </div>
+            <div class="content-comparison-grid mb-6">
+                <div class="comparison-item" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                    <div class="comparison-value text-blue-600">{{content_comparison.books.views}}</div>
+                    <div class="comparison-label">Book Views</div>
+                    <div class="comparison-meta">{{content_comparison.books.content_count}} books</div>
+                </div>
+                <div class="comparison-item" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+                    <div class="comparison-value text-green-600">{{content_comparison.news.views}}</div>
+                    <div class="comparison-label">News Views</div>
+                    <div class="comparison-meta">{{content_comparison.news.content_count}} articles</div>
+                </div>
+                <div class="comparison-item" style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);">
+                    <div class="comparison-value text-purple-600">{{content_comparison.travel.views}}</div>
+                    <div class="comparison-label">Travel Views</div>
+                    <div class="comparison-meta">{{content_comparison.travel.content_count}} stories</div>
+                </div>
+            </div>
+            <div class="h-64">
+                <canvas id="contentComparisonChart"></canvas>
+            </div>
         </div>
     </div>
-    <div class="sm:w-3/12">
-        <div class="border rounded-xl my-4 p-2 px-4">
-            <div class="font-bold text-lg">Realtime</div>
-            <div class="text-sm font-light">Updating live</div>
-            <hr class="my-4" />
-            <div class="font-bold text-lg">{{user.userprofile.followers.count }}</div>
-            <div class="text-sm font-light">Subscribers</div>
-            <button class="py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-full font-medium text-sm my-2">See
-                live count</button>
-            <hr class="my-2" />
-            <div class="font-medium text-lg">0</div>
-            <div class="text-sm font-light">Reads - last 48 hours</div>
-            <button class="py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-full font-medium text-sm my-2">See
-                more</button>
-        </div>
-        <!-- <div class="border rounded-xl my-4 p-2 px-4">
-            <h3 class="text-lg font-bold mb-2">Latest Book Performance</h3>
-            <div class="space-y-2">
-                <img alt="Latest Video" class="w-48 h-64 rounded-md" src="{% static 'book images/img1.jpg' %}" />
-                <p class="text-gray-600">First 30 days 2 hours</p>
-                <ul class="text-sm space-y-2 py-4 border-b">
-                    <li class="flex justify-between">
-                        <div>Reads</div>
-                        <div>2</div>
-                    </li>
-                    <li class="flex justify-between">
-                        <div>Average percentage viewed</div>
-                        <div>11.9%</div>
-                    </li>
-                    <li class="flex justify-between">
-                        <div>Likes</div>
-                        <div>25</div>
-                    </li>
-                </ul>
-                <div class="flex justify-between">
-                    <button class="fa fa-chevron-left"></button>
-                    <div class="text-sm">1 of 10</div>
-                    <button class="fa fa-chevron-right"></button>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+        <!-- Real-time Stats -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h3 class="text-lg font-semibold mb-4">Real-time</h3>
+            <div class="text-sm text-gray-600 mb-4">Updating live</div>
+            <div class="space-y-4">
+                <div class="analytics-metric">
+                    <div>
+                        <div class="metric-value">{{follower_analytics.summary.total_followers}}</div>
+                        <div class="metric-label">Total Followers</div>
+                    </div>
+                    <div class="metric-icon bg-purple-100">
+                        <i class="fas fa-users text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="analytics-metric">
+                    <div>
+                        <div class="metric-value" id="recent24hViews">{{views_analytics.summary.total_views}}</div>
+                        <div class="metric-label">Total Views ({{days}} days)</div>
+                    </div>
+                    <div class="metric-icon bg-blue-100">
+                        <i class="fas fa-eye text-blue-600"></i>
+                    </div>
                 </div>
             </div>
-        </div> -->
+            <button class="w-full mt-4 py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium">
+                <i class="fas fa-chart-bar mr-2"></i>View Live Dashboard
+            </button>
+        </div>
+
+        <!-- Top Performing Content -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h3 class="text-lg font-semibold mb-4">Top Performing Content</h3>
+            <div class="space-y-3">
+                {% for content_type, items in top_content.items %}
+                    {% if items %}
+                        <div class="text-sm font-medium text-gray-700 mb-2 capitalize">{{content_type}}</div>
+                        {% for item in items|slice:":3" %}
+                            <div class="top-content-item">
+                                <div class="flex-1">
+                                    <div class="content-title">{{item.title|truncatechars:25}}</div>
+                                    <div class="content-meta">{{item.views}} views</div>
+                                </div>
+                                <div class="content-views">{{item.views}}</div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <a href="{% url 'author:author_content' 'books' %}" class="quick-action-btn btn-primary mt-4">
+                <i class="fas fa-list mr-2"></i>View All Content
+            </a>
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h3 class="text-lg font-semibold mb-4">Performance Insights</h3>
+            <div class="space-y-3">
+                <div class="performance-insight">
+                    <div class="insight-title">Growth Trend</div>
+                    <div class="insight-text">
+                        {% if follower_analytics.summary.growth_rate > 5 %}
+                            Excellent growth! Your follower count is increasing rapidly.
+                        {% elif follower_analytics.summary.growth_rate > 0 %}
+                            Steady growth in your audience. Keep up the good work!
+                        {% else %}
+                            Focus on creating engaging content to boost growth.
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="performance-insight">
+                    <div class="insight-title">Content Strategy</div>
+                    <div class="insight-text">
+                        {% if content_comparison.books.views > content_comparison.news.views %}
+                            Your books are performing better than news articles.
+                        {% elif content_comparison.news.views > content_comparison.books.views %}
+                            Your news articles are getting more engagement.
+                        {% else %}
+                            You have balanced performance across content types.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{% static 'js/chart_data.js' %}"></script>
+<script src="{% static 'js/analytics-dashboard.js' %}"></script>
 <script>
-    render_chart('myChart', JSON.parse('{{labels|safe}}'), JSON.parse('{{data|safe}}'), 'Reads');
-    render_chart('follower_chart', JSON.parse('{{follower_entries_labels|safe}}'), JSON.parse('{{follower_entries_data|safe}}'), 'Followers')
-    document.addEventListener('onload', () => {
-        let chart1 = document.getElementById('myChart')
-        let chart2 = document.getElementById('follower_chart')
-        chart2.classList.add('hidden')
+    // Chart data
+    const chartData = {
+        views: {
+            labels: {{views_labels|safe}},
+            data: {{views_data|safe}},
+            label: 'Views',
+            color: 'rgba(59, 130, 246, 1)',
+            bgColor: 'rgba(59, 130, 246, 0.1)'
+        },
+        unique_viewers: {
+            labels: {{views_labels|safe}},
+            data: {{unique_viewers_data|safe}},
+            label: 'Unique Viewers',
+            color: 'rgba(16, 185, 129, 1)',
+            bgColor: 'rgba(16, 185, 129, 0.1)'
+        },
+        followers: {
+            labels: {{follower_labels|safe}},
+            data: {{follower_data|safe}},
+            label: 'New Followers',
+            color: 'rgba(139, 92, 246, 1)',
+            bgColor: 'rgba(139, 92, 246, 0.1)'
+        },
+        cumulative_followers: {
+            labels: {{follower_labels|safe}},
+            data: {{cumulative_followers_data|safe}},
+            label: 'Total Followers',
+            color: 'rgba(245, 101, 101, 1)',
+            bgColor: 'rgba(245, 101, 101, 0.1)'
+        }
+    };
+
+    // Initialize main chart
+    let mainChart = render_chart('mainChart', 
+        chartData.views.labels, 
+        chartData.views.data, 
+        chartData.views.label,
+        {
+            borderColor: chartData.views.color,
+            backgroundColor: chartData.views.bgColor
+        }
+    );
+
+    // Register chart with dashboard
+    if (window.analyticsDashboard) {
+        window.analyticsDashboard.registerChart('main', mainChart);
+    }
+
+    // Content comparison chart
+    const contentComparisonData = {
+        labels: ['Books', 'News', 'Travel Stories'],
+        datasets: [{
+            data: [
+                {{content_comparison.books.views}},
+                {{content_comparison.news.views}},
+                {{content_comparison.travel.views}}
+            ],
+            backgroundColor: [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(139, 92, 246, 0.8)'
+            ],
+            borderWidth: 0
+        }]
+    };
+
+    render_comparison_chart('contentComparisonChart', contentComparisonData, {
+        type: 'doughnut',
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    });
+
+    // Chart switching functionality
+    function showChart(chartType) {
+        const data = chartData[chartType];
         
-    })
-    function showFollwerChart(){
-        let chart1 = document.getElementById('myChart')
-        let chart2 = document.getElementById('follower_chart')
-        chart1.parentElement.classList.add('hidden')
-        chart2.parentElement.classList.remove('hidden')
+        // Update chart
+        mainChart.data.labels = data.labels;
+        mainChart.data.datasets[0].data = data.data;
+        mainChart.data.datasets[0].label = data.label;
+        mainChart.data.datasets[0].borderColor = data.color;
+        mainChart.data.datasets[0].backgroundColor = data.bgColor;
+        mainChart.update();
+        
+        // Update button states
+        document.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-blue-100', 'text-blue-700');
+            btn.classList.add('bg-gray-100', 'text-gray-700');
+        });
+        
+        const activeBtn = document.getElementById(chartType + 'Btn') || document.getElementById(chartType.replace('_', '') + 'Btn');
+        if (activeBtn) {
+            activeBtn.classList.remove('bg-gray-100', 'text-gray-700');
+            activeBtn.classList.add('active', 'bg-blue-100', 'text-blue-700');
+        }
     }
-    function showReadsChart(){
-        let chart1 = document.getElementById('myChart')
-        let chart2 = document.getElementById('follower_chart')
-        chart2.parentElement.classList.add('hidden')
-        chart1.parentElement.classList.remove('hidden')
-    }
+
+    // Dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdownButton = document.querySelector('.dropdownButton');
+        const dropdownMenu = document.querySelector('.dropdownMenu');
+        
+        if (dropdownButton && dropdownMenu) {
+            dropdownButton.addEventListener('click', function() {
+                dropdownMenu.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!dropdownButton.contains(event.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}

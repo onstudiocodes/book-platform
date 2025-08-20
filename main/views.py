@@ -35,18 +35,18 @@ def get_books_queryset(sort_type):
     if sort_type == 'trending':
         # For trending, prioritize books with higher views but include all books
         # This ensures we always have content while showing most viewed first
-        return base_queryset.order_by('-views', '-published_date')
+        return base_queryset.order_by('-views', '-created_at')
     elif sort_type == 'recent':
-        return base_queryset.order_by('-published_date')
+        return base_queryset.order_by('-created_at')
     elif sort_type == 'popular':
         # For popular, prioritize books with more likes but include all books
         # This ensures we always have content while showing most liked first
         return base_queryset.annotate(
             like_count=Count('likes')
-        ).order_by('-like_count', '-views', '-published_date')
+        ).order_by('-like_count', '-views', '-created_at')
     else:  # recommended/default
         # Use a deterministic but varied ordering instead of random
-        return base_queryset.order_by('-published_date')
+        return base_queryset.order_by('-created_at')
 
 
 def index(request):
@@ -155,7 +155,7 @@ def load_more_data(request):
 
 def get_news_items():
     """Get news items for homepage"""
-    return News.objects.select_related('author', 'author__userprofile').order_by('-published_date')
+    return News.objects.select_related('author', 'author__userprofile').order_by('-created_at')
 
 @csrf_exempt
 @login_required
@@ -194,12 +194,12 @@ def profile(request, username):
         'author', 'author__userprofile'
         ).prefetch_related(
             'readinglist_set'
-        ).order_by('-published_date')
+        ).order_by('-created_at')
     news = News.objects.filter(author__username=username).select_related(
         'author', 'author__userprofile'
     ).prefetch_related(
         'images', 'category'
-    ).order_by('-published_date')[:5]
+    ).order_by('-created_at')[:5]
     travel_story = TravelStory.objects.filter(author__username=username).select_related(
         'author', 'author__userprofile'
     ).order_by('-created_at')[:5]

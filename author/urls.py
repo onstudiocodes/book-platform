@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, api_views
 
 app_name = 'author'
 
@@ -29,5 +29,9 @@ urlpatterns = [
     path('delete-news-image/<int:image_id>/', views.delete_news_image, name="delete_news_image"),
     path('delete-travel-image/<int:image_id>/', views.delete_travel_image, name="delete_travel_image"),
     path('update-session-key/', views.update_session_key, name='update_session_key'),
-
+    
+    # API endpoints for enhanced analytics
+    path('api/analytics/', api_views.analytics_api, name="analytics_api"),
+    path('api/realtime-stats/', api_views.realtime_stats, name="realtime_stats"),
+    path('api/content-performance/', api_views.content_performance_api, name="content_performance_api"),
 ]

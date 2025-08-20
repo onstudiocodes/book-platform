@@ -14,7 +14,7 @@ def debug_pagination():
     
     # Test trending order
     print("\n1. Testing trending order (first 15 books):")
-    books = Book.objects.order_by('-views', '-published_date')[:15]
+    books = Book.objects.order_by('-views', '-created_at')[:15]
     for i, book in enumerate(books):
         cursor = generate_cursor(book, 'trending')
         print(f'{i+1:2d}. {book.title[:30]:30} | Views: {book.views:3d} | ID: {book.id}')
@@ -27,7 +27,7 @@ def debug_pagination():
             print(f"    Parsed cursor data: {cursor_data}")
             
             # Apply cursor pagination
-            queryset = Book.objects.order_by('-views', '-published_date')
+            queryset = Book.objects.order_by('-views', '-created_at')
             filtered_queryset = apply_cursor_pagination(queryset, 'trending', cursor_data)
             next_books = list(filtered_queryset[:5])
             

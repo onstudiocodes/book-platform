@@ -12,45 +12,78 @@
     </tr>
 </thead>
 <tbody>          
-    {% for book in books %}
+    {% for item in books %}
     <tr class="bg-white border-b align-top text-xs">
         <th class="px-6 py-4 font-medium text-gray-900 flex gap-3 border-r" scope="col">
-            <input id="select-{{book.id}}" class="select" name="" type="checkbox" />
-            <img alt="" class="h-20 w-12 object-cover" src="{{book.thumbnail.url}}" />
+            <input id="select-{{item.id}}" class="select" name="" type="checkbox" />
+            {% if content_type == 'books' %}
+                {% if item.thumbnail %}
+                    <img alt="" class="h-20 w-12 object-cover" src="{{item.thumbnail.url}}" />
+                {% else %}
+                    <div class="h-20 w-12 bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-book text-gray-400"></i>
+                    </div>
+                {% endif %}
+            {% else %}
+                {% if item.get_thumbnail %}
+                    <img alt="" class="h-20 w-12 object-cover" src="{{item.get_thumbnail.url}}" />
+                {% else %}
+                    <div class="h-20 w-12 bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-newspaper text-gray-400"></i>
+                    </div>
+                {% endif %}
+            {% endif %}
             <div class="text-sm cursor-pointer"
             {% if content_type == 'books' %}
-                onclick="location.href=`{% url 'author:content_details' 'books' book.slug %}`"
+                onclick="location.href=`{% url 'author:content_details' 'books' item.slug %}`"
             {% else %}
-                onclick="location.href=`{% url 'author:content_details' 'news' book.slug %}`"
+                onclick="location.href=`{% url 'author:content_details' 'news' item.slug %}`"
             {% endif %}
                 >
 
-                <div class="font-bold">{{book.title}}</div>
+                <div class="font-bold">{{item.title}}</div>
                 <div class="text-gray-600 description">
-                    {{book.description}}
+                    {{item.description}}
                 </div>
             </div>
         </th>
         <td class="px-2 py-6 whitespace-nowrap">
-            <select name="" id="" data-book-id="{{book.id}}"
-                class="block p-1 rounded visibility-toggle cursor-pointer">
-                <option value="Public" {% if book.status == 'Public' %} selected {% endif %}>Public</option>
-                <option value="Private" {% if book.status == 'Private' %} selected {% endif %}>Private</option>
-            </select>
+            {% if content_type == 'books' %}
+                <select name="" id="" data-book-id="{{item.id}}"
+                    class="block p-1 rounded visibility-toggle cursor-pointer">
+                    <option value="Public" {% if item.status == 'Public' %} selected {% endif %}>Public</option>
+                    <option value="Private" {% if item.status == 'Private' %} selected {% endif %}>Private</option>
+                </select>
+            {% else %}
+                <div class="p-1 rounded text-center">
+                    {% if item.publish %}
+                        <span class="text-green-600 font-medium">Published</span>
+                    {% else %}
+                        <span class="text-yellow-600 font-medium">Draft</span>
+                    {% endif %}
+                </div>
+            {% endif %}
         </td>
         <td class="px-2 py-6">None</td>
         <td class="px-2 py-4 whitespace-nowrap">
             <div class="">
-                <div class="font-bold">{{book.published_date|date:'M d, Y'}}</div>
+                <div class="font-bold">{{item.created_at|date:'M d, Y'}}</div>
                 <div class="text-gray-600">Published</div>
             </div>
         </td>
-        <td class="px-2 py-4 text-end">{{book.views}}</td>
-        <td class="px-2 py-4 text-end">{{book.comments.count}}</td>
+        <td class="px-2 py-4 text-end">{{item.views}}</td>
+        <td class="px-2 py-4 text-end">{{item.comments.count}}</td>
         <td class="px-2 py-4 text-end">
             <div class="text-sm">
-                <div class="font-bold">100%</div>
-                <div class="text-gray-600">{{book.likes.count}} Likes</div>
+                {% with total_votes=item.likes.count|add:item.dislikes.count %}
+                    {% if total_votes > 0 %}
+                        {% widthratio item.likes.count total_votes 100 as like_percentage %}
+                        <div class="font-bold">{{like_percentage}}%</div>
+                    {% else %}
+                        <div class="font-bold">--</div>
+                    {% endif %}
+                {% endwith %}
+                <div class="text-gray-600">{{item.likes.count}} Likes</div>
             </div>
         </td>
     </tr>

@@ -24,7 +24,7 @@ def get_optimized_book_queryset():
             to_attr='like_users'
         )
     ).only(
-        'id', 'title', 'slug', 'description', 'views', 'published_date',
+        'id', 'title', 'slug', 'description', 'views', 'created_at',
         'thumbnail', 'author__username', 'author__userprofile__full_name',
         'author__userprofile__profile_picture', 'category__name'
     )
@@ -76,8 +76,8 @@ def apply_cursor_pagination(queryset, sort_type, cursor_data):
                 )
                 return queryset.filter(
                     Q(views__lt=cursor_data['views']) |
-                    (Q(views=cursor_data['views']) & Q(published_date__lt=timestamp_dt)) |
-                    (Q(views=cursor_data['views']) & Q(published_date=timestamp_dt) & Q(id__lt=cursor_data['id']))
+                    (Q(views=cursor_data['views']) & Q(created_at__lt=timestamp_dt)) |
+                    (Q(views=cursor_data['views']) & Q(created_at=timestamp_dt) & Q(id__lt=cursor_data['id']))
                 )
         
         elif sort_type == 'popular':
@@ -90,8 +90,8 @@ def apply_cursor_pagination(queryset, sort_type, cursor_data):
                 ).filter(
                     Q(like_count__lt=cursor_data['like_count']) |
                     (Q(like_count=cursor_data['like_count']) & Q(views__lt=cursor_data['views'])) |
-                    (Q(like_count=cursor_data['like_count']) & Q(views=cursor_data['views']) & Q(published_date__lt=timestamp_dt)) |
-                    (Q(like_count=cursor_data['like_count']) & Q(views=cursor_data['views']) & Q(published_date=timestamp_dt) & Q(id__lt=cursor_data['id']))
+                    (Q(like_count=cursor_data['like_count']) & Q(views=cursor_data['views']) & Q(created_at__lt=timestamp_dt)) |
+                    (Q(like_count=cursor_data['like_count']) & Q(views=cursor_data['views']) & Q(created_at=timestamp_dt) & Q(id__lt=cursor_data['id']))
                 )
         
         else:  # recent and recommended
@@ -100,8 +100,8 @@ def apply_cursor_pagination(queryset, sort_type, cursor_data):
                     cursor_data['timestamp'], tz=timezone.get_current_timezone()
                 )
                 return queryset.filter(
-                    Q(published_date__lt=timestamp_dt) |
-                    (Q(published_date=timestamp_dt) & Q(id__lt=cursor_data['id']))
+                    Q(created_at__lt=timestamp_dt) |
+                    (Q(created_at=timestamp_dt) & Q(id__lt=cursor_data['id']))
                 )
     
     except (ValueError, TypeError):
@@ -171,12 +171,12 @@ def generate_cursor(book, sort_type):
     """
     try:
         if sort_type == 'trending':
-            return f"{book.views}_{book.published_date.timestamp()}_{book.id}"
+            return f"{book.views}_{book.created_at.timestamp()}_{book.id}"
         elif sort_type == 'popular':
             like_count = getattr(book, 'like_count', 0)
-            return f"{like_count}_{book.views}_{book.published_date.timestamp()}_{book.id}"
+            return f"{like_count}_{book.views}_{book.created_at.timestamp()}_{book.id}"
         else:  # recent and recommended
-            return f"{book.published_date.timestamp()}_{book.id}"
+            return f"{book.created_at.timestamp()}_{book.id}"
     except AttributeError:
         return ''
 
@@ -241,7 +241,7 @@ def get_book_suggestions(book, limit=15):
             author=book.author
         ).exclude(
             id__in=[s.id for s in suggestions]
-        ).order_by('-published_date')[:limit//3])
+        ).order_by('-created_at')[:limit//3])
         suggestions.extend(author_books)
         
         # Fill remaining with popular books

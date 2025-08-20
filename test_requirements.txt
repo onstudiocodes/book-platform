@@ -17,9 +17,6 @@ djangorestframework-simplejwt>=5.0.0  # If using JWT authentication
 # Image testing
 Pillow>=9.0.0       # For image processing in tests (already in requirements)
 
-# Performance testing
-django-silk>=5.0.0  # For profiling (already in requirements)
-
 # Mock utilities (included with Python 3.3+)
 # unittest.mock
 

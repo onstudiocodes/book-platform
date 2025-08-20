@@ -286,7 +286,7 @@
             <div class="py-2">
               <div class="font-medium">{{ item.title }}</div>
               <a href="{% url 'main:profile' book.author.username %}" class="text-xs text-gray-500 hover:text-blue-400">{{ item.author.userprofile.full_name }}</a>
-              <div class="text-xs font-thin">{{ item.views }} views • {{ item.published_date|timesince }} ago</div>
+              <div class="text-xs font-thin">{{ item.views }} views • {{ item.created_at|timesince }} ago</div>
             </div>
           </div>
 

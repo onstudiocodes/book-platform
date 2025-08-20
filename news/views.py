@@ -13,11 +13,11 @@ from main.serializers import CommentSerializer
 # Create your views here.
 def home(request):
     categories = NewsCategory.objects.annotate(news_count=Count('news')).order_by('-news_count')
-    recent_news = News.objects.order_by('-published_date')[:2]
+    recent_news = News.objects.order_by('-created_at')[:2]
     trending_news = News.objects.annotate(views_count=Count('news_views')).order_by('-views_count')[:3]
     
     # Add pagination for news list
-    all_news = News.objects.order_by('-published_date')
+    all_news = News.objects.order_by('-created_at')
     paginator = Paginator(all_news, 10)  # 10 news items per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -92,7 +92,7 @@ class NewsPagination(PageNumberPagination):
     max_page_size = 100
 
 class NewsListCreateView(generics.ListCreateAPIView):
-    queryset = News.objects.select_related('author', 'author__userprofile').prefetch_related('likes', 'dislikes', 'images', 'comments').order_by('-published_date')
+    queryset = News.objects.select_related('author', 'author__userprofile').prefetch_related('likes', 'dislikes', 'images', 'comments').order_by('-created_at')
     serializer_class = NewsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = NewsPagination 
@@ -115,7 +115,7 @@ class NewsListCreateView(generics.ListCreateAPIView):
             dislikes_count=Count('dislikes', distinct=True),
             comments_count=Count('comments', distinct=True),
             views_count=Count('news_views', distinct=True)
-        ).order_by('-published_date')
+        ).order_by('-created_at')
 
         exclude_id = self.request.query_params.get('exclude')
         if exclude_id and exclude_id.isdigit():

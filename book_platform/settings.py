@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'django_ckeditor_5',
     'django_cleanup',
     'rest_framework',
-    'silk'
 ]
 
 MIDDLEWARE = [
@@ -58,7 +57,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'silk.middleware.SilkyMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 

@@ -103,7 +103,7 @@
                     {% endif %}
                 </div>
                 <div class="text-right text-sm text-gray-500">
-                    <p>Published: {{ obj.published_date|date:"M d, Y" }}</p>
+                    <p>Published: {{ obj.created_at|date:"M d, Y" }}</p>
                     <p>Updated: {{ obj.updated_date|date:"M d, Y g:i A" }}</p>
                 </div>
             </div>
@@ -233,10 +233,10 @@
                 <button type="button" id="cancel-edit-btn" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                     Cancel
                 </button>
-                <button type="submit" name="draft" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                <button type="button" onclick="submitNewsFormWithCKEditor('draft')" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                     Save as Draft
                 </button>
-                <button type="submit" name="publish" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center">
+                <button type="button" onclick="submitNewsFormWithCKEditor('publish')" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
@@ -249,6 +249,40 @@
 
 <!-- JavaScript for handling edit mode and file uploads -->
 <script>
+// Function to submit news form with CKEditor content sync and action type
+function submitNewsFormWithCKEditor(actionType) {
+    // Update CKEditor instances before submission
+    if (window.CKEDITOR) {
+        for (let instance in CKEDITOR.instances) {
+            CKEDITOR.instances[instance].updateElement();
+        }
+    }
+    
+    // For CKEditor 5, sync all instances
+    if (window.ClassicEditor) {
+        document.querySelectorAll('.ck-editor__editable').forEach(function(editableElement) {
+            const editorInstance = editableElement.ckeditorInstance;
+            if (editorInstance) {
+                const textarea = document.querySelector(`[data-ckeditor="${editableElement.getAttribute('data-ckeditor')}"]`);
+                if (textarea) {
+                    textarea.value = editorInstance.getData();
+                }
+            }
+        });
+    }
+    
+    // Create and add hidden input for action type
+    const form = document.getElementById('content-update-form');
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = actionType;
+    actionInput.value = 'true';
+    form.appendChild(actionInput);
+    
+    // Submit the form
+    form.submit();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const editModeBtn = document.getElementById('edit-mode-btn');
     const previewModeBtn = document.getElementById('preview-mode-btn');

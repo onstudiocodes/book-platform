@@ -89,10 +89,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Disable Django Silk profiling during tests
-if 'silk' in INSTALLED_APPS:
-    INSTALLED_APPS.remove('silk')
-
 # Test file upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 5  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 10  # 10MB

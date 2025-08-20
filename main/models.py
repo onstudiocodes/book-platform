@@ -25,7 +25,7 @@ class Book(models.Model):
     language = models.CharField(max_length=50, default="default")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='books')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='books', blank=True, null=True)
-    published_date = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_date = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_books', blank=True)
     dislikes = models.ManyToManyField(User, related_name='disliked_books', blank=True)
@@ -37,12 +37,12 @@ class Book(models.Model):
     public_objects = PublicBookManager()
 
     class Meta:
-        ordering = ['-published_date']
+        ordering = ['-created_at']
         indexes = [
             models.Index(fields=['-views'], name='book_views_desc_idx'),
-            models.Index(fields=['-published_date'], name='book_published_desc_idx'),
+            models.Index(fields=['-created_at'], name='book_published_desc_idx'),
             models.Index(fields=['status', '-views'], name='book_status_views_idx'),
-            models.Index(fields=['status', '-published_date'], name='book_status_published_idx'),
+            models.Index(fields=['status', '-created_at'], name='book_status_published_idx'),
         ]
 
     def __str__(self):
@@ -105,7 +105,7 @@ class News(models.Model):
     content = CKEditor5Field(config_name="extends") 
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
     category = models.ForeignKey(NewsCategory, on_delete=models.CASCADE, related_name='news', blank=True, null=True)
-    published_date = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_date = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_news', blank=True)
     dislikes = models.ManyToManyField(User, related_name='disliked_news', blank=True)
@@ -113,10 +113,10 @@ class News(models.Model):
     publish = models.BooleanField(default=False)
     
     class Meta:
-        ordering = ['-published_date']
+        ordering = ['-created_at']
         indexes = [
             models.Index(fields=['-views'], name='news_views_desc_idx'),
-            models.Index(fields=['-published_date'], name='news_published_desc_idx'),
+            models.Index(fields=['-created_at'], name='news_published_desc_idx'),
         ]
     
     def __str__(self):

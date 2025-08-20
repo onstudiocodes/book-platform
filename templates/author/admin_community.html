@@ -63,7 +63,7 @@ Community
                 {% endif %}
                 <div class="text-sm whitespace-nowrap">
                     <div>{{comment.book.title}}</div>
-                    <div>{{comment.book.published_date|date:'M d, Y'}}</div>
+                    <div>{{comment.book.created_at|date:'M d, Y'}}</div>
                 </div>
                 <button class="p-2 hover:bg-gray-200 rounded-full" onclick="location.href=`{% url 'main:book_view' comment.book.slug %}`">
                     <i class="fa fa-up-right-from-square h-5 w-5"></i>

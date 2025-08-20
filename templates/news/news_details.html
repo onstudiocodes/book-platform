@@ -96,7 +96,7 @@ News
                             <h1 class="text-3xl font-bold mb-4">{{news.title}}</h1>
                             <div class="flex items-center text-gray-600">
                                 <span class="mr-4">Posted by <span class="font-semibold">{{news.author.userprofile.full_name}}</span></span>
-                                <span><i class="far fa-clock mr-1"></i> {{news.published_date|time_since}}</span>
+                                <span><i class="far fa-clock mr-1"></i> {{news.created_at|time_since}}</span>
                             </div>
                         </header>
 
