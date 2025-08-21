@@ -13,7 +13,7 @@ Earn
     <div class="my-4">
         <div class="text-xl font-bold">Become a partner</div>
         <div class="text-neutral-500 text-sm font-medium">
-            Join the YouTube Partner Program to earn money, get creator support, and more.
+            Join the Poroon Partner Program to earn money, get creator support, and more.
         </div>
 
 
@@ -47,14 +47,14 @@ Earn
                 <div class="text-xs font-medium text-neutral-500 my-1">Showing data as of: {% now "M d, Y" %}</div>
 
                 <!-- custom progress bar -->
-                <div class="bg-gray-200 h-2 rounded-full overflow-hidden my-2">
+                {% comment %} <div class="bg-gray-200 h-2 rounded-full overflow-hidden my-2">
                     <div class="bg-blue-700 h-full" style="width: {{follower_progress}}%;"></div>
                 </div>
                 <div class="flex justify-between my-2">
                     <div class="text-sm">{{user.followers_users.count}} Subscribers</div>
                     <div class="text-neutral-500">1000</div>
                 </div>
-                <div class="text-xs text-center my-4 font-bold">and the following</div>
+                <div class="text-xs text-center my-4 font-bold">and the following</div> {% endcomment %}
                      {% comment %} custom progress bar {% endcomment %}
                 <div class="bg-gray-200 h-2 rounded-full overflow-hidden my-2">
                     <div class="bg-blue-700 h-full" style="width: {{reader_progress}}%;"></div>

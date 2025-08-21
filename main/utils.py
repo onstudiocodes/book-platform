@@ -457,7 +457,7 @@ def generate_book_pdf(book, width_px=270, height_px=480):
     # Create in-memory buffer
     pdf_buffer = BytesIO()
 
-    # Define custom page size (e.g., 270x480 px for mobile-like view)
+    # Define custom page size and justified text
     custom_css = CSS(string=f'''
         @page {{
             size: {width_px}px {height_px}px;
@@ -468,6 +468,7 @@ def generate_book_pdf(book, width_px=270, height_px=480):
             font-family: "Arial", sans-serif;
             font-size: 20px;
             line-height: 1.4;
+            text-align: justify;
         }}
 
         h1, h2, h3 {{
@@ -480,7 +481,6 @@ def generate_book_pdf(book, width_px=270, height_px=480):
     pdf_buffer.seek(0)
 
     return pdf_buffer
-
 
 def time_since_custom(dt):
     """

@@ -1,0 +1,608 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}
+  {{ story.title }}
+{% endblock %}
+{% block header %}
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .prose img {
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        .ad-container {
+            position: sticky;
+            top: 20px;
+        }
+        @media (max-width: 1023px) {
+            .ad-container {
+                display: none;
+            }
+        }
+    </style>
+{% endblock %}
+{% block content %}
+ <!-- Single Tour Page Demo -->
+    <div class="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+        <!-- Main Content -->
+        <div class="flex-1">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <!-- Post Header -->
+                <div class="p-6 border-b border-gray-200">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">{{story.title}}</h1>
+                    <div class="flex items-center text-gray-600">
+                        <img onclick="location.href=`{% url 'main:profile' story.author.username %}`" src="{{story.author.userprofile.profile_picture.url}}" alt="Author" class="w-8 h-8 rounded-full mr-2">
+                        <a href="{% url 'main:profile' story.author.username %}" class="mr-4">{{story.author.userprofile.full_name}}</a>
+                        <span class="flex items-center mr-4">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{story.created_at|time_since}}
+                        </span>
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                            {{story.comments.count}} Comments
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Cover Image -->
+                <div class="relative h-96">
+                    <img src="{{story.thumbnail.url}}" alt="Post Cover" class="w-full h-full object-cover">
+                </div>
+                
+                <!-- Post Content -->
+                <div class="p-6">
+                    <div class="prose max-w-none mb-6">
+                       {{story.story|safe}}
+                    </div>
+                    
+                    <!-- Image Gallery -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Photo Gallery</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {% for img in story.images.all %}
+                            <div class="rounded-lg overflow-hidden">
+                                <img src="{{img.image.url}}" alt="Gallery Image {{ forloop.counter }}" class="gallery-image w-full h-32 md:h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-zoom-in" data-index="{{ forloop.counter0 }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Image Modal/Lightbox -->
+                    <div id="imageModal" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-md z-[1000] hidden items-center justify-center">
+                        <div class="relative max-w-7xl max-h-full mx-4">
+                            <!-- Close Button -->
+                            <button id="closeModal" class="absolute top-4 right-4 z-10 text-gray-800 hover:text-gray-600 transition-colors bg-white bg-opacity-80 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Previous Button -->
+                            <button id="prevImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-800 hover:text-gray-600 transition-colors bg-white bg-opacity-80 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Next Button -->
+                            <button id="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-gray-800 hover:text-gray-600 transition-colors bg-white bg-opacity-80 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Main Image -->
+                            <img id="modalImage" src="" alt="Gallery Image" class="w-full h-[80vh] object-cover rounded-lg shadow-2xl">
+                            
+                            <!-- Image Counter -->
+                            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-gray-800 bg-white bg-opacity-80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                                <span id="imageCounter">1 / 1</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Embed -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Video Tour</h3>
+                        <div class="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden">
+                            <iframe class="w-full h-64 md:h-96" src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    
+                    <!-- Travel Guide Section -->
+                    <div class="bg-blue-50 rounded-xl p-6 mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Travel Guide</h3>
+                        <div class="space-y-4">
+                            {{story.pro_tips}}
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex space-x-4">
+                            {% if user.is_authenticated %}
+                            <button id="like-btn" data-story-id="{{ story.id }}" data-url="{% url 'travel:toggle_travel_story_like' %}" data-op="like" class="flex items-center text-gray-700 hover:text-indigo-600 transition-colors">
+                                <svg class="w-5 h-5 mr-1" fill="{% if user in story.likes.all %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                </svg>
+                                <span id="likes-count">{{ story.likes.count }}</span> Likes
+                            </button>
+                            <button id="dislike-btn" data-story-id="{{ story.id }}" data-url="{% url 'travel:toggle_travel_story_like' %}" data-op="dislike" class="flex items-center text-gray-700 hover:text-red-600 transition-colors">
+                                <svg class="w-5 h-5 mr-1" fill="{% if user in story.dislikes.all %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.737 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v9a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714-.211-1.412-.608-2.006L17 14v-9m-7 10h2m5-9H9a2 2 0 00-2 2v6a2 2 0 002 2h2.5"></path>
+                                </svg>
+                                <span id="dislikes-count">{{ story.dislikes.count }}</span> Dislikes
+                            </button>
+                            {% else %}
+                            <span class="flex items-center text-gray-700">
+                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                </svg>
+                                {{ story.likes.count }} Likes
+                            </span>
+                            <span class="flex items-center text-gray-700 ml-4">
+                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.737 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v9a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714-.211-1.412-.608-2.006L17 14v-9m-7 10h2m5-9H9a2 2 0 00-2 2v6a2 2 0 002 2h2.5"></path>
+                                </svg>
+                                {{ story.dislikes.count }} Dislikes
+                            </span>
+                            {% endif %}
+                            <button class="flex items-center text-gray-700 hover:text-indigo-600">
+                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                Comment
+                            </button>
+                            <button class="flex items-center text-gray-700 hover:text-indigo-600">
+                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                                </svg>
+                                Save
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-500">Share:</span>
+                            <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                                <svg class="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path>
+                                </svg>
+                            </button>
+                            <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                                <svg class="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
+                                </svg>
+                            </button>
+                            <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                                <svg class="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-xl font-bold mb-4">Comments ({{ story.comments.count }})</h3>
+
+                        {% if user.is_authenticated %}
+                        <form action="{% url 'news:comments' %}" method="post" class="mb-8" id="travelstory_comment_form">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ story.id }}">
+                            <input type="hidden" name="type" value="travelstory">
+                            <input type="hidden" name="user" value="{{request.user.id}}" id="">
+
+
+                            <div class="flex items-start space-x-4">
+                                <img src="{{user.userprofile.profile_picture.url}}" alt="User" class="w-10 h-10 rounded-full">
+                                <div class="flex-1">
+                                    <textarea name="content" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Share your thoughts..."></textarea>
+                                    <div class="mt-2 flex justify-end">
+                                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                            Post Comment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="text-red-600">Please login first to add comment.</div>
+                        {% endif %}
+
+                        <script>
+                            let travelstoryForm = document.querySelector("#travelstory_comment_form");
+
+                            function addCommentToList(comment) {
+                                // Get the comments list element when we need it
+                                let commentsList = document.querySelector("#comments-list");
+                                if (!commentsList) {
+                                    return;
+                                }
+                                
+                                // Get profile picture URL safely
+                                let profilePicture = '';
+                                if (comment.user && comment.user.userprofile && comment.user.userprofile.profile_picture) {
+                                    profilePicture = comment.user.userprofile.profile_picture;
+                                } else {
+                                    profilePicture = '/media/default_imgs/default_profile.png'; // fallback
+                                }
+
+                                // Get full name safely
+                                let fullName = '';
+                                if (comment.user && comment.user.full_name) {
+                                    fullName = comment.user.full_name;
+                                } else if (comment.user && comment.user.username) {
+                                    fullName = comment.user.username;
+                                } else {
+                                    fullName = 'Anonymous';
+                                }
+
+                                // Get username safely
+                                let username = '';
+                                if (comment.user && comment.user.username) {
+                                    username = comment.user.username;
+                                } else {
+                                    username = 'anonymous';
+                                }
+
+                                const commentHTML = `
+                                    <div class="flex space-x-4">
+                                        <img onclick="location.href='/profile/${username}/'" src="${profilePicture}" alt="User" class="w-10 h-10 rounded-full">
+                                        <div class="flex-1">
+                                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <a href="/profile/${username}/" class="font-medium capitalize text-gray-900">${fullName}</a>
+                                                    <span class="text-sm text-gray-500">just now</span>
+                                                </div>
+                                                <p class="text-gray-700 mb-3">${comment.content}.</p>
+                                                <div class="flex items-center text-sm text-gray-500">
+                                                    <button class="flex items-center hover:text-indigo-600 mr-4">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                                        </svg>
+                                                        ${comment.likes_count || 0}
+                                                    </button>
+                                                    <button class="hover:text-indigo-600">Reply</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                commentsList.insertAdjacentHTML('afterbegin', commentHTML);
+                            }
+
+                            function updateCommentsCount() {
+                                // Find the comments heading more specifically
+                                let commentsHeading = document.querySelector('.border-t.border-gray-200.pt-6 h3');
+                                if (!commentsHeading) {
+                                    // Fallback: look for h3 containing "Comments"
+                                    const allH3s = document.querySelectorAll('h3');
+                                    for (let h3 of allH3s) {
+                                        if (h3.textContent.includes('Comments')) {
+                                            commentsHeading = h3;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (commentsHeading && commentsHeading.textContent) {
+                                    const match = commentsHeading.textContent.match(/\d+/);
+                                    if (match) {
+                                        const currentCount = parseInt(match[0]);
+                                        commentsHeading.textContent = `Comments (${currentCount + 1})`;
+                                    }
+                                } else {
+                                }
+                            }
+
+                            if (travelstoryForm) {
+                                travelstoryForm.addEventListener('submit', (e) => {
+                                    e.preventDefault();
+                                    
+                                    fetch(travelstoryForm.action, {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                            'Accept': 'application/json',
+                                        },
+                                        body: new FormData(travelstoryForm)
+                                    })
+                                    .then(response => {
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        if (data && data.success) {
+                                            travelstoryForm.reset();
+                                            addCommentToList(data.comment);
+                                            updateCommentsCount();
+                                        } else {
+                                            alert(data.error || "Failed to post comment.");
+                                        }
+                                    })
+                                    .catch(error => {
+                                        alert("An error occurred. Please try again.");
+                                    });
+                                });
+                            }
+                        </script>                        
+                        <!-- Comments List -->
+                        <div class="space-y-6" id="comments-list">
+                            {% for comment in comments %}
+                            <!-- Comment 1 -->
+                            <div class="flex space-x-4">
+                                <img onclick="location.href=`{% url 'main:profile' comment.user.username %}`" src="{{comment.user.userprofile.profile_picture.url}}" alt="User" class="w-10 h-10 rounded-full">
+                                <div class="flex-1">
+                                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <a href="{% url "main:profile" comment.user.username %}" class="font-medium capitalize text-gray-900">{{comment.user.userprofile.full_name}}</a>
+                                            <span class="text-sm text-gray-500">{{comment.created_at|time_since}}</span>
+                                        </div>
+                                        <p class="text-gray-700 mb-3">{{comment.content}}.</p>
+                                        <div class="flex items-center text-sm text-gray-500">
+                                            <button class="flex items-center hover:text-indigo-600 mr-4">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                                </svg>
+                                                {{comment.likes.count}}
+                                            </button>
+                                            <button class="hover:text-indigo-600">Reply</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar with Ads -->
+        <div class="lg:w-80 space-y-6">
+            <!-- Sticky container for ads -->
+            <div class="ad-container space-y-6">
+                <!-- Ad 1 - Travel Booking -->
+                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                    <div class="text-center mb-3">
+                        <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Sponsored</span>
+                    </div>
+                    <a href="#" class="block">
+                        <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4" alt="Book your next trip" class="w-full h-40 object-cover rounded-lg mb-3">
+                        <h4 class="font-bold text-gray-900 mb-1">Book Your Next Adventure</h4>
+                        <p class="text-sm text-gray-600 mb-3">Exclusive deals on hotels and flights. Save up to 40%!</p>
+                        <button class="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Explore Deals</button>
+                    </a>
+                </div>
+
+                <!-- Ad 2 - Travel Gear -->
+                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                    <div class="text-center mb-3">
+                        <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Sponsored</span>
+                    </div>
+                    <a href="#" class="block">
+                        <img src="https://images.unsplash.com/photo-1520006403909-838d6b92c22e" alt="Travel gear" class="w-full h-40 object-cover rounded-lg mb-3">
+                        <h4 class="font-bold text-gray-900 mb-1">Essential Travel Gear</h4>
+                        <p class="text-sm text-gray-600 mb-3">Top-rated backpacks, cameras, and accessories for travelers.</p>
+                        <button class="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Shop Now</button>
+                    </a>
+                </div>
+
+                <!-- Ad 3 - Newsletter -->
+                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                    <h4 class="font-bold text-gray-900 mb-3">Travel Tips Newsletter</h4>
+                    <p class="text-sm text-gray-600 mb-4">Get weekly travel inspiration and exclusive tips straight to your inbox.</p>
+                    <form class="space-y-3">
+                        <input type="email" placeholder="Your email address" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Subscribe</button>
+                    </form>
+                    <p class="text-xs text-gray-500 mt-2">We respect your privacy. Unsubscribe at any time.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let halfMenu = false;
+        let fullMenuHide = true;
+        const sideBar = document.getElementById('sidebar')
+        const cardGrid = document.getElementById('content')
+        sideBar.classList.toggle('md:translate-x-0')
+        cardGrid.classList.remove('md:ml-64')
+
+        // Image Gallery Modal Functionality
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const imageCounter = document.getElementById('imageCounter');
+        const closeModal = document.getElementById('closeModal');
+        const prevImage = document.getElementById('prevImage');
+        const nextImage = document.getElementById('nextImage');
+        const galleryImages = document.querySelectorAll('.gallery-image');
+        
+        let currentImageIndex = 0;
+        let imageUrls = [];
+        
+        // Collect all image URLs
+        galleryImages.forEach((img, index) => {
+            imageUrls.push(img.src);
+        });
+        
+        // Open modal when gallery image is clicked
+        galleryImages.forEach((img, index) => {
+            img.addEventListener('click', () => {
+                currentImageIndex = index;
+                showImage();
+                imageModal.classList.remove('hidden');
+                imageModal.classList.add('flex');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+        });
+        
+        // Close modal
+        function closeImageModal() {
+            imageModal.classList.add('hidden');
+            imageModal.classList.remove('flex');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+        
+        // Show current image
+        function showImage() {
+            if (imageUrls.length > 0) {
+                modalImage.src = imageUrls[currentImageIndex];
+                imageCounter.textContent = `${currentImageIndex + 1} / ${imageUrls.length}`;
+                
+                // Hide/show navigation buttons based on position
+                prevImage.style.display = currentImageIndex === 0 ? 'none' : 'block';
+                nextImage.style.display = currentImageIndex === imageUrls.length - 1 ? 'none' : 'block';
+            }
+        }
+        
+        // Event listeners
+        closeModal.addEventListener('click', closeImageModal);
+        
+        prevImage.addEventListener('click', () => {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                showImage();
+            }
+        });
+        
+        nextImage.addEventListener('click', () => {
+            if (currentImageIndex < imageUrls.length - 1) {
+                currentImageIndex++;
+                showImage();
+            }
+        });
+        
+        // Close modal when clicking outside the image
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                closeImageModal();
+            }
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!imageModal.classList.contains('hidden')) {
+                switch(e.key) {
+                    case 'Escape':
+                        closeImageModal();
+                        break;
+                    case 'ArrowLeft':
+                        if (currentImageIndex > 0) {
+                            currentImageIndex--;
+                            showImage();
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (currentImageIndex < imageUrls.length - 1) {
+                            currentImageIndex++;
+                            showImage();
+                        }
+                        break;
+                }
+            }
+        });
+
+        // Like/Dislike functionality for travel stories
+        const likeBtn = document.getElementById('like-btn');
+        const dislikeBtn = document.getElementById('dislike-btn');
+        
+        if (likeBtn) {
+            likeBtn.addEventListener('click', function() {
+                const storyId = this.getAttribute('data-story-id');
+                const url = this.getAttribute('data-url');
+                const op = this.getAttribute('data-op');
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: `story_id=${storyId}&op=${op}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update likes count
+                        document.getElementById('likes-count').textContent = data.likes;
+                        
+                        // Update dislikes count if present
+                        if (data.dislikes !== undefined) {
+                            document.getElementById('dislikes-count').textContent = data.dislikes;
+                        }
+                        
+                        // Toggle like button appearance
+                        const likeSvg = likeBtn.querySelector('svg');
+                        if (data.likes > 0 && data.action === 'like') {
+                            likeSvg.setAttribute('fill', 'currentColor');
+                        } else {
+                            likeSvg.setAttribute('fill', 'none');
+                        }
+                        
+                        // Reset dislike button appearance
+                        const dislikeSvg = dislikeBtn.querySelector('svg');
+                        if (dislikeSvg) {
+                            dislikeSvg.setAttribute('fill', 'none');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        }
+        
+        if (dislikeBtn) {
+            dislikeBtn.addEventListener('click', function() {
+                const storyId = this.getAttribute('data-story-id');
+                const url = this.getAttribute('data-url');
+                const op = this.getAttribute('data-op');
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: `story_id=${storyId}&op=${op}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update likes count
+                        document.getElementById('likes-count').textContent = data.likes;
+                        
+                        // Update dislikes count
+                        document.getElementById('dislikes-count').textContent = data.dislikes;
+                        
+                        // Toggle dislike button appearance
+                        const dislikeSvg = dislikeBtn.querySelector('svg');
+                        if (data.dislikes > 0 && data.action === 'dislike') {
+                            dislikeSvg.setAttribute('fill', 'currentColor');
+                        } else {
+                            dislikeSvg.setAttribute('fill', 'none');
+                        }
+                        
+                        // Reset like button appearance
+                        const likeSvg = likeBtn.querySelector('svg');
+                        if (likeSvg) {
+                            likeSvg.setAttribute('fill', 'none');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        }
+    </script>
+{% endblock %}

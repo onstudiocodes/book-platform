@@ -195,12 +195,20 @@ class TravelStory(models.Model):
     budget_level = models.CharField(max_length=20, choices=BUDGET_CHOICES, blank=True, null=True)
     pro_tips = CKEditor5Field('Pro Tips', config_name='extends', blank=True)
     tags = models.CharField(max_length=500, blank=True)
+    likes = models.ManyToManyField(User, related_name='liked_travel_stories', blank=True)
+    dislikes = models.ManyToManyField(User, related_name='disliked_travel_stories', blank=True)
     published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
+    
+    def likes_count(self):
+        return self.likes.count()
+    
+    def dislikes_count(self):
+        return self.dislikes.count()
 
 
 class TravelImage(models.Model):

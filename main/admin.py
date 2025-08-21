@@ -40,14 +40,14 @@ class TravelImageInline(admin.TabularInline):
     image_preview.short_description = 'Preview'
 
 class TravelStoryAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'country', 'published', 'created_at')
+    list_display = ('title', 'author', 'category', 'country', 'likes_count', 'dislikes_count', 'published', 'created_at')
     list_filter = ('category', 'country', 'published', 'created_at')
     search_fields = ('title', 'story', 'location', 'pro_tips')
     inlines = [TravelImageInline]
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'likes_count', 'dislikes_count')
     fieldsets = (
         ('Basic Information', {
-            'fields': ('thumbnail','title', 'category', 'story', 'published')
+            'fields': ('thumbnail','title', 'author', 'category', 'story', 'published')
         }),
         ('Location Details', {
             'fields': ('country', 'location', 'latitude', 'longitude')
@@ -58,11 +58,23 @@ class TravelStoryAdmin(admin.ModelAdmin):
         ('Additional Information', {
             'fields': ('pro_tips', 'tags')
         }),
+        ('Engagement', {
+            'fields': ('likes_count', 'dislikes_count'),
+            'classes': ('collapse',)
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
+    
+    def likes_count(self, obj):
+        return obj.likes.count()
+    likes_count.short_description = 'Likes'
+    
+    def dislikes_count(self, obj):
+        return obj.dislikes.count()
+    dislikes_count.short_description = 'Dislikes'
 
 class TravelCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'story_count')

@@ -35,8 +35,8 @@
                 <div class="p-6 border-b border-gray-200">
                     <h1 class="text-2xl font-bold text-gray-900 mb-2">{{story.title}}</h1>
                     <div class="flex items-center text-gray-600">
-                        <img src="{{story.author.userprofile.profile_picture.url}}" alt="Author" class="w-8 h-8 rounded-full mr-2">
-                        <span class="mr-4">{{story.author.userprofile.full_name}}</span>
+                        <img onclick="location.href=`{% url 'main:profile' story.author.username %}`" src="{{story.author.userprofile.profile_picture.url}}" alt="Author" class="w-8 h-8 rounded-full mr-2">
+                        <a href="{% url 'main:profile' story.author.username %}" class="mr-4">{{story.author.userprofile.full_name}}</a>
                         <span class="flex items-center mr-4">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -76,7 +76,7 @@
                     </div>
 
                     <!-- Image Modal/Lightbox -->
-                    <div id="imageModal" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-md z-50 hidden items-center justify-center">
+                    <div id="imageModal" class="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-md z-[1000] hidden items-center justify-center">
                         <div class="relative max-w-7xl max-h-full mx-4">
                             <!-- Close Button -->
                             <button id="closeModal" class="absolute top-4 right-4 z-10 text-gray-800 hover:text-gray-600 transition-colors bg-white bg-opacity-80 backdrop-blur-sm rounded-full p-2 shadow-lg">
@@ -100,7 +100,7 @@
                             </button>
                             
                             <!-- Main Image -->
-                            <img id="modalImage" src="" alt="Gallery Image" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+                            <img id="modalImage" src="" alt="Gallery Image" class="w-full h-[80vh] object-cover rounded-lg shadow-2xl">
                             
                             <!-- Image Counter -->
                             <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-gray-800 bg-white bg-opacity-80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
@@ -113,7 +113,7 @@
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Video Tour</h3>
                         <div class="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden">
-                            <iframe class="w-full h-64 md:h-96" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <iframe class="w-full h-64 md:h-96" src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         </div>
                     </div>
                     
@@ -128,12 +128,21 @@
                     <!-- Action Buttons -->
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex space-x-4">
-                            <button class="flex items-center text-gray-700 hover:text-indigo-600">
+                            {% if user.is_authenticated %}
+                            <button id="like-btn" data-story-id="{{ story.id }}" data-url="{% url 'travel:toggle_travel_story_like' %}" data-op="like" class="flex items-center px-3 py-2 rounded-lg transition-all {% if user in story.likes.all %}bg-indigo-100 text-indigo-600{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                                <svg class="w-5 h-5 mr-1" fill="{% if user in story.likes.all %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                </svg>
+                                <span id="likes-count">{{ story.likes.count }}</span> Likes
+                            </button>
+                            {% else %}
+                            <span class="flex items-center text-gray-700">
                                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
                                 </svg>
-                                87 Likes
-                            </button>
+                                {{ story.likes.count }} Likes
+                            </span>
+                            {% endif %}
                             <button class="flex items-center text-gray-700 hover:text-indigo-600">
                                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
@@ -198,43 +207,129 @@
                         <script>
                             let travelstoryForm = document.querySelector("#travelstory_comment_form");
 
-                            travelstoryForm.addEventListener('submit', (e) => {
-                                e.preventDefault();
-                                fetch(travelstoryForm.action, {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                                        'Accept': 'application/json',
-                                    },
-                                    body: new FormData(travelstoryForm)
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    console.log(data);
-                                    if (data && data.success) {
-                                        travelstoryForm.reset()
-                                        location.reload();
-                                    } else {
-                                        alert(data.error || "Failed to post comment.");
-                                    }
-                                })
-                                .catch(error => {
-                                    alert("An error occurred. Please try again.");
-                                });
-                            });
-                        </script>
+                            function addCommentToList(comment) {
+                                // Get the comments list element when we need it
+                                let commentsList = document.querySelector("#comments-list");
+                                if (!commentsList) {
+                                    return;
+                                }
+                                
+                                // Get profile picture URL safely
+                                let profilePicture = '';
+                                if (comment.user && comment.user.userprofile && comment.user.userprofile.profile_picture) {
+                                    profilePicture = comment.user.userprofile.profile_picture;
+                                } else {
+                                    profilePicture = '/media/default_imgs/default_profile.png'; // fallback
+                                }
 
-                        
+                                // Get full name safely
+                                let fullName = '';
+                                if (comment.user && comment.user.full_name) {
+                                    fullName = comment.user.full_name;
+                                } else if (comment.user && comment.user.username) {
+                                    fullName = comment.user.username;
+                                } else {
+                                    fullName = 'Anonymous';
+                                }
+
+                                // Get username safely
+                                let username = '';
+                                if (comment.user && comment.user.username) {
+                                    username = comment.user.username;
+                                } else {
+                                    username = 'anonymous';
+                                }
+
+                                const commentHTML = `
+                                    <div class="flex space-x-4">
+                                        <img onclick="location.href='/profile/${username}/'" src="${profilePicture}" alt="User" class="w-10 h-10 rounded-full">
+                                        <div class="flex-1">
+                                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <a href="/profile/${username}/" class="font-medium capitalize text-gray-900">${fullName}</a>
+                                                    <span class="text-sm text-gray-500">just now</span>
+                                                </div>
+                                                <p class="text-gray-700 mb-3">${comment.content}.</p>
+                                                <div class="flex items-center text-sm text-gray-500">
+                                                    <button class="flex items-center hover:text-indigo-600 mr-4">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                                        </svg>
+                                                        ${comment.likes_count || 0}
+                                                    </button>
+                                                    <button class="hover:text-indigo-600">Reply</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                commentsList.insertAdjacentHTML('afterbegin', commentHTML);
+                            }
+
+                            function updateCommentsCount() {
+                                // Find the comments heading more specifically
+                                let commentsHeading = document.querySelector('.border-t.border-gray-200.pt-6 h3');
+                                if (!commentsHeading) {
+                                    // Fallback: look for h3 containing "Comments"
+                                    const allH3s = document.querySelectorAll('h3');
+                                    for (let h3 of allH3s) {
+                                        if (h3.textContent.includes('Comments')) {
+                                            commentsHeading = h3;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (commentsHeading && commentsHeading.textContent) {
+                                    const match = commentsHeading.textContent.match(/\d+/);
+                                    if (match) {
+                                        const currentCount = parseInt(match[0]);
+                                        commentsHeading.textContent = `Comments (${currentCount + 1})`;
+                                    }
+                                } else {
+                                }
+                            }
+
+                            if (travelstoryForm) {
+                                travelstoryForm.addEventListener('submit', (e) => {
+                                    e.preventDefault();
+                                    
+                                    fetch(travelstoryForm.action, {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                            'Accept': 'application/json',
+                                        },
+                                        body: new FormData(travelstoryForm)
+                                    })
+                                    .then(response => {
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        if (data && data.success) {
+                                            travelstoryForm.reset();
+                                            addCommentToList(data.comment);
+                                            updateCommentsCount();
+                                        } else {
+                                            alert(data.error || "Failed to post comment.");
+                                        }
+                                    })
+                                    .catch(error => {
+                                        alert("An error occurred. Please try again.");
+                                    });
+                                });
+                            }
+                        </script>                        
                         <!-- Comments List -->
-                        <div class="space-y-6">
-                            {% for comment in story.comments.all %}
+                        <div class="space-y-6" id="comments-list">
+                            {% for comment in comments %}
                             <!-- Comment 1 -->
                             <div class="flex space-x-4">
-                                <img src="{{comment.user.userprofile.profile_picture.url}}" alt="User" class="w-10 h-10 rounded-full">
+                                <img onclick="location.href=`{% url 'main:profile' comment.user.username %}`" src="{{comment.user.userprofile.profile_picture.url}}" alt="User" class="w-10 h-10 rounded-full">
                                 <div class="flex-1">
                                     <div class="bg-white p-4 rounded-lg shadow-sm">
                                         <div class="flex items-center justify-between mb-2">
-                                            <span class="font-medium text-gray-900">{{comment.user.userprofile.full_name}}</span>
+                                            <a href="{% url "main:profile" comment.user.username %}" class="font-medium capitalize text-gray-900">{{comment.user.userprofile.full_name}}</a>
                                             <span class="text-sm text-gray-500">{{comment.created_at|time_since}}</span>
                                         </div>
                                         <p class="text-gray-700 mb-3">{{comment.content}}.</p>
@@ -403,5 +498,51 @@
                 }
             }
         });
+
+        // Like functionality for travel stories
+        const likeBtn = document.getElementById('like-btn');
+        
+        if (likeBtn) {
+            likeBtn.addEventListener('click', function() {
+                const storyId = this.getAttribute('data-story-id');
+                const url = this.getAttribute('data-url');
+                const op = this.getAttribute('data-op');
+                const prevLikes = parseInt(document.getElementById('likes-count').textContent) || 0;
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: `story_id=${storyId}&op=${op}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update likes count
+                        document.getElementById('likes-count').textContent = data.likes;
+                        
+                        // Update like button appearance based on counts delta
+                        const likeSvg = likeBtn.querySelector('svg');
+                        const liked = data.likes > prevLikes; // true if this click resulted in a like
+                        if (liked) {
+                            likeSvg.setAttribute('fill', 'currentColor');
+                            likeBtn.setAttribute('class', 'flex items-center px-3 py-2 rounded-lg transition-all bg-indigo-100 text-indigo-600');
+                            likeBtn.style.backgroundColor = '#e0e7ff';
+                            likeBtn.style.color = '#4f46e5';
+                        } else {
+                            likeSvg.setAttribute('fill', 'none');
+                            likeBtn.setAttribute('class', 'flex items-center px-3 py-2 rounded-lg transition-all text-gray-700 hover:bg-gray-100');
+                            likeBtn.style.backgroundColor = '';
+                            likeBtn.style.color = '';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        }
     </script>
 {% endblock %}

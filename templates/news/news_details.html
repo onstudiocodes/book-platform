@@ -95,7 +95,7 @@ News
                             </div>
                             <h1 class="text-3xl font-bold mb-4">{{news.title}}</h1>
                             <div class="flex items-center text-gray-600">
-                                <span class="mr-4">Posted by <span class="font-semibold">{{news.author.userprofile.full_name}}</span></span>
+                                <span class="mr-4">Posted by <a href="{% url "main:profile" news.author.username %}" class="font-semibold">{{news.author.userprofile.full_name}}</a></span>
                                 <span><i class="far fa-clock mr-1"></i> {{news.created_at|time_since}}</span>
                             </div>
                         </header>
@@ -179,43 +179,123 @@ News
                                 {% endif %}
                                 
                                 <script>
-                                    let commentForm = document.querySelector("#comment_form")
-                                    commentForm.addEventListener('submit', (e)=>{
-                                        e.preventDefault()
-                                        fetch(commentForm.action, {
-                                            method: 'POST',
-                                            headers: {
-                                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                                                'Accept': 'application/json',
-                                            },
-                                            body: new FormData(commentForm)
-                                        })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            console.log(data);
-                                            if (data && data.success) {
-                                                commentForm.reset();
-                                                location.reload();
-                                            } else {
-                                                console.log(data)
-                                                alert(data.error || "Failed to post comment.");
+                                    let commentForm = document.querySelector("#comment_form");
+
+                                    function addCommentToList(comment) {
+                                        // Get the comments list element when we need it
+                                        let commentsList = document.querySelector("#comments-list");
+                                        if (!commentsList) {
+                                            return;
+                                        }
+                                        
+                                        // Get profile picture URL safely
+                                        let profilePicture = '';
+                                        if (comment.user && comment.user.userprofile && comment.user.userprofile.profile_picture) {
+                                            profilePicture = comment.user.userprofile.profile_picture;
+                                        } else {
+                                            profilePicture = '/media/default_imgs/default_profile.png'; // fallback
+                                        }
+
+                                        // Get full name safely
+                                        let fullName = '';
+                                        if (comment.user && comment.user.full_name) {
+                                            fullName = comment.user.full_name;
+                                        } else if (comment.user && comment.user.username) {
+                                            fullName = comment.user.username;
+                                        } else {
+                                            fullName = 'Anonymous';
+                                        }
+
+                                        // Get username safely
+                                        let username = '';
+                                        if (comment.user && comment.user.username) {
+                                            username = comment.user.username;
+                                        } else {
+                                            username = 'anonymous';
+                                        }
+
+                                        const commentHTML = `
+                                            <div class="bg-gray-50 p-4 rounded-lg">
+                                                <div class="flex items-center mb-2">
+                                                    <img onclick="location.href='/profile/${username}/'" class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold mr-2" src="${profilePicture}">
+                                                    <a href="/profile/${username}/" class="font-semibold">${fullName}</a>
+                                                    <span class="text-gray-500 text-sm ml-2">• just now</span>
+                                                </div>
+                                                <p class="text-gray-700">${comment.content}</p>
+                                                <div class="flex items-center mt-2 text-sm text-gray-500">
+                                                    <button class="flex items-center mr-4 hover:text-blue-600">
+                                                        <i class="far fa-thumbs-up mr-1"></i> ${comment.likes_count || 0}
+                                                    </button>
+                                                    <button class="flex items-center mr-4 hover:text-blue-600">
+                                                        <i class="far fa-thumbs-down mr-1"></i> ${comment.dislikes_count || 0}
+                                                    </button>
+                                                    <button class="hover:text-blue-600">Reply</button>
+                                                </div>
+                                            </div>
+                                        `;
+                                        commentsList.insertAdjacentHTML('afterbegin', commentHTML);
+                                    }
+
+                                    function updateCommentsCount() {
+                                        // Find the comments heading more specifically
+                                        let commentsHeading = null;
+                                        const allH3s = document.querySelectorAll('h3');
+                                        for (let h3 of allH3s) {
+                                            if (h3.textContent.includes('Comments')) {
+                                                commentsHeading = h3;
+                                                break;
                                             }
-                                        })
-                                        .catch(error => {
-                                            alert("An error occurred. Please try again.");
+                                        }
+                                        
+                                        if (commentsHeading && commentsHeading.textContent) {
+                                            const match = commentsHeading.textContent.match(/\d+/);
+                                            if (match) {
+                                                const currentCount = parseInt(match[0]);
+                                                commentsHeading.textContent = `Comments (${currentCount + 1})`;
+                                            }
+                                        }
+                                    }
+
+                                    if (commentForm) {
+                                        commentForm.addEventListener('submit', (e)=>{
+                                            e.preventDefault();
+                                            
+                                            fetch(commentForm.action, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                                    'Accept': 'application/json',
+                                                },
+                                                body: new FormData(commentForm)
+                                            })
+                                            .then(response => {
+                                                return response.json();
+                                            })
+                                            .then(data => {
+                                                if (data && data.success) {
+                                                    commentForm.reset();
+                                                    addCommentToList(data.comment);
+                                                    updateCommentsCount();
+                                                } else {
+                                                    alert(data.error || "Failed to post comment.");
+                                                }
+                                            })
+                                            .catch(error => {
+                                                alert("An error occurred. Please try again.");
+                                            });
                                         });
-                                    })
+                                    }
                                 </script>
 
                                 <!-- Comment List -->
-                                <div class="space-y-4">
+                                <div class="space-y-4" id="comments-list">
                                     <!-- Comment 1 -->
                                      {% for comment in comments %}
                                     <div class="bg-gray-50 p-4 rounded-lg">
                                         <div class="flex items-center mb-2">
-                                            <image class="w-8 h-8  rounded-full flex items-center justify-center text-white font-bold mr-2"
+                                            <image onclick="location.href='{% url "main:profile" comment.user.username %}'" class="w-8 h-8  rounded-full flex items-center justify-center text-white font-bold mr-2"
                                             src="{{comment.user.userprofile.profile_picture.url}}">
-                                            <span class="font-semibold">{{comment.user.userprofile.full_name}}</span>
+                                            <a href="{% url "main:profile" news.author.username %}" class="font-semibold">{{comment.user.userprofile.full_name}}</a>
                                             <span class="text-gray-500 text-sm ml-2">• {{comment.created_at|time_since}}</span>
                                         </div>
                                         <p class="text-gray-700">{{comment.content}}</p>
