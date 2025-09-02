@@ -720,11 +720,11 @@ def delete_book(request, book_id):
     if book.author == request.user:
         book.delete()
         messages.success(request, 'Book deleted')
-        return redirect('author:author_content')
+        return redirect('author:author_content', "books")
     messages.error(request, 'Book not deleted')
     return redirect('author:author_content')
 
-@login_required(login_url='accounts:login')
+@login_required(login_url='accounts:log in')
 def delete_news_image(request, image_id):
     """
     Delete a news image if the user owns the news article

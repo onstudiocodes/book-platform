@@ -62,5 +62,51 @@ def test_urls():
     else:
         print("❌ No travel stories found in database")
 
+def add_categories():
+    from main.models import Category
+    categories = [
+        "Literary Fiction",
+        "Mystery",
+        "Thriller & Suspense",
+        "Horror",
+        "Historical Fiction",
+        "Romance",
+        "Science Fiction",
+        "Fantasy",
+        "Young Adult (YA) Fiction",
+        "Children's Fiction",
+        "Graphic Novels & Comics",
+        "Biography & Autobiography",
+        "Memoir",
+        "History",
+        "Travel",
+        "True Crime",
+        "Science & Nature",
+        "Philosophy",
+        "Religion & Spirituality",
+        "Self-Help & Personal Development",
+        "Business & Economics",
+        "Cookbooks, Food & Wine",
+        "Art, Architecture & Photography",
+        "Health, Fitness & Dieting",
+        "Parenting & Relationships",
+        "Crafts, Hobbies & Home",
+        "Essays & Journalism",
+        "Poetry Collections",
+        "Plays & Dramatic Works",
+        "Textbooks",
+        "Reference Books (Dictionaries, Encyclopedias)",
+        "Academic & Scholarly Works",
+        "Professional & Technical Guides",
+        "Test Preparation & Study Guides",
+        "Language Learning Books",
+        "Short Story & Essay"
+    ]
+    for item in categories:
+        Category.objects.get_or_create(name=item)
+        print(Category.objects.count())
+    print("Categories added.")
+
 if __name__ == '__main__':
-    test_urls()
+    # test_urls()
+    add_categories()

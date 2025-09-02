@@ -1,10 +1,17 @@
 from django import forms
 from django.forms import inlineformset_factory
-from main.models import Book, News, NewsImage, AudioBook, Booktranslation
+from main.models import Book, News, NewsImage, AudioBook, Booktranslation, Category
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 class BookUploadForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditor5Widget())
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate category choices from the database
+        self.fields['category'].queryset = Category.objects.all()
+        self.fields['category'].empty_label = "Select a category..."
+    
     class Meta:
         model = Book
         fields = ['thumbnail', 'title', 'description','language', 'content', 'category']
