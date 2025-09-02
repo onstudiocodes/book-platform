@@ -2,7 +2,8 @@
 # exit on error
 set -o errexit
 
-poetry install
+# Install dependencies
+pip install -r requirements.txt
 
 # Set up fonts for PDF generation using Django management command
 echo "Setting up fonts for multilingual PDF support..."
