@@ -1,14 +1,35 @@
-<!-- templates/main/pdf_template.html -->
+<!-- templates/components/pdf_template.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ book.title }}</title>
+    <style>
+        body {
+            direction: ltr;
+            unicode-bidi: embed;
+        }
+        
+        /* Support for RTL languages if needed */
+        .rtl {
+            direction: rtl;
+            unicode-bidi: embed;
+        }
+        
+        /* Ensure proper text rendering */
+        * {
+            font-feature-settings: "kern" 1, "liga" 1;
+            text-rendering: optimizeLegibility;
+        }
+    </style>
 </head>
 <body>
     <h1>{{ book.title }}</h1>
     <p><em>By {{ book.author.username }}</em></p>
     <hr>
-    {{ book.content|safe }}
+    <div class="content">
+        {{ book.content|safe }}
+    </div>
 </body>
 </html>

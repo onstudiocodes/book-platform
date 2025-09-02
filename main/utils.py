@@ -441,14 +441,124 @@ def create_notification(user, message):
 # pdf_utils.py
 from weasyprint import HTML, CSS
 from django.template.loader import render_to_string
+from django.conf import settings
+from django.core.cache import cache
 from io import BytesIO
 import os
+import logging
+import hashlib
 
-def generate_book_pdf(book, width_px=270, height_px=480):
+logger = logging.getLogger(__name__)
+
+def get_font_css():
+    """
+    Generate font CSS with caching for better performance
+    """
+    cache_key = 'pdf_font_css'
+    cached_css = cache.get(cache_key)
+    
+    if cached_css:
+        return cached_css
+    
+    # Multiple font paths to try (covers local development and various deployment scenarios)
+    potential_font_paths = [
+        # Local development paths
+        os.path.join(settings.BASE_DIR, 'static', 'NotoSans-Regular.ttf'),
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NotoSans-Regular.ttf'),
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NotoSansBengali-Regular.ttf'),
+        
+        # Production paths (common deployment scenarios)
+        '/app/static/NotoSans-Regular.ttf',
+        '/app/static/fonts/NotoSans-Regular.ttf',
+        '/app/static/fonts/NotoSansBengali-Regular.ttf',
+        
+        # Render.com specific paths
+        '/opt/render/project/src/static/NotoSans-Regular.ttf',
+        '/opt/render/project/src/static/fonts/NotoSans-Regular.ttf',
+        
+        # Alternative deployment paths
+        os.path.join(os.environ.get('STATIC_ROOT', ''), 'NotoSans-Regular.ttf'),
+        os.path.join(os.environ.get('STATIC_ROOT', ''), 'fonts', 'NotoSans-Regular.ttf'),
+    ]
+    
+    # Add STATIC_ROOT paths if available
+    if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+        potential_font_paths.extend([
+            os.path.join(settings.STATIC_ROOT, 'NotoSans-Regular.ttf'),
+            os.path.join(settings.STATIC_ROOT, 'fonts', 'NotoSans-Regular.ttf'),
+            os.path.join(settings.STATIC_ROOT, 'fonts', 'NotoSansBengali-Regular.ttf'),
+        ])
+    
+    # Find available fonts
+    available_fonts = []
+    for font_path in potential_font_paths:
+        if font_path and os.path.exists(font_path):
+            available_fonts.append(font_path)
+            logger.debug(f"Found font: {font_path}")
+    
+    # Build font-face declarations
+    font_faces = ""
+    font_family_list = []
+    
+    for i, font_path in enumerate(available_fonts):
+        font_name = f"CustomFont{i}"
+        font_faces += f'''
+            @font-face {{
+                font-family: '{font_name}';
+                src: url('file://{font_path}') format('truetype');
+                font-weight: normal;
+                font-style: normal;
+            }}
+        '''
+        font_family_list.append(f'"{font_name}"')
+    
+    # Add system fallback fonts with good multilingual support
+    fallback_fonts = [
+        '"Noto Sans"',
+        '"Noto Sans Bengali"', 
+        '"Kalpurush"',  # Popular Bengali font
+        '"SolaimanLipi"',  # Another Bengali font
+        '"DejaVu Sans"',
+        '"Liberation Sans"',
+        '"Roboto"',
+        '"Arial Unicode MS"',
+        'Arial',
+        'sans-serif'
+    ]
+    
+    # Combine custom fonts with fallbacks
+    all_fonts = font_family_list + fallback_fonts
+    font_family_string = ', '.join(all_fonts)
+    
+    result = {
+        'font_faces': font_faces,
+        'font_family': font_family_string,
+        'available_fonts_count': len(available_fonts)
+    }
+    
+    # Cache for 1 hour
+    cache.set(cache_key, result, 3600)
+    logger.info(f"Font CSS cached with {len(available_fonts)} available fonts")
+    
+    return result
+
+def generate_book_pdf(book, width_px=270, height_px=480, enable_cache=True):
     """
     Generate a PDF file for a given Book instance.
     Returns a BytesIO stream containing the PDF.
+    Supports all languages including Bengali/Bangla with robust font handling.
     """
+    
+    # Check cache first (optional)
+    cache_key = None
+    if enable_cache and hasattr(book, 'id'):
+        content_hash = hashlib.md5(f"{book.title}_{book.content}_{width_px}_{height_px}".encode()).hexdigest()
+        cache_key = f"pdf_{book.id}_{content_hash}"
+        cached_pdf = cache.get(cache_key)
+        if cached_pdf:
+            logger.info(f"Returning cached PDF for book: {book.title}")
+            return BytesIO(cached_pdf)
+    
     # Render HTML template with book content
     html_string = render_to_string("components/pdf_template.html", {
         "book": book,
@@ -456,36 +566,151 @@ def generate_book_pdf(book, width_px=270, height_px=480):
 
     # Create in-memory buffer
     pdf_buffer = BytesIO()
-
-    font_path = os.path.join(os.getcwd(), "static/NotoSans-Regular.ttf")
-    # Define custom page size and justified text
+    
+    # Get font CSS (cached)
+    font_config = get_font_css()
+    
+    # Enhanced CSS with better multilingual support
     custom_css = CSS(string=f'''
-        @font-face {{
-            font-family: "NotoSans";
-            src: url("file://{font_path}");
-        }}
+        {font_config['font_faces']}
+        
         @page {{
             size: {width_px}px {height_px}px;
-            margin: 5px;
+            margin: 8px;
         }}
 
         body {{
-            font-family: "Arial", sans-serif;
-            font-size: 20px;
-            line-height: 1.4;
+            font-family: {font_config['font_family']};
+            font-size: 18px;
+            line-height: 1.7;
             text-align: justify;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            -moz-hyphens: auto;
+            direction: ltr;
+            unicode-bidi: embed;
         }}
 
-        h1, h2, h3 {{
+        h1, h2, h3, h4, h5, h6 {{
+            font-family: {font_config['font_family']};
             page-break-after: avoid;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }}
+        
+        h1 {{
+            font-size: 24px;
+            font-weight: bold;
+        }}
+        
+        h2 {{
+            font-size: 20px;
+            font-weight: bold;
+        }}
+        
+        h3 {{
+            font-size: 18px;
+            font-weight: bold;
+        }}
+        
+        p {{
+            margin-bottom: 12px;
+            text-align: justify;
+            orphans: 2;
+            widows: 2;
+        }}
+        
+        /* Enhanced multilingual text rendering */
+        * {{
+            font-feature-settings: "kern" 1, "liga" 1, "clig" 1;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }}
+        
+        /* Support for Bengali and other complex scripts */
+        .bengali, [lang="bn"], [lang="bn-BD"] {{
+            font-feature-settings: "kern" 1, "liga" 1, "clig" 1, "calt" 1;
+            text-rendering: optimizeLegibility;
+        }}
+        
+        /* Prevent orphans and widows */
+        .content {{
+            orphans: 2;
+            widows: 2;
+        }}
+        
+        /* Better handling of long words */
+        .content {{
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }}
+        
+        /* Print optimizations */
+        @media print {{
+            body {{
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }}
         }}
     ''')
 
-    # Generate PDF
-    HTML(string=html_string, base_url=os.getcwd()).write_pdf(pdf_buffer, stylesheets=[custom_css])
-    pdf_buffer.seek(0)
-
-    return pdf_buffer
+    try:
+        # Determine base URL for font loading
+        base_url = None
+        if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+            base_url = settings.STATIC_ROOT
+        else:
+            base_url = os.path.join(settings.BASE_DIR, 'static')
+        
+        # Generate PDF with proper error handling
+        html_doc = HTML(string=html_string, base_url=base_url)
+        html_doc.write_pdf(pdf_buffer, stylesheets=[custom_css])
+        pdf_buffer.seek(0)
+        
+        # Cache the result (optional)
+        if enable_cache and cache_key:
+            pdf_data = pdf_buffer.read()
+            cache.set(cache_key, pdf_data, 3600)  # Cache for 1 hour
+            pdf_buffer = BytesIO(pdf_data)
+            pdf_buffer.seek(0)
+        
+        logger.info(f"Successfully generated PDF for book: {book.title} (fonts: {font_config['available_fonts_count']})")
+        return pdf_buffer
+        
+    except Exception as e:
+        logger.error(f"Error generating PDF for book {book.title}: {str(e)}")
+        # Fallback: try without custom fonts
+        try:
+            fallback_css = CSS(string=f'''
+                @page {{
+                    size: {width_px}px {height_px}px;
+                    margin: 8px;
+                }}
+                body {{
+                    font-family: "DejaVu Sans", Arial, sans-serif;
+                    font-size: 18px;
+                    line-height: 1.7;
+                    text-align: justify;
+                }}
+                h1, h2, h3 {{
+                    page-break-after: avoid;
+                }}
+            ''')
+            
+            pdf_buffer = BytesIO()
+            HTML(string=html_string).write_pdf(pdf_buffer, stylesheets=[fallback_css])
+            pdf_buffer.seek(0)
+            
+            logger.warning(f"Generated PDF with fallback fonts for book: {book.title}")
+            return pdf_buffer
+            
+        except Exception as fallback_error:
+            logger.error(f"Fallback PDF generation also failed: {str(fallback_error)}")
+            raise
 
 def time_since_custom(dt):
     """
