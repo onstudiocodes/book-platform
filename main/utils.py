@@ -457,8 +457,13 @@ def generate_book_pdf(book, width_px=270, height_px=480):
     # Create in-memory buffer
     pdf_buffer = BytesIO()
 
+    font_path = os.path.join(os.getcwd(), "static/NotoSans-Regular.ttf")
     # Define custom page size and justified text
     custom_css = CSS(string=f'''
+        @font-face {{
+            font-family: "NotoSans";
+            src: url("file://{font_path}");
+        }}
         @page {{
             size: {width_px}px {height_px}px;
             margin: 5px;
