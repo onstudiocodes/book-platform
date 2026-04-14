@@ -83,6 +83,4 @@ Guidelines for contributing to the project.
 This project is proprietary and not open for public use. All rights are reserved by the client.
 
 ## Contact
-Md. Mahmud Hasan - [mahadymahamudh472@gmail.com](mailto:mahadymahamudh472@gmail.com)
-
 Project Link: [https://github.com/mahamudh472/book-platform.git](https://github.com/mahamudh472/book-platform.git)
